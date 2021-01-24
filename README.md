@@ -17,4 +17,4 @@ number of C# Visual Studio projects.
 
 ## License
 
-GPLv3 License (2020, Yasuo Matsubara)
+GPL-3.0 License (2020, Yasuo Matsubara)
