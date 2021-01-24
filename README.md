@@ -1,6 +1,6 @@
 # Voltammogrammer
 
-Voltammogrammer is a software controlling a small yet powerful potentiostat, PocketPoentiostat.
+Voltammogrammer is a software controlling a small yet powerful potentiostat, PocketPotentiostat.
 
 
 
