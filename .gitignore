@@ -3,6 +3,16 @@
 ##
 ## Get latest from https://github.com/github/gitignore/blob/master/VisualStudio.gitignore
 
+# Added by Yasuo
+*.bk
+*.back
+*.pem
+dwf.h
+*.vcxproj.*
+!cacert.pem
+hostname.txt
+ProjectBuildCounter-master/
+
 # User-specific files
 *.rsuser
 *.suo
