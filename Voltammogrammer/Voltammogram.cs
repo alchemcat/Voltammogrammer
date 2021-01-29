@@ -75,9 +75,10 @@ namespace Voltammogrammer
             Coulomb_in_mC = 2,
             Coulomb_in_C = 3,
             Potential_in_mV = 4,
+            Current_in_nA = 5,
         }
         typeAxisY _selectedAxisY = typeAxisY.Current_in_uA;
-        double[] _scaleAxisY = { 1000, 1, 1, 0.001, 1 };
+        double[] _scaleAxisY = { 1000, 1, 1, 0.001, 1, 1000000 };
 
         public enum typeAxisX : int
         {
@@ -347,7 +348,7 @@ namespace Voltammogrammer
                     System.Text.RegularExpressions.RegexOptions.IgnoreCase | System.Text.RegularExpressions.RegexOptions.Singleline
                 );
 
-            System.Windows.Forms.DataVisualization.Charting.Series series = AddNewSeries(!_mode_coulomb_counting, name, false);
+            System.Windows.Forms.DataVisualization.Charting.Series series = AddNewSeries(!_mode_coulomb_counting, name, name, false);
 
             TextReader reader = new StreamReader(file);
 
@@ -573,7 +574,7 @@ namespace Voltammogrammer
 
 
 
-            System.Windows.Forms.DataVisualization.Charting.Series series = AddNewSeries(!_mode_coulomb_counting, name, false);
+            System.Windows.Forms.DataVisualization.Charting.Series series = AddNewSeries(!_mode_coulomb_counting, name, name, false);
 
             TextReader reader = new StreamReader(file);
 
@@ -682,7 +683,11 @@ namespace Voltammogrammer
                 string lines;
                 string line; string[] values;
                 double x, y, y1, y2, y3, y4;
-                string name;
+                string name, original_name;
+                string color, width, dash;
+
+                System.Windows.Forms.DataVisualization.Charting.ChartColorPalette ttt;
+
                 //StringBuilder sb; sb.
                 //for (; ; ) // reader.Read()
                 //{
@@ -692,9 +697,23 @@ namespace Voltammogrammer
                     while (reader.ReadToFollowing("Data"))
                     {
                         name = reader.GetAttribute("name");
-                        lines = reader.ReadString();
+                        original_name = reader.GetAttribute("base-name"); if (original_name == null) original_name = name;
+                        System.Windows.Forms.DataVisualization.Charting.Series series = AddNewSeries(true, name, original_name, false);
 
-                        System.Windows.Forms.DataVisualization.Charting.Series series = AddNewSeries(true, name, false);
+
+                        color = reader.GetAttribute("color"); if (color == null) color = "Black";
+                        width = reader.GetAttribute("width"); if (width == null) width = "1";
+                        dash = reader.GetAttribute("dash");   if (dash == null) dash = "5";
+
+                        series.Color = System.Drawing.Color.FromName(color);
+                        series.BorderWidth = Int32.Parse(width);
+                        series.BorderDashStyle = (System.Windows.Forms.DataVisualization.Charting.ChartDashStyle)Int32.Parse(dash);
+
+
+
+
+
+                        lines = reader.ReadString();
 
                         Stream stream = new MemoryStream(Encoding.UTF8.GetBytes(lines));
                         StreamReader readerStream = new StreamReader(stream);
@@ -857,7 +876,8 @@ namespace Voltammogrammer
                 //toolStripComboBoxSeries.Items.Add(_series[i]);
             }
 
-            toolStripComboBoxSeries.SelectedIndex = _currentIndex;
+            //toolStripComboBoxSeries.SelectedIndex = _currentIndex;
+            updateSelectionOfSeries();
 
             gzipStrm.Close();
             gzipStrm2.Close();
@@ -875,31 +895,41 @@ namespace Voltammogrammer
             _indexRecording = -1;
         }
 
-        public System.Windows.Forms.DataVisualization.Charting.Series AddNewSeries(bool mode_voltammmetry, string name, bool mode_recording)
+        public System.Windows.Forms.DataVisualization.Charting.Series AddNewSeries(bool mode_voltammmetry, string name, string base_name, bool mode_recording)
         {
             //chronoamperogramモードなのに、現インスタンスが_mode_coulomb_countingでない場合には、_chronoamperogramのそれを呼び出し
             if (false && !mode_voltammmetry && !_mode_coulomb_counting)
             {
-                return _chronoamperogram.AddNewSeries(false, name, mode_recording);
+                return _chronoamperogram.AddNewSeries(false, name, base_name, mode_recording);
             }
             if (_mode_coulomb_counting) this.Show();
 
             string nameActual = name;
-            if (name == "Scan") { nameActual = name + " " + 1.ToString(); }
 
-            //try
-            //{
-            int i = 1;
-            while (_series.IndexOf(nameActual) != -1)
+            if(name == base_name)
             {
-                nameActual = name + " " + (_currentIndex + (++i)).ToString();
+                if (name == "Scan") { nameActual = name + " " + 1.ToString(); }
+
+                //try
+                //{
+                int i = 1;
+                while (_series.IndexOf(nameActual) != -1)
+                {
+                    nameActual = name + " " + (_currentIndex + (++i)).ToString();
+                }
+                //int i = 1;
+                //while (chartVoltammogram.Series.IndexOf(nameActual) != -1)
+                //{
+                //    nameActual = name + " " + (_currentIndex + (++i)).ToString();
+                //}
+                _series.Add(nameActual);
             }
-            //int i = 1;
-            //while (chartVoltammogram.Series.IndexOf(nameActual) != -1)
-            //{
-            //    nameActual = name + " " + (_currentIndex + (++i)).ToString();
-            //}
-            _series.Add(nameActual);
+            else
+            {
+                _series.Add(base_name);
+                nameActual = name;
+            }
+
             _currentIndex = _series.Count() - 1;
             if (mode_recording) _indexRecording = _currentIndex;
             //}
@@ -1014,6 +1044,10 @@ namespace Voltammogrammer
 
                             case typeAxisY.Current_in_mA:
                                 y = y_value / _scaleAxisY[(int)scaleY] * _scaleAxisY[(int)typeAxisY.Current_in_mA];
+                                break;
+
+                            case typeAxisY.Current_in_nA:
+                                y = y_value / _scaleAxisY[(int)scaleY] * _scaleAxisY[(int)typeAxisY.Current_in_nA];
                                 break;
 
                             case typeAxisY.Coulomb_in_mC:
@@ -1147,7 +1181,7 @@ namespace Voltammogrammer
 
         public int RemoveSeries(int index)
         {
-            if (index == -1)
+            if (index <= -1)
             {
                 if(_indexRecording == -1)
                 {
@@ -1266,6 +1300,10 @@ namespace Voltammogrammer
                 {
                     writer.WriteStartElement("Data");
                     writer.WriteAttributeString("name", chartVoltammogram.Series[i].Name);
+                    writer.WriteAttributeString("base-name", _series[i]);
+                    writer.WriteAttributeString("color", chartVoltammogram.Series[i].Color.Name);
+                    writer.WriteAttributeString("width", chartVoltammogram.Series[i].BorderWidth.ToString());
+                    writer.WriteAttributeString("dash", ((int)chartVoltammogram.Series[i].BorderDashStyle).ToString());
 
                     int step = (chartVoltammogram.Series[i].Points.Count() < 200) ? 1 : reduced;
 
@@ -1318,7 +1356,8 @@ namespace Voltammogrammer
             XmlDocument doc = new XmlDocument();
             doc.Load(stream);
 
-            SerializeParameter(doc, _series, nameof(_series));
+            // 2021/1/29: LoadSetOfSeriesの方でも使わなくなったので、comment out
+            //SerializeParameter(doc, _series, nameof(_series));
 
             //List<int> shifts = new List<int>();
             //System.Windows.Forms.DataVisualization.Charting.SeriesCollection sc = chartVoltammogram.Series;
@@ -1394,6 +1433,7 @@ namespace Voltammogrammer
 
                         switch (_selectedAxisY)
                         {
+                            case typeAxisY.Current_in_nA: current = "nA"; break;
                             case typeAxisY.Current_in_uA: current = "uA"; break;
                             case typeAxisY.Current_in_mA: current = "mA"; break;
                             case typeAxisY.Coulomb_in_mC: current = "mC"; break;
@@ -1437,6 +1477,7 @@ namespace Voltammogrammer
                         }
                         switch (_selectedAxisY)
                         {
+                            case typeAxisY.Current_in_nA: current = "nA"; break;
                             case typeAxisY.Current_in_uA: current = "uA"; break;
                             case typeAxisY.Current_in_mA: current = "mA"; break;
                             case typeAxisY.Coulomb_in_mC: current = "mC"; break;
@@ -1534,6 +1575,7 @@ namespace Voltammogrammer
                 }
                 switch(_selectedAxisY)
                 {
+                    case typeAxisY.Current_in_nA: unit_y = "nA"; format_current = "0.000"; break;
                     case typeAxisY.Current_in_uA: unit_y = "uA"; format_current = "0.000"; break;
                     case typeAxisY.Current_in_mA: unit_y = "mA"; format_current = "0.000"; break;
                 }
@@ -1884,6 +1926,10 @@ namespace Voltammogrammer
             typeAxisY prev = _selectedAxisY;
             switch (toolStripComboBoxAxisY.SelectedIndex)
             {
+                case 5:
+                    _selectedAxisY = typeAxisY.Current_in_nA;
+                    chartVoltammogram.ChartAreas[0].AxisY.Title = "Current / nA";
+                    break;
                 case 0:
                     _selectedAxisY = typeAxisY.Current_in_uA;
                     chartVoltammogram.ChartAreas[0].AxisY.Title = "Current / μA";
@@ -1923,6 +1969,7 @@ namespace Voltammogrammer
 
                     switch (_selectedAxisY)
                     {
+                        case typeAxisY.Current_in_nA:
                         case typeAxisY.Current_in_uA:
                         case typeAxisY.Current_in_mA:
                             itr.YValues[0] = itr.YValues[CURRENT] / _scaleAxisY[(int)typeAxisY.Current_in_uA] * _scaleAxisY[(int)_selectedAxisY];
@@ -2022,6 +2069,11 @@ namespace Voltammogrammer
         }
 
         private void toolStripComboBoxSeries_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            updateSelectionOfSeries();
+        }
+
+        private void updateSelectionOfSeries()
         {
             int idx = toolStripComboBoxSeries.SelectedIndex;
 
@@ -2241,6 +2293,7 @@ namespace Voltammogrammer
             {
                 case typeAxisY.Current_in_mA:
                 case typeAxisY.Current_in_uA:
+                case typeAxisY.Current_in_nA:
                     {
                         _currentMinY = Double.NaN;
                         _currentMaxY = Double.NaN;
@@ -2603,8 +2656,10 @@ namespace Voltammogrammer
         {
             //MessageBox.Show(((ToolStripMenuItem)sender).Text);
 
-            string name = ((ToolStripMenuItem)sender).Text;
-            int idx = _series.IndexOf(name);
+            //string name = ((ToolStripMenuItem)sender).Text;
+            //int idx = _series.IndexOf(name)
+            ToolStripItemCollection tsic = toolStripDropDownButton2.DropDownItems;
+            int idx = tsic.IndexOf((ToolStripMenuItem)sender) - 2;
 
             RemoveSeries(idx);
         }
@@ -2671,6 +2726,7 @@ namespace Voltammogrammer
             {
                 case typeAxisY.Current_in_mA:
                 case typeAxisY.Current_in_uA:
+                case typeAxisY.Current_in_nA:
                     {
                         _currentMinY = Double.NaN;
                         _currentMaxY = Double.NaN;

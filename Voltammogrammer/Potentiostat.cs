@@ -1768,11 +1768,11 @@ namespace Voltammogrammer
 
                     if (_file_path != null)
                     {
-                        _series = _voltammogram.AddNewSeries(true, System.IO.Path.GetFileName(_file_path), true);
+                        _series = _voltammogram.AddNewSeries(true, System.IO.Path.GetFileName(_file_path), System.IO.Path.GetFileName(_file_path), true);
                     }
                     else
                     {
-                        _series = _voltammogram.AddNewSeries(true, "Scan", true);
+                        _series = _voltammogram.AddNewSeries(true, "Scan", "Scan", true);
                     }
 
                     _exp_conditions = new XMLDataHolder("experimantal-conditions");

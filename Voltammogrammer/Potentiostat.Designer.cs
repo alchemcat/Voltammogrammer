@@ -841,7 +841,7 @@
             this.toolStrip2.Location = new System.Drawing.Point(3, 28);
             this.toolStrip2.Name = "toolStrip2";
             this.toolStrip2.RenderMode = System.Windows.Forms.ToolStripRenderMode.Professional;
-            this.toolStrip2.Size = new System.Drawing.Size(870, 27);
+            this.toolStrip2.Size = new System.Drawing.Size(693, 27);
             this.toolStrip2.TabIndex = 3;
             //
             // toolStripLabel1
@@ -853,7 +853,7 @@
             // toolStripTextBoxInitialV
             //
             this.toolStripTextBoxInitialV.Name = "toolStripTextBoxInitialV";
-            this.toolStripTextBoxInitialV.Size = new System.Drawing.Size(132, 27);
+            this.toolStripTextBoxInitialV.Size = new System.Drawing.Size(70, 27);
             this.toolStripTextBoxInitialV.Text = "0";
             //
             // toolStripLabel2
@@ -865,7 +865,7 @@
             // toolStripTextBoxVertexV
             //
             this.toolStripTextBoxVertexV.Name = "toolStripTextBoxVertexV";
-            this.toolStripTextBoxVertexV.Size = new System.Drawing.Size(132, 27);
+            this.toolStripTextBoxVertexV.Size = new System.Drawing.Size(70, 27);
             this.toolStripTextBoxVertexV.Text = "500";
             this.toolStripTextBoxVertexV.Validating += new System.ComponentModel.CancelEventHandler(this.toolStripTextBoxVertexV_Validating);
             //
@@ -878,7 +878,7 @@
             // toolStripTextBoxScanrate
             //
             this.toolStripTextBoxScanrate.Name = "toolStripTextBoxScanrate";
-            this.toolStripTextBoxScanrate.Size = new System.Drawing.Size(132, 27);
+            this.toolStripTextBoxScanrate.Size = new System.Drawing.Size(70, 27);
             this.toolStripTextBoxScanrate.Text = "100";
             this.toolStripTextBoxScanrate.Validating += new System.ComponentModel.CancelEventHandler(this.toolStripTextBoxScanrate_Validating);
             //
@@ -891,7 +891,7 @@
             // toolStripTextBoxRepeat
             //
             this.toolStripTextBoxRepeat.Name = "toolStripTextBoxRepeat";
-            this.toolStripTextBoxRepeat.Size = new System.Drawing.Size(100, 27);
+            this.toolStripTextBoxRepeat.Size = new System.Drawing.Size(70, 27);
             this.toolStripTextBoxRepeat.Text = "1";
             //
             // timerCurrentEandI

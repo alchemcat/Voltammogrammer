@@ -610,7 +610,8 @@
             "Current / mA",
             "Coulomb / mC",
             "Coulomb / C",
-            "Potential / mV"});
+            "Potential / mV",
+            "Current / nA"});
             this.toolStripComboBoxAxisY.Name = "toolStripComboBoxAxisY";
             this.toolStripComboBoxAxisY.Size = new System.Drawing.Size(130, 28);
             this.toolStripComboBoxAxisY.SelectedIndexChanged += new System.EventHandler(this.toolStripComboBoxAxisY_SelectedIndexChanged);
