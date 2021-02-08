@@ -41,7 +41,7 @@ Install Digilent Waveforms SDK 3.10.9 or later version ([**https://reference.dig
 
 2. Then, launch the software as shown in a screenshot below.
 
-   <img src=".README.md/Fig2.png" alt="Fig2" width="50%" />
+   <img src=".README.md/Fig2.png" alt="Fig2" width="75%" />
 
 3. Press the `Connect` button to energize the device. If multiple AD2s are connected to the computer, select a target device from the pull-down list (in the drop-down menu from the `Connect` button) enumerating device IDs of AD2s.
 
@@ -55,12 +55,14 @@ Install Digilent Waveforms SDK 3.10.9 or later version ([**https://reference.dig
 
 8. During the recording, you can stop the recording at any time by clicking `Stop` button.
 
-9. After the recording, you should see two temporal response-curves of current (red line) and potential (blue line) as shown below. First two seconds in these responses correspond the duration for pre-electrolysis at the `initial` potential to attenuate a (non-Faradaic) charging current. Then, the triangle-shaped potential waveform (blue line) was input to the device that outputting a potential waveform from which the Faradaic current response (red line) was calculated according to Ohm's law with the reference resistor selected. ![Fig9](.README.md/Fig9.png)
+9. After the recording, you should see two temporal response-curves of current (red line) and potential (blue line) as shown below. First two seconds in these responses correspond the duration for pre-electrolysis at the `initial` potential to attenuate a (non-Faradaic) charging current. Then, the triangle-shaped potential waveform (blue line) was input to the device that outputting a potential waveform from which the Faradaic current response (red line) was calculated according to Ohm's law with the reference resistor selected.
+
+   <img src=".README.md/Fig9.png" alt="Fig2" width="75%" /> 
 
 10. Meanwhile, the actual cyclic voltammogram appears in the "Actual Voltammogram" window. In this window, you can organize a set of voltammograms with facility.
 
 11. As shown in a screenshot below, the window consists of three toolbars with the main menu. By using the appearance toolbar, you can change the appearance of respective voltammogram (line color, line style, and line width). By using the mathematics toolbar, you can manipulate a voltammogram in terms of current (with text boxes of `+I`  for offset and `xI` for multiplication) and potential (with a text box of `Fc(+/0)` for offset). Note that the mathematical manipulation-history is noted in the graph legend. By using the axes toolbar, you can change units for horizontal and vertical axes. By using the "Half-wave potential" sub-window (invoked by `Calculation` > `Half-wave potential...` menu), you can semi-automatically calculate the half-wave potential of a cyclic voltammogram acquired. 
-    ![Fig 11](.README.md/Fig11.png)
+    <img src=".README.md/Fig11.png" alt="Fig2" width="75%" />
 
 12. Finally, such organized voltammogramms can be saved to the file you specified by clicking `Save As` menu in the main toolbar. In the dialogue box, you can also specify whether or not to decimate the raw data points of voltammograms.
 
