@@ -10,7 +10,7 @@ Voltammogrammer is a software controlling a small yet powerful potentiostat, Poc
 
 Using this Voltammogrammer software with the PocketPotentiostat hardware, you can conduct:
 
-- various voltammetric measurements: cyclic voltammetry (CV);  bulk electrolysis (controlled-potential coulometry); linear scan voltammetry (LSV); double-potential-step chronoamperometry; and Osteryoung square-wave voltammetry (OSWV) with or without *i*R potential-drop compensation, where a digital first-order sinc filter (sinc^1^) can attenuate noise from power line (50 or 60 Hz)
+- various voltammetric measurements: cyclic voltammetry (CV);  bulk electrolysis (controlled-potential coulometry); linear scan voltammetry (LSV); double-potential-step chronoamperometry; and Osteryoung square-wave voltammetry (OSWV) with or without *i*R potential-drop compensation, where a digital first-order sinc filter (sinc<sup>1</sup>) can attenuate noise from power line (50 or 60 Hz)
 - a full-automatic hydrodynamic measurement with an external rotating-disk electrode apparatus (RDE)
 - various galvaometric measurements: cyclic galvanometry and constant current
 - electrochemical impedance spectroscopy by means of an impedance analyzer 
