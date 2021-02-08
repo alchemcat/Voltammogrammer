@@ -41,7 +41,7 @@ Install Digilent Waveforms SDK 3.10.9 or later version ([**https://reference.dig
 
 2. Then, launch the software as shown in a screenshot below.
 
-   <img src=".README.md/Fig2.png" alt="Fig2" width="60%" />
+   <img src=".README.md/Fig2.png" alt="Fig2" width=50% />
 
 3. Press the `Connect` button to energize the device. If multiple AD2s are connected to the computer, select a target device from the pull-down list (in the drop-down menu from the `Connect` button) enumerating device IDs of AD2s.
 
