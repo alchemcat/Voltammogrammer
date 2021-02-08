@@ -59,10 +59,8 @@ namespace Voltammogrammer
                 xr.Close();
 
             }
+
             dataGridView1.DataSource = _tableRegister;
-
-
-            dataGridView1.Columns[0].ReadOnly = true;
         }
 
         private void Configure_Potentiostat_FormClosing(object sender, FormClosingEventArgs e)
@@ -84,6 +82,10 @@ namespace Voltammogrammer
             //    _ps.SetCalibrationData(p, c);
             //}
 
+            dataGridView1[1, 6].Value = dataGridView1[1, 3].Value;
+            dataGridView1[2, 6].Value = dataGridView1[2, 3].Value;
+            dataGridView1[3, 6].Value = dataGridView1[3, 3].Value;
+
             System.Xml.Serialization.XmlSerializer serializer2 = new System.Xml.Serialization.XmlSerializer(typeof(DataTable));
             StringBuilder sb2 = new StringBuilder();
             XmlWriter xw2 = XmlWriter.Create(sb2);
@@ -100,6 +102,15 @@ namespace Voltammogrammer
         {
             Properties.Settings.Default.configure_register_values = "";
             Properties.Settings.Default.Save();
+        }
+
+        private void dataGridView1_DataBindingComplete(object sender, DataGridViewBindingCompleteEventArgs e)
+        {
+            dataGridView1.Columns[0].ReadOnly = true;
+            dataGridView1.Columns[0].DefaultCellStyle.BackColor = Color.LightGray;
+
+            dataGridView1.Rows[6].DefaultCellStyle.BackColor = Color.LightGray;
+            dataGridView1.Rows[6].ReadOnly = true;
         }
     }
 }
