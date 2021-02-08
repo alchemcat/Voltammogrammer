@@ -37,7 +37,7 @@ Install Digilent Waveforms SDK 3.10.9 or later version ([**https://reference.dig
 
 1. Connect the Analog Discovery 2 (AD2) attached with the device to the laptop computer via a USB cable. If you need to use the voltage regulator (converting of +5 V to ±12 V for the potentiostat), connect an external +5 DCV power supply to the AD2 and switch the regulator on by sliding the switch to the upside (as shown below).
 
-   <img src=".README.md/Fig1.jpg" alt="Fig1" width=25% />
+   <img src=".README.md/Fig1.jpg" alt="Fig1" width=10% />
 
 2. Then, launch the software as shown in a screenshot below.
 
