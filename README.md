@@ -45,7 +45,9 @@ Install Digilent Waveforms SDK 3.10.9 or later version ([**https://reference.dig
 
 3. Press the `Connect` button to energize the device. If multiple AD2s are connected to the computer, select a target device from the pull-down list (in the drop-down menu from the `Connect` button) enumerating device IDs of AD2s.
 
-4. Configure values of reference resistor in the "Configure_Potentiostat" sub-window (invoked by `Record` > `Configure Potentiostat...` menu) in order to match up these values with those of actual resistors inserted in the device *a priori*. This configuration is essential for an internal *I*-*V* converter in the device. For example, a resistor of 10 MΩ is required to sense a current in a few nA scale with the device. ![Fig4](.README.md/Fig4.png)
+4. Configure values of reference resistor in the "Configure_Potentiostat" sub-window (invoked by `Record` > `Configure Potentiostat...` menu) in order to match up these values with those of actual resistors inserted in the device *a priori*. This configuration is essential for an internal *I*-*V* converter in the device. For example, a resistor of 10 MΩ is required to sense a current in a few nA scale with the device. 
+
+   <img src=".README.md/Fig4.png" alt="Fig2" width="90%" />
 
 5. Select "Cyclic Voltammetry" as a `technique`, "+-200 uA" as a `current range` from combo boxes. When you select the current range, mechanical relay-switches in the device turn on an analog circuit to use the target reference resistor from a set of resistors (10 kΩ in this case) for an internal *I*-*V* converter in the device. Set "-300", "500", "100", and "1" to text boxes of the `initial` potential, `vertex` potential, `scanning rate`, and `repeat` count, respectively, for the measurement of cyclic voltammetry.
 
