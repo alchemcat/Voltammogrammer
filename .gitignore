@@ -12,6 +12,7 @@ dwf.h
 !cacert.pem
 hostname.txt
 ProjectBuildCounter-master/
+*.pdn
 
 # User-specific files
 *.rsuser
