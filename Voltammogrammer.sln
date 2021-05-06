@@ -7,12 +7,18 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Voltammogrammer", "Voltammo
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug (for simplified ver.)|Any CPU = Debug (for simplified ver.)|Any CPU
 		Debug|Any CPU = Debug|Any CPU
+		Release (for simplified ver.)|Any CPU = Release (for simplified ver.)|Any CPU
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{A1482912-0F53-4973-9307-DFFE82BC2314}.Debug (for simplified ver.)|Any CPU.ActiveCfg = Debug (for simplified ver.)|Any CPU
+		{A1482912-0F53-4973-9307-DFFE82BC2314}.Debug (for simplified ver.)|Any CPU.Build.0 = Debug (for simplified ver.)|Any CPU
 		{A1482912-0F53-4973-9307-DFFE82BC2314}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{A1482912-0F53-4973-9307-DFFE82BC2314}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A1482912-0F53-4973-9307-DFFE82BC2314}.Release (for simplified ver.)|Any CPU.ActiveCfg = Release (for simplified ver.)|Any CPU
+		{A1482912-0F53-4973-9307-DFFE82BC2314}.Release (for simplified ver.)|Any CPU.Build.0 = Release (for simplified ver.)|Any CPU
 		{A1482912-0F53-4973-9307-DFFE82BC2314}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{A1482912-0F53-4973-9307-DFFE82BC2314}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection

@@ -19,7 +19,7 @@
     Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
 */
 
-#define VERSION_0_9e
+//#define VERSION_0_9e
 
 using System;
 using System.ComponentModel;
@@ -58,6 +58,15 @@ namespace Voltammogrammer
         const bool VERSION_0_9c = false;
         const bool VERSION_0_9d = false;
         const bool VERSION_0_9e = true;
+        const bool VERSION_0_9k = false;
+        const int CHANNEL_POTENTIAL = 1; const int CHANNEL_CURRENT = 2;
+#elif VERSION_0_9k
+        const string VERSION_string = "0.9k (the simplified version)";
+        const bool VERSION_0_5 = false;
+        const bool VERSION_0_9c = false;
+        const bool VERSION_0_9d = false;
+        const bool VERSION_0_9e = false;
+        const bool VERSION_0_9k = true;
         const int CHANNEL_POTENTIAL = 1; const int CHANNEL_CURRENT = 2;
 #elif VERSION_0_9j
         const string VERSION_string = "0.9j";
@@ -65,6 +74,7 @@ namespace Voltammogrammer
         const bool VERSION_0_9c = false;
         const bool VERSION_0_9d = false;
         const bool VERSION_0_9e = true;
+        const bool VERSION_0_9k = false;
         const int CHANNEL_POTENTIAL = 2; const int CHANNEL_CURRENT = 1;
 #elif VERSION_0_9c
         const string VERSION_string = "0.9c";
@@ -72,6 +82,7 @@ namespace Voltammogrammer
         const bool VERSION_0_9c = true;
         const bool VERSION_0_9d = false;
         const bool VERSION_0_9e = false;
+        const bool VERSION_0_9k = false;
         const int CHANNEL_POTENTIAL = 2; const int CHANNEL_CURRENT = 1;
 #elif VERSION_0_9d
         const string VERSION_string = "0.9d";
@@ -79,6 +90,7 @@ namespace Voltammogrammer
         const bool VERSION_0_9c = false;
         const bool VERSION_0_9d = true;
         const bool VERSION_0_9e = false;
+        const bool VERSION_0_9k = false;
         const int CHANNEL_POTENTIAL = 2; const int CHANNEL_CURRENT = 1;
 #endif
 
@@ -1454,6 +1466,7 @@ namespace Voltammogrammer
 
                     if (i >= 0)
                     {
+                        // FDwfAnalogInBufferSizeSetで16個の指定だが、ここでは、最初の1個だけデータとして採取。いまのところ、平均していない。
                         FDwfAnalogInStatusData2(_handle, (CHANNEL_POTENTIAL - 1), _readingBuffers[(CHANNEL_POTENTIAL - 1)], pWrite, 1);
                         //_recordingSeries[1][cSamples] = (_readingBuffers[0][0] * -1000.0);// * -1)*1000.0;// とりあえず最初の値のみ記録。平均しない。
                         //Array.Copy(_readingBuffers[(CHANNEL_POTENTIAL - 1)], 0, _recordingSeries[CHANNEL_POTENTIAL], cSamples, cAvailable);
@@ -1895,7 +1908,8 @@ namespace Voltammogrammer
                                         chartVoltammogram.Series[5].Points.AddXY(_recordingSeries[0][trigger] / 1000, (_recordingSeries[CHANNEL_CURRENT][trigger] - CURRENT_OFFSET) * ((double)_selectedCurrentFactor));
                                         chartVoltammogram.Series[5].Points.AddXY(_recordingSeries[0][end] / 1000, (_recordingSeries[CHANNEL_CURRENT][end] - CURRENT_OFFSET) * ((double)_selectedCurrentFactor));
 
-                                        if (_nlr.perform(ref _recordingSeries[0], ref _recordingSeries[CHANNEL_CURRENT], (double)_selectedCurrentFactor, (double)_millivoltVertex, trigger, end, _recordingSeries[0][trigger - (int)Math.Round(0.005 * 3 * _herzAcquisition)], out double c, out double r))
+                                        // beginとendの範囲でtの関数でfittingされる。begin0は、本当のt0の推定値。デッドタイムの倍数にしてあるが、何倍がよいか？もう少し検討が必要
+                                        if (_nlr.perform(ref _recordingSeries[0], ref _recordingSeries[CHANNEL_CURRENT], (double)_selectedCurrentFactor, (double)_millivoltVertex, trigger, end, _recordingSeries[0][trigger - (int)Math.Round(0.005 * 1 * _herzAcquisition)], out double c, out double r))
                                         {
                                             if (cnt > 0) { cap += c; res += r; }
 
@@ -2521,7 +2535,7 @@ namespace Voltammogrammer
             }
             else
             {
-                if (VERSION_0_9d || VERSION_0_9e)
+                if (VERSION_0_9d || VERSION_0_9e || VERSION_0_9k)
                 {
                     FDwfDigitalIOOutputEnableSet(_handle, 0b1111111111111111);
                 }
@@ -2568,60 +2582,63 @@ namespace Voltammogrammer
                     FDwfDigitalIOOutputEnableSet(_handle, 0b1011111100111111);
                     FDwfDigitalIOOutputSet(_handle, 0b0000000000000000);
                 }
-                else if(VERSION_0_9c)
+                else if (VERSION_0_9c)
                 {
                     FDwfDigitalIOOutputEnableSet(_handle, 0b1111111101111111);
                     FDwfDigitalIOOutputSet(_handle, 0b0000000000000000);
 
-                  //  // self test of latching...
-                  //  ////////////////////////////////////////////  CBA     CBA
-                  ////FDwfDigitalIOOutputSet(_handle,           0b0011100000111000); Thread.Sleep(DELAY_TIME_SWITCHING_RELAY);
-                  //  FDwfDigitalIOOutputSet(_handle,           0b0010000000000000); Thread.Sleep(DELAY_TIME_SWITCHING_RELAY);
-                  //  FDwfDigitalIOOutputSet(_handle,           0b0001000000000000); Thread.Sleep(DELAY_TIME_SWITCHING_RELAY);
-                  //  FDwfDigitalIOOutputSet(_handle,           0b0000100000000000); Thread.Sleep(DELAY_TIME_SWITCHING_RELAY);
+                    //  // self test of latching...
+                    //  ////////////////////////////////////////////  CBA     CBA
+                    ////FDwfDigitalIOOutputSet(_handle,           0b0011100000111000); Thread.Sleep(DELAY_TIME_SWITCHING_RELAY);
+                    //  FDwfDigitalIOOutputSet(_handle,           0b0010000000000000); Thread.Sleep(DELAY_TIME_SWITCHING_RELAY);
+                    //  FDwfDigitalIOOutputSet(_handle,           0b0001000000000000); Thread.Sleep(DELAY_TIME_SWITCHING_RELAY);
+                    //  FDwfDigitalIOOutputSet(_handle,           0b0000100000000000); Thread.Sleep(DELAY_TIME_SWITCHING_RELAY);
 
-                  //  Console.WriteLine("Now, check if the latching sounds 6 times.");
-                  //  Thread.Sleep(2000);
+                    //  Console.WriteLine("Now, check if the latching sounds 6 times.");
+                    //  Thread.Sleep(2000);
 
-                  //  Console.WriteLine("C-up?"); FDwfDigitalIOOutputSet(_handle,           0b0000000000100000); Thread.Sleep(DELAY_TIME_SWITCHING_RELAY);
-                  //  Console.WriteLine("B-up?"); FDwfDigitalIOOutputSet(_handle,           0b0000000000010000); Thread.Sleep(DELAY_TIME_SWITCHING_RELAY);
-                  //  Console.WriteLine("A-up?"); FDwfDigitalIOOutputSet(_handle,           0b0000000000001000); Thread.Sleep(DELAY_TIME_SWITCHING_RELAY);
-                  //  Console.WriteLine("C-dn?"); FDwfDigitalIOOutputSet(_handle,           0b0010000000000000); Thread.Sleep(DELAY_TIME_SWITCHING_RELAY);
-                  //  Console.WriteLine("B-dn?"); FDwfDigitalIOOutputSet(_handle,           0b0001000000000000); Thread.Sleep(DELAY_TIME_SWITCHING_RELAY);
-                  //  Console.WriteLine("A-dn?"); FDwfDigitalIOOutputSet(_handle,           0b0000100000000000); Thread.Sleep(DELAY_TIME_SWITCHING_RELAY);
+                    //  Console.WriteLine("C-up?"); FDwfDigitalIOOutputSet(_handle,           0b0000000000100000); Thread.Sleep(DELAY_TIME_SWITCHING_RELAY);
+                    //  Console.WriteLine("B-up?"); FDwfDigitalIOOutputSet(_handle,           0b0000000000010000); Thread.Sleep(DELAY_TIME_SWITCHING_RELAY);
+                    //  Console.WriteLine("A-up?"); FDwfDigitalIOOutputSet(_handle,           0b0000000000001000); Thread.Sleep(DELAY_TIME_SWITCHING_RELAY);
+                    //  Console.WriteLine("C-dn?"); FDwfDigitalIOOutputSet(_handle,           0b0010000000000000); Thread.Sleep(DELAY_TIME_SWITCHING_RELAY);
+                    //  Console.WriteLine("B-dn?"); FDwfDigitalIOOutputSet(_handle,           0b0001000000000000); Thread.Sleep(DELAY_TIME_SWITCHING_RELAY);
+                    //  Console.WriteLine("A-dn?"); FDwfDigitalIOOutputSet(_handle,           0b0000100000000000); Thread.Sleep(DELAY_TIME_SWITCHING_RELAY);
 
-                  //  Console.WriteLine("Did sound 6 times?");
-                  //  Thread.Sleep(2000);
+                    //  Console.WriteLine("Did sound 6 times?");
+                    //  Thread.Sleep(2000);
                 }
-                else if(VERSION_0_9d)
+                else if (VERSION_0_9d)
                 {
                     //FDwfDigitalIOOutputEnableSet(_handle, 0b1111111111111111);
                     //FDwfDigitalIOOutputSet(_handle, 0b0000000010000000);
                 }
-                else if(VERSION_0_9e)
+                else if (VERSION_0_9e)
                 {
                     //FDwfDigitalIOOutputEnableSet(_handle, 0b1111111111111111);
                     //FDwfDigitalIOOutputSet(_handle, 0b0000000010000000);
 
-                  //  // self test of latching...
-                  //  //////////////////////////////////////////// CBA     CBA
-                  ////FDwfDigitalIOOutputSet(_handle,           0b0111000001110000); Thread.Sleep(DELAY_TIME_SWITCHING_RELAY);
-                  //  FDwfDigitalIOOutputSet(_handle,           0b0100000000000000); Thread.Sleep(DELAY_TIME_SWITCHING_RELAY);
-                  //  FDwfDigitalIOOutputSet(_handle,           0b0010000000000000); Thread.Sleep(DELAY_TIME_SWITCHING_RELAY);
-                  //  FDwfDigitalIOOutputSet(_handle,           0b0001000000000000); Thread.Sleep(DELAY_TIME_SWITCHING_RELAY);
+                    //  // self test of latching...
+                    //  //////////////////////////////////////////// CBA     CBA
+                    ////FDwfDigitalIOOutputSet(_handle,           0b0111000001110000); Thread.Sleep(DELAY_TIME_SWITCHING_RELAY);
+                    //  FDwfDigitalIOOutputSet(_handle,           0b0100000000000000); Thread.Sleep(DELAY_TIME_SWITCHING_RELAY);
+                    //  FDwfDigitalIOOutputSet(_handle,           0b0010000000000000); Thread.Sleep(DELAY_TIME_SWITCHING_RELAY);
+                    //  FDwfDigitalIOOutputSet(_handle,           0b0001000000000000); Thread.Sleep(DELAY_TIME_SWITCHING_RELAY);
 
-                  //  Console.WriteLine("Now, check if the latching sounds 6 times.");
-                  //  Thread.Sleep(2000);
+                    //  Console.WriteLine("Now, check if the latching sounds 6 times.");
+                    //  Thread.Sleep(2000);
 
-                  //  Console.WriteLine("C-up?"); FDwfDigitalIOOutputSet(_handle,           0b0000000001000000); Thread.Sleep(DELAY_TIME_SWITCHING_RELAY);
-                  //  Console.WriteLine("B-up?"); FDwfDigitalIOOutputSet(_handle,           0b0000000000100000); Thread.Sleep(DELAY_TIME_SWITCHING_RELAY);
-                  //  Console.WriteLine("A-up?"); FDwfDigitalIOOutputSet(_handle,           0b0000000000010000); Thread.Sleep(DELAY_TIME_SWITCHING_RELAY);
-                  //  Console.WriteLine("C-dn?"); FDwfDigitalIOOutputSet(_handle,           0b0100000000000000); Thread.Sleep(DELAY_TIME_SWITCHING_RELAY);
-                  //  Console.WriteLine("B-dn?"); FDwfDigitalIOOutputSet(_handle,           0b0010000000000000); Thread.Sleep(DELAY_TIME_SWITCHING_RELAY);
-                  //  Console.WriteLine("A-dn?"); FDwfDigitalIOOutputSet(_handle,           0b0001000000000000); Thread.Sleep(DELAY_TIME_SWITCHING_RELAY);
+                    //  Console.WriteLine("C-up?"); FDwfDigitalIOOutputSet(_handle,           0b0000000001000000); Thread.Sleep(DELAY_TIME_SWITCHING_RELAY);
+                    //  Console.WriteLine("B-up?"); FDwfDigitalIOOutputSet(_handle,           0b0000000000100000); Thread.Sleep(DELAY_TIME_SWITCHING_RELAY);
+                    //  Console.WriteLine("A-up?"); FDwfDigitalIOOutputSet(_handle,           0b0000000000010000); Thread.Sleep(DELAY_TIME_SWITCHING_RELAY);
+                    //  Console.WriteLine("C-dn?"); FDwfDigitalIOOutputSet(_handle,           0b0100000000000000); Thread.Sleep(DELAY_TIME_SWITCHING_RELAY);
+                    //  Console.WriteLine("B-dn?"); FDwfDigitalIOOutputSet(_handle,           0b0010000000000000); Thread.Sleep(DELAY_TIME_SWITCHING_RELAY);
+                    //  Console.WriteLine("A-dn?"); FDwfDigitalIOOutputSet(_handle,           0b0001000000000000); Thread.Sleep(DELAY_TIME_SWITCHING_RELAY);
 
-                  //  Console.WriteLine("Did sound 6 times?");
-                  //  Thread.Sleep(2000);
+                    //  Console.WriteLine("Did sound 6 times?");
+                    //  Thread.Sleep(2000);
+                }
+                else if (VERSION_0_9k)
+                {
                 }
                 else
                 {
@@ -3188,11 +3205,24 @@ namespace Voltammogrammer
                     chartVoltammogram.ChartAreas[0].AxisY2.IsLogarithmic = false;
                     chartVoltammogram.ChartAreas[0].AxisY2.MinorTickMark.Enabled = false;
 
-                    if (_selectedMode_previous != modeMeasurement.galvanometry) toolStripComboBoxRange.SelectedIndex = 0;
+                    if (_selectedMode_previous != modeMeasurement.galvanometry) toolStripComboBoxRange.SelectedIndex = 2;
 
                     break;
 
                 case modeMeasurement.eis:
+                    chartVoltammogram.Series[1].Points.Clear();
+                    chartVoltammogram.Series[2].Points.Clear();
+                    chartVoltammogram.Series[3].Points.Clear();
+                    chartVoltammogram.Series[4].Points.Clear();
+                    chartVoltammogram.Series[5].Points.Clear();
+
+                    chartVoltammogram.Series[6].Points.SuspendUpdates();
+                    chartVoltammogram.Series[6].Points.Clear();
+                    chartVoltammogram.Series[6].Points.AddXY(1, 1);
+                    chartVoltammogram.Series[6].Points.ResumeUpdates();
+
+                    chartVoltammogram.Update();
+
                     unit1 = "mV"; unit2 = "Hz";
                     chartVoltammogram.ChartAreas[0].AxisX.Title = "Re[Z] / ohm";
                     chartVoltammogram.ChartAreas[0].AxisX.Maximum = Double.NaN;
@@ -3616,7 +3646,7 @@ namespace Voltammogrammer
                     FDwfDigitalIOOutputSet(_handle, (dwRead & 0b0111111111111111) ^ 0b0000000000000000);
                 }
             }
-            else if (VERSION_0_9d || VERSION_0_9e)
+            else if (VERSION_0_9d || VERSION_0_9e || VERSION_0_9k)
             {
                 if (on)
                 {
@@ -3828,6 +3858,28 @@ namespace Voltammogrammer
                 Thread.Sleep(DELAY_TIME_SWITCHING_RELAY);
                 FDwfDigitalIOOutputSet(_handle, (dwRead & 0b1111101111111011) ^ 0b0000000000000000);
             }
+            else if (VERSION_0_9k) // DONE
+            {
+                if (open)
+                {
+                    FDwfDigitalIOOutputSet(_handle, (dwRead & 0b1111111111111011) ^ 0b0000000000000100);
+                }
+                else
+                {
+                    Invoke((Action)delegate ()
+                    {
+                        if (!toolStripMenuGalvanoStat.Checked)
+                        {
+                            FDwfDigitalIOOutputSet(_handle, (dwRead & 0b1111111111111011) ^ 0b0000000000000000);
+                        }
+                        else
+                        {
+                            FDwfDigitalIOOutputSet(_handle, dwRead); // Digital I/Oの状態を元の状態に戻す
+                            open = true;
+                        }
+                    });
+                }
+            }
             else
             {
                 if (open)
@@ -4022,6 +4074,39 @@ namespace Voltammogrammer
                         Thread.Sleep(DELAY_TIME_SWITCHING_RELAY);
                         FDwfDigitalIOOutputSet(_handle, (dwRead & 0b1000111110001111) ^ 0b0000000000000000);
             }
+            else if (VERSION_0_9k)
+            {
+                switch (range) // C1とC2は無いので、強制的にC3扱いにする
+                {
+                    //case Potentiostat.rangeCurrent.Range200mA:
+                    //    //////////////////////////////////////////// CBA     CBA           CBA     CBA
+                    //    FDwfDigitalIOOutputSet(_handle, (dwRead & 0b1000111110001111) ^ 0b0010000001010000); break;
+
+                    //case Potentiostat.rangeCurrent.Range20mA:
+                    //    //////////////////////////////////////////// CBA     CBA           CBA     CBA
+                    //    FDwfDigitalIOOutputSet(_handle, (dwRead & 0b1000111110001111) ^ 0b0110000000010000); break;
+
+                    case Potentiostat.rangeCurrent.Range2mA:
+                        ////////////////////////////////////////////          BA                    BA
+                        FDwfDigitalIOOutputSet(_handle, (dwRead & 0b1111111111001111) ^ 0b0000000000100000); break;
+
+                    case Potentiostat.rangeCurrent.Range200uA:
+                        ////////////////////////////////////////////          BA                    BA
+                        FDwfDigitalIOOutputSet(_handle, (dwRead & 0b1111111111001111) ^ 0b0000000000000000); break;
+
+                    case Potentiostat.rangeCurrent.Range20uA:
+                        ////////////////////////////////////////////          BA                    BA
+                        FDwfDigitalIOOutputSet(_handle, (dwRead & 0b1111111111001111) ^ 0b0000000000110000); break;
+
+                    case Potentiostat.rangeCurrent.Range2uA:
+                        ////////////////////////////////////////////          BA                    BA
+                        FDwfDigitalIOOutputSet(_handle, (dwRead & 0b1111111111001111) ^ 0b0000000000010000); break;
+
+                    default: // Potentiostat.rangeMeasurement.RangeRAW; .Range200mA; .Range20mA (same as the Range200uA-case)
+                        ////////////////////////////////////////////          BA                    BA
+                        FDwfDigitalIOOutputSet(_handle, (dwRead & 0b1111111111001111) ^ 0b0000000000000000); break;
+                }
+            }
             else
             {
                 switch (range)
@@ -4079,7 +4164,7 @@ namespace Voltammogrammer
 
                 Thread.Sleep(500);
 
-                if(VERSION_0_9d || VERSION_0_9e)
+                if(VERSION_0_9d || VERSION_0_9e || VERSION_0_9k)
                 {
                     FDwfDigitalIOOutputSet(_handle, 0b0000000010000000);
                 }
@@ -4106,7 +4191,7 @@ namespace Voltammogrammer
 
         public void SetGalvanostat(bool on)
         {
-            if (VERSION_0_5 || VERSION_0_9c || VERSION_0_9d || VERSION_0_9e)
+            if (VERSION_0_5 || VERSION_0_9c || VERSION_0_9d || VERSION_0_9e || VERSION_0_9k)
             {
                 uint dwRead = 0b0000000000000000;
                 // fetch digital IO information from the device
@@ -4210,6 +4295,29 @@ namespace Voltammogrammer
                     Thread.Sleep(DELAY_TIME_SWITCHING_RELAY);
                     FDwfDigitalIOOutputSet(_handle, (dwRead & 0b1111000011110000) ^ 0b0000000000000000);
                 }
+                else if (VERSION_0_9k) // DONE
+                {
+                    if (on)
+                    {
+                        // 強制的にEISはoffにする
+                        Invoke((Action)delegate ()
+                        {
+                            toolStripMenuEIS.Checked = false;
+                        });
+
+                        FDwfDigitalIOOutputSet(_handle, (dwRead & 0b1111111111110000) ^ 0b0000000000001110);
+                    }
+                    else
+                    {
+                        Invoke((Action)delegate ()
+                        {
+                            if (!toolStripMenuEIS.Checked) // non-EIS mode
+                            {
+                                FDwfDigitalIOOutputSet(_handle, (dwRead & 0b1111111111110100) ^ 0b0000000000000001);
+                            }
+                        });
+                    }
+                }
 
                 _selectedMode_previous = _selectedMode;
                 if (on)
@@ -4236,7 +4344,7 @@ namespace Voltammogrammer
 
         public void SetEIS(bool on)
         {
-            if (VERSION_0_5 || VERSION_0_9c || VERSION_0_9d || VERSION_0_9e)
+            if (VERSION_0_5 || VERSION_0_9c || VERSION_0_9d || VERSION_0_9e || VERSION_0_9k)
             {
                 uint dwRead = 0b0000000000000000;
                 // fetch digital IO information from the device
@@ -4323,6 +4431,29 @@ namespace Voltammogrammer
                     }
                     Thread.Sleep(DELAY_TIME_SWITCHING_RELAY);
                     FDwfDigitalIOOutputSet(_handle, (dwRead & 0b1111010011110100) ^ 0b0000000000000000);
+                }
+                else if (VERSION_0_9k) // DONE
+                {
+                    if (on)
+                    {
+                        // 強制的にG/Sはoffにする
+                        Invoke((Action)delegate ()
+                        {
+                            toolStripMenuGalvanoStat.Checked = false;
+                        });
+
+                        FDwfDigitalIOOutputSet(_handle, (dwRead & 0b1111111111110100) ^ 0b0000000000000000);
+                    }
+                    else
+                    {
+                        Invoke((Action)delegate ()
+                        {
+                            if (!toolStripMenuGalvanoStat.Checked) // Potentiostat mode, non-EIS mode
+                            {
+                                FDwfDigitalIOOutputSet(_handle, (dwRead & 0b1111111111110100) ^ 0b0000000000000001);
+                            }
+                        });
+                    }
                 }
 
                 _selectedMode_previous = _selectedMode;
