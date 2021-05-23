@@ -143,6 +143,7 @@ namespace Voltammogrammer
 
         ToolStripMenuItem[] _toolstripmenuitemsFrequencyOfAcquisition;
         ToolStripMenuItem[] _toolstripmenuitemsRange;
+        ToolStripMenuItem[] _toolstripmenuitemsFilteringMethod;
 
         DataTable[] _tablesMethods = { new DataTable("method_table1"), new DataTable("method_table2"), new DataTable("method_table3") };
         DataTable[] _tablesRanges = { new DataTable("range_table1"), new DataTable("range_table2"), new DataTable("range_table3") };
@@ -232,6 +233,9 @@ namespace Voltammogrammer
         //double _herzAcquisition_prev;
         int _itrRecording = -1;
         bool _flag_digitalfilter = true;
+        double _target_filtering_frequency = 60.0;
+        DigitalFilter_BiQuad _digital_filter_notch = new DigitalFilter_BiQuad();
+        DigitalFilter_BiQuad _digital_filter_lowpass = new DigitalFilter_BiQuad();
 
         Arduino _arduino = new Arduino();
 
@@ -372,6 +376,12 @@ namespace Voltammogrammer
             //_tableMethod.Columns.Add("eis");
             //_tableMethod.Rows.Add( "voltamo", "galvano", "eis");
 
+
+            //
+            // Initialize the filtering method
+            //
+            _toolstripmenuitemsFilteringMethod = new ToolStripMenuItem[] { toolStripMenuItemFiltering60Hz, toolStripMenuItemFiltering50Hz };
+            SetFilteringMethod(Int32.Parse(Properties.Settings.Default.configure_filtering_method));
 
             //
             // Initialize Others
@@ -1835,6 +1845,8 @@ namespace Voltammogrammer
                     //{
                     //    _herzAcquisition = 400;
                     //}
+                    _digital_filter_notch.Notch(_target_filtering_frequency, _herzAcquisition, 1.0);
+                    _digital_filter_lowpass.LowPass(_target_filtering_frequency * 2, _herzAcquisition);
                     break;
 
                 case (int)statusMeasurement.CAGotStarted: // CA got started
@@ -2184,17 +2196,42 @@ namespace Voltammogrammer
                     {
                         if (_flag_digitalfilter)
                         {
-                            const int k = 16;
-                            if (progress >= (k - 1))
+                            if (false)
                             {
-                                for (int i = ((_itrRecording > 0) ? _itrRecording : (k - 1)); i < progress; i++)
+                                int k = (int)Math.Round(_herzAcquisition / _target_filtering_frequency * 2);
+                                //const int k = 16;
+                                if (progress >= (k - 1))
                                 {
-                                    double c = 0.0;
-                                    for (int j = 0; j < k; j++)
+                                    for (int i = ((_itrRecording > 0) ? _itrRecording : (k - 1)); i < progress; i++)
                                     {
-                                        c += _recordingSeries[CHANNEL_CURRENT][i - j] - CURRENT_OFFSET;
+                                        double c = 0.0;
+                                        for (int j = 0; j < k; j++)
+                                        {
+                                            c += _recordingSeries[CHANNEL_CURRENT][i - j] - CURRENT_OFFSET;
+                                        }
+                                        c /= k;
+
+                                        chartVoltammogram.Series[1].Points.AddXY(_recordingSeries[0][i] / 1000.00, _recordingSeries[CHANNEL_POTENTIAL][i] * POTENTIAL_SCALE); // E [mV]
+                                        chartVoltammogram.Series[2].Points.AddXY(_recordingSeries[0][i] / 1000.00, (double)c * (factorCurrent)); // I [uA]
+
+                                        _voltammogram.AddDataToCurrentSeries(
+                                            _series,
+                                            true,
+                                            _recordingSeries[CHANNEL_POTENTIAL][i] * POTENTIAL_SCALE,
+                                            formVoltammogram.typeAxisX.Potential_in_mV,
+                                            (double)c * (factorCurrent),
+                                            formVoltammogram.typeAxisY.Current_in_uA,
+                                            _recordingSeries[0][i] / 1000.00
+                                        );
                                     }
-                                    c /= k;
+                                }
+                            }
+                            else
+                            {
+                                for (int i = _itrRecording; i < progress; i++)
+                                {
+                                    double c = _digital_filter_notch.Process(_recordingSeries[CHANNEL_CURRENT][i] - CURRENT_OFFSET);
+                                    c = _digital_filter_lowpass.Process(_recordingSeries[CHANNEL_CURRENT][i] - CURRENT_OFFSET);
 
                                     chartVoltammogram.Series[1].Points.AddXY(_recordingSeries[0][i] / 1000.00, _recordingSeries[CHANNEL_POTENTIAL][i] * POTENTIAL_SCALE); // E [mV]
                                     chartVoltammogram.Series[2].Points.AddXY(_recordingSeries[0][i] / 1000.00, (double)c * (factorCurrent)); // I [uA]
@@ -2947,7 +2984,7 @@ namespace Voltammogrammer
                         {
                             double millivoltHeight = Math.Abs(_millivoltVertex - _millivoltInitial);
                             double secRecording = (2 * millivoltHeight) / _millivoltScanrate;
-                            _herzAcquisition = (1.0 / secRecording) * 5000;
+                            _herzAcquisition = (1.0 / secRecording) * 6000;
                         }
 
 
@@ -3486,7 +3523,12 @@ namespace Voltammogrammer
             }
         }
 
-        private void toolStripMenuItem1_Click(object sender, EventArgs e)
+        //private void toolStripMenuItem1_Click(object sender, EventArgs e)
+        //{
+        //    _select_rotation_speeds.Show();
+        //}
+
+        private void toolStripMenuItemConfigureRotationSpeed_Click(object sender, EventArgs e)
         {
             _select_rotation_speeds.Show();
         }
@@ -4493,7 +4535,8 @@ namespace Voltammogrammer
                 if(i == index)
                 {
                     _toolstripmenuitemsFrequencyOfAcquisition[i].Checked = true;
-                    _herzAcquisition = double.Parse(_toolstripmenuitemsFrequencyOfAcquisition[i].Tag.ToString());
+                    _herzAcquisition = double.Parse(_toolstripmenuitemsFrequencyOfAcquisition[i].Tag.ToString())
+                                       * (_target_filtering_frequency / 50.0); // for the aligmment of SINC filter (50 or 60 Hz?)
                 }
                 else
                 {
@@ -4504,11 +4547,30 @@ namespace Voltammogrammer
             Console.WriteLine("FrequencyOfAcquisition: {0} Hz", _herzAcquisition);
         }
 
+        private void SetFilteringMethod(int index)
+        {
+            for (int i = 0; i < _toolstripmenuitemsFilteringMethod.Length; i++)
+            {
+                if (i == index)
+                {
+                    _toolstripmenuitemsFilteringMethod[i].Checked = true;
+                    _target_filtering_frequency = double.Parse(_toolstripmenuitemsFilteringMethod[i].Tag.ToString());
+                }
+                else
+                {
+                    _toolstripmenuitemsFilteringMethod[i].Checked = false;
+                }
+            }
+
+            Console.WriteLine("FilteringMethod: {0} Hz", _target_filtering_frequency);
+        }
+
+
         //
         // Miscellaneous event handlers
         //
 
-        private void hzToolStripMenuItem_Click(object sender, EventArgs e)
+        private void toolStripMenuItem_Click(object sender, EventArgs e)
         {
             string senderName = ((ToolStripMenuItem)(sender)).Name;
 
@@ -4551,7 +4613,7 @@ namespace Voltammogrammer
             DEBUG_VOLTAMMOGRAM = toolStripMenuItemDebug.Checked;
         }
 
-        private void hzToolStripMenuItemAuto_Click(object sender, EventArgs e)
+        private void toolStripMenuItemAuto_Click(object sender, EventArgs e)
         {
             hzToolStripMenuItemAuto.Checked = !hzToolStripMenuItemAuto.Checked;
             if(hzToolStripMenuItemAuto.Checked)
@@ -4560,7 +4622,7 @@ namespace Voltammogrammer
             }
         }
 
-        private void hzToolStripMenuItemCustom_Click(object sender, EventArgs e)
+        private void toolStripMenuItemCustom_Click(object sender, EventArgs e)
         {
             hzToolStripMenuItemCustom.Checked = !hzToolStripMenuItemCustom.Checked;
             if(hzToolStripMenuItemCustom.Checked)
@@ -4637,13 +4699,11 @@ namespace Voltammogrammer
 
         private void toolStripMenuClearComp_Click(object sender, EventArgs e)
         {
-
             toolStripMenuOpenComp.Checked = false;
             toolStripMenuShortComp.Checked = false;
 
             _recordingSeries[CHANNEL_VIRTUAL_OPEN_RS][0] = Double.NaN;
             _recordingSeries[CHANNEL_VIRTUAL_SHORT_RS][0] = Double.NaN;
-
         }
 
         //private void toolStripButtonConnect_DropDownItemClicked(object sender, ToolStripItemClickedEventArgs e)
@@ -4721,6 +4781,47 @@ namespace Voltammogrammer
         private void toolStripMenuItemConfigure_Click(object sender, EventArgs e)
         {
             _configure_potentiostat.Show();
+        }
+
+        //private void toolStripMenuItemFiltering60Hz_Click(object sender, EventArgs e)
+        //{
+
+        //}
+
+        //private void toolStripMenuItemFiltering_Click(object sender, EventArgs e)
+        //{
+        //    ////グループのToolStripMenuItemを配列にしておく
+        //    //ToolStripMenuItem[] groupMenuItems = new ToolStripMenuItem[]
+        //    //{
+        //    //    this.toolStripMenuItemFiltering60Hz,
+        //    //    this.toolStripMenuItemFiltering50Hz,
+        //    //};
+
+        //    ////グループのToolStripMenuItemを列挙する
+        //    //foreach (ToolStripMenuItem item in groupMenuItems)
+        //    //{
+        //    //    if (object.ReferenceEquals(item, sender))
+        //    //    {
+        //    //        //ClickされたToolStripMenuItemならば、Indeterminateにする
+        //    //        item.CheckState = CheckState.Checked;
+        //    //        _target_filtering_frequency = Double.Parse(item.Tag.ToString());
+        //    //    }
+        //    //    else
+        //    //    {
+        //    //        //ClickされたToolStripMenuItemでなければ、Uncheckedにする
+        //    //        item.CheckState = CheckState.Unchecked;
+        //    //    }
+        //    //}
+        //    ToolStripMenuItem item = (ToolStripMenuItem)sender;
+        //    item.
+
+        //    SetFilteringMethod
+        //}
+
+        private void toolStripMenuItemSaveAvaragedData_DropDownItemClicked(object sender, ToolStripItemClickedEventArgs e)
+        {
+            ToolStripMenuItem item = (ToolStripMenuItem)sender;
+            SetFilteringMethod(item.DropDownItems.IndexOf(e.ClickedItem));
         }
 
         //private void toolStripComboBoxSerialPort_Click(object sender, EventArgs e)

@@ -51,6 +51,7 @@
             this.toolStripComboBoxSerialPort = new System.Windows.Forms.ToolStripComboBox();
             this.toolStripSeparator11 = new System.Windows.Forms.ToolStripSeparator();
             this.toolStripMenuItemDebug = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStripMenuItemConfigure = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator1 = new System.Windows.Forms.ToolStripSeparator();
             this.toolStripButtonRecord = new System.Windows.Forms.ToolStripSplitButton();
             this.toolStripMenuItemOCV = new System.Windows.Forms.ToolStripMenuItem();
@@ -62,6 +63,8 @@
             this.toolStripMenuItemPurge = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator5 = new System.Windows.Forms.ToolStripSeparator();
             this.toolStripMenuItemSaveAvaragedData = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStripMenuItemFiltering60Hz = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStripMenuItemFiltering50Hz = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator6 = new System.Windows.Forms.ToolStripSeparator();
             this.hzToolStripMenuItemAuto = new System.Windows.Forms.ToolStripMenuItem();
             this.hzToolStripMenuItemCustom = new System.Windows.Forms.ToolStripMenuItem();
@@ -88,7 +91,6 @@
             this.toolStripMenuGalvanoStat = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator9 = new System.Windows.Forms.ToolStripSeparator();
             this.toolStripMenuItemCalibrate = new System.Windows.Forms.ToolStripMenuItem();
-            this.toolStripMenuItemConfigure = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripButtonScan = new System.Windows.Forms.ToolStripButton();
             this.toolStripComboBoxMethod = new System.Windows.Forms.ToolStripComboBox();
             this.toolStripSeparator2 = new System.Windows.Forms.ToolStripSeparator();
@@ -117,6 +119,7 @@
             this.toolStripLabel4 = new System.Windows.Forms.ToolStripLabel();
             this.toolStripTextBoxRepeat = new System.Windows.Forms.ToolStripTextBox();
             this.timerCurrentEandI = new System.Windows.Forms.Timer(this.components);
+            this.toolStripSeparator12 = new System.Windows.Forms.ToolStripSeparator();
             this.toolStrip1.SuspendLayout();
             this.statusStrip1.SuspendLayout();
             this.toolStripContainer1.ContentPanel.SuspendLayout();
@@ -198,6 +201,8 @@
             this.toolStripButtonConnect.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.toolStripComboBoxSerialPort,
             this.toolStripSeparator11,
+            this.toolStripMenuItemConfigure,
+            this.toolStripSeparator12,
             this.toolStripMenuItemDebug});
             this.toolStripButtonConnect.Image = ((System.Drawing.Image)(resources.GetObject("toolStripButtonConnect.Image")));
             this.toolStripButtonConnect.ImageTransparentColor = System.Drawing.Color.Magenta;
@@ -220,14 +225,21 @@
             // toolStripSeparator11
             //
             this.toolStripSeparator11.Name = "toolStripSeparator11";
-            this.toolStripSeparator11.Size = new System.Drawing.Size(263, 6);
+            this.toolStripSeparator11.Size = new System.Drawing.Size(283, 6);
             //
             // toolStripMenuItemDebug
             //
             this.toolStripMenuItemDebug.Name = "toolStripMenuItemDebug";
-            this.toolStripMenuItemDebug.Size = new System.Drawing.Size(266, 26);
+            this.toolStripMenuItemDebug.Size = new System.Drawing.Size(286, 26);
             this.toolStripMenuItemDebug.Text = "Debug mode";
             this.toolStripMenuItemDebug.Click += new System.EventHandler(this.toolStripMenuItemDebug_Click);
+            //
+            // toolStripMenuItemConfigure
+            //
+            this.toolStripMenuItemConfigure.Name = "toolStripMenuItemConfigure";
+            this.toolStripMenuItemConfigure.Size = new System.Drawing.Size(286, 26);
+            this.toolStripMenuItemConfigure.Text = "Configure PocketPotentiostat...";
+            this.toolStripMenuItemConfigure.Click += new System.EventHandler(this.toolStripMenuItemConfigure_Click);
             //
             // toolStripSeparator1
             //
@@ -266,8 +278,7 @@
             this.toolStripMenuEIS,
             this.toolStripMenuGalvanoStat,
             this.toolStripSeparator9,
-            this.toolStripMenuItemCalibrate,
-            this.toolStripMenuItemConfigure});
+            this.toolStripMenuItemCalibrate});
             this.toolStripButtonRecord.Enabled = false;
             this.toolStripButtonRecord.Image = ((System.Drawing.Image)(resources.GetObject("toolStripButtonRecord.Image")));
             this.toolStripButtonRecord.ImageTransparentColor = System.Drawing.Color.Magenta;
@@ -317,7 +328,7 @@
             this.toolStripMenuItem1.Name = "toolStripMenuItem1";
             this.toolStripMenuItem1.Size = new System.Drawing.Size(326, 26);
             this.toolStripMenuItem1.Text = "Set a sequence of rotating speeds...";
-            this.toolStripMenuItem1.Click += new System.EventHandler(this.toolStripMenuItem1_Click);
+            this.toolStripMenuItem1.Click += new System.EventHandler(this.toolStripMenuItemConfigureRotationSpeed_Click);
             //
             // toolStripSeparator4
             //
@@ -342,10 +353,30 @@
             //
             this.toolStripMenuItemSaveAvaragedData.Checked = true;
             this.toolStripMenuItemSaveAvaragedData.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.toolStripMenuItemSaveAvaragedData.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.toolStripMenuItemFiltering60Hz,
+            this.toolStripMenuItemFiltering50Hz});
             this.toolStripMenuItemSaveAvaragedData.Name = "toolStripMenuItemSaveAvaragedData";
             this.toolStripMenuItemSaveAvaragedData.Size = new System.Drawing.Size(326, 26);
             this.toolStripMenuItemSaveAvaragedData.Text = "Apply a digital SINC filter (1st order)";
+            this.toolStripMenuItemSaveAvaragedData.DropDownItemClicked += new System.Windows.Forms.ToolStripItemClickedEventHandler(this.toolStripMenuItemSaveAvaragedData_DropDownItemClicked);
             this.toolStripMenuItemSaveAvaragedData.Click += new System.EventHandler(this.toolStripMenuItemSaveAvaragedData_Click);
+            //
+            // toolStripMenuItemFiltering60Hz
+            //
+            this.toolStripMenuItemFiltering60Hz.Checked = true;
+            this.toolStripMenuItemFiltering60Hz.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.toolStripMenuItemFiltering60Hz.Name = "toolStripMenuItemFiltering60Hz";
+            this.toolStripMenuItemFiltering60Hz.Size = new System.Drawing.Size(118, 26);
+            this.toolStripMenuItemFiltering60Hz.Tag = "60.0";
+            this.toolStripMenuItemFiltering60Hz.Text = "60Hz";
+            //
+            // toolStripMenuItemFiltering50Hz
+            //
+            this.toolStripMenuItemFiltering50Hz.Name = "toolStripMenuItemFiltering50Hz";
+            this.toolStripMenuItemFiltering50Hz.Size = new System.Drawing.Size(118, 26);
+            this.toolStripMenuItemFiltering50Hz.Tag = "50.0";
+            this.toolStripMenuItemFiltering50Hz.Text = "50Hz";
             //
             // toolStripSeparator6
             //
@@ -359,7 +390,7 @@
             this.hzToolStripMenuItemAuto.Name = "hzToolStripMenuItemAuto";
             this.hzToolStripMenuItemAuto.Size = new System.Drawing.Size(326, 26);
             this.hzToolStripMenuItemAuto.Text = "Auto";
-            this.hzToolStripMenuItemAuto.Click += new System.EventHandler(this.hzToolStripMenuItemAuto_Click);
+            this.hzToolStripMenuItemAuto.Click += new System.EventHandler(this.toolStripMenuItemAuto_Click);
             //
             // hzToolStripMenuItemCustom
             //
@@ -368,7 +399,7 @@
             this.hzToolStripMenuItemCustom.Name = "hzToolStripMenuItemCustom";
             this.hzToolStripMenuItemCustom.Size = new System.Drawing.Size(326, 26);
             this.hzToolStripMenuItemCustom.Text = "Custom";
-            this.hzToolStripMenuItemCustom.Click += new System.EventHandler(this.hzToolStripMenuItemCustom_Click);
+            this.hzToolStripMenuItemCustom.Click += new System.EventHandler(this.toolStripMenuItemCustom_Click);
             //
             // toolStripTextBoxFreqOfAcquisition
             //
@@ -389,7 +420,7 @@
             this.hzToolStripMenuItem7.Size = new System.Drawing.Size(326, 26);
             this.hzToolStripMenuItem7.Tag = "12800";
             this.hzToolStripMenuItem7.Text = "12.8kHz";
-            this.hzToolStripMenuItem7.Click += new System.EventHandler(this.hzToolStripMenuItem_Click);
+            this.hzToolStripMenuItem7.Click += new System.EventHandler(this.toolStripMenuItem_Click);
             //
             // hzToolStripMenuItem6
             //
@@ -397,7 +428,7 @@
             this.hzToolStripMenuItem6.Size = new System.Drawing.Size(326, 26);
             this.hzToolStripMenuItem6.Tag = "6400";
             this.hzToolStripMenuItem6.Text = "6.4kHz";
-            this.hzToolStripMenuItem6.Click += new System.EventHandler(this.hzToolStripMenuItem_Click);
+            this.hzToolStripMenuItem6.Click += new System.EventHandler(this.toolStripMenuItem_Click);
             //
             // hzToolStripMenuItem5
             //
@@ -405,7 +436,7 @@
             this.hzToolStripMenuItem5.Size = new System.Drawing.Size(326, 26);
             this.hzToolStripMenuItem5.Tag = "1600";
             this.hzToolStripMenuItem5.Text = "1.6kHz";
-            this.hzToolStripMenuItem5.Click += new System.EventHandler(this.hzToolStripMenuItem_Click);
+            this.hzToolStripMenuItem5.Click += new System.EventHandler(this.toolStripMenuItem_Click);
             //
             // hzToolStripMenuItem4
             //
@@ -415,7 +446,7 @@
             this.hzToolStripMenuItem4.Size = new System.Drawing.Size(326, 26);
             this.hzToolStripMenuItem4.Tag = "400";
             this.hzToolStripMenuItem4.Text = "400Hz";
-            this.hzToolStripMenuItem4.Click += new System.EventHandler(this.hzToolStripMenuItem_Click);
+            this.hzToolStripMenuItem4.Click += new System.EventHandler(this.toolStripMenuItem_Click);
             //
             // hzToolStripMenuItem3
             //
@@ -423,7 +454,7 @@
             this.hzToolStripMenuItem3.Size = new System.Drawing.Size(326, 26);
             this.hzToolStripMenuItem3.Tag = "100";
             this.hzToolStripMenuItem3.Text = "100Hz";
-            this.hzToolStripMenuItem3.Click += new System.EventHandler(this.hzToolStripMenuItem_Click);
+            this.hzToolStripMenuItem3.Click += new System.EventHandler(this.toolStripMenuItem_Click);
             //
             // hzToolStripMenuItem2
             //
@@ -431,7 +462,7 @@
             this.hzToolStripMenuItem2.Size = new System.Drawing.Size(326, 26);
             this.hzToolStripMenuItem2.Tag = "25";
             this.hzToolStripMenuItem2.Text = "25Hz";
-            this.hzToolStripMenuItem2.Click += new System.EventHandler(this.hzToolStripMenuItem_Click);
+            this.hzToolStripMenuItem2.Click += new System.EventHandler(this.toolStripMenuItem_Click);
             //
             // hzToolStripMenuItem1
             //
@@ -439,7 +470,7 @@
             this.hzToolStripMenuItem1.Size = new System.Drawing.Size(326, 26);
             this.hzToolStripMenuItem1.Tag = "5";
             this.hzToolStripMenuItem1.Text = "5Hz";
-            this.hzToolStripMenuItem1.Click += new System.EventHandler(this.hzToolStripMenuItem_Click);
+            this.hzToolStripMenuItem1.Click += new System.EventHandler(this.toolStripMenuItem_Click);
             //
             // toolStripSeparator7
             //
@@ -542,13 +573,6 @@
             this.toolStripMenuItemCalibrate.Size = new System.Drawing.Size(326, 26);
             this.toolStripMenuItemCalibrate.Text = "Calibrate PocketPotentiostat...";
             this.toolStripMenuItemCalibrate.Click += new System.EventHandler(this.toolStripMenuItemCalibrate_Click);
-            //
-            // toolStripMenuItemConfigure
-            //
-            this.toolStripMenuItemConfigure.Name = "toolStripMenuItemConfigure";
-            this.toolStripMenuItemConfigure.Size = new System.Drawing.Size(326, 26);
-            this.toolStripMenuItemConfigure.Text = "Configure PocketPotentiostat...";
-            this.toolStripMenuItemConfigure.Click += new System.EventHandler(this.toolStripMenuItemConfigure_Click);
             //
             // toolStripButtonScan
             //
@@ -841,7 +865,7 @@
             this.toolStrip2.Location = new System.Drawing.Point(3, 28);
             this.toolStrip2.Name = "toolStrip2";
             this.toolStrip2.RenderMode = System.Windows.Forms.ToolStripRenderMode.Professional;
-            this.toolStrip2.Size = new System.Drawing.Size(693, 27);
+            this.toolStrip2.Size = new System.Drawing.Size(654, 27);
             this.toolStrip2.TabIndex = 3;
             //
             // toolStripLabel1
@@ -898,6 +922,11 @@
             //
             this.timerCurrentEandI.Interval = 1000;
             this.timerCurrentEandI.Tick += new System.EventHandler(this.timerCurrentEandI_Tick);
+            //
+            // toolStripSeparator12
+            //
+            this.toolStripSeparator12.Name = "toolStripSeparator12";
+            this.toolStripSeparator12.Size = new System.Drawing.Size(283, 6);
             //
             // Potentiostat
             //
@@ -1009,7 +1038,10 @@
         private System.Windows.Forms.ContextMenuStrip contextMenuStrip1;
         private System.Windows.Forms.ToolStripMenuItem contextMenuItemUndoZoom;
         private System.Windows.Forms.ToolStripMenuItem toolStripMenuItemRange25VonlyforCurrent;
+        private System.Windows.Forms.ToolStripMenuItem toolStripMenuItemFiltering60Hz;
+        private System.Windows.Forms.ToolStripMenuItem toolStripMenuItemFiltering50Hz;
         private System.Windows.Forms.ToolStripMenuItem toolStripMenuItemConfigure;
+        private System.Windows.Forms.ToolStripSeparator toolStripSeparator12;
     }
 }
 

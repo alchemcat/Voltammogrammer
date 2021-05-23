@@ -166,5 +166,17 @@ namespace Voltammogrammer.Properties {
                 this["configure_register_values"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("0")]
+        public string configure_filtering_method {
+            get {
+                return ((string)(this["configure_filtering_method"]));
+            }
+            set {
+                this["configure_filtering_method"] = value;
+            }
+        }
     }
 }

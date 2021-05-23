@@ -33,10 +33,9 @@ namespace Voltammogrammer
 
             //_ps.SetCalibrationData(p, c);
 
-            string r = Properties.Settings.Default.configure_register_values;
-
+            string r1 = Properties.Settings.Default.configure_register_values;
             _tableRegister = new DataTable("register_table1");
-            if (r == "")
+            if (r1 == "")
             {
                 //_tableRegister.Columns.Add("Register");
                 //_tableRegister.Columns.Add("Value [ohm]", typeof(int));
@@ -52,15 +51,17 @@ namespace Voltammogrammer
             else
             {
                 XmlSerializer serializer = new XmlSerializer(typeof(DataTable)); // _tableRegister.GetType()
-                StringReader sr = new StringReader(r);
+                StringReader sr = new StringReader(r1);
 
                 XmlReader xr = XmlReader.Create(sr);
                 _tableRegister = (DataTable)serializer.Deserialize(xr);
                 xr.Close();
 
             }
-
             dataGridView1.DataSource = _tableRegister;
+
+            string r2 = Properties.Settings.Default.configure_filtering_method;
+            comboBoxFilteringMethod.SelectedIndex = Int32.Parse(r2);
         }
 
         private void Configure_Potentiostat_FormClosing(object sender, FormClosingEventArgs e)
@@ -95,12 +96,14 @@ namespace Voltammogrammer
 
 
             Properties.Settings.Default.configure_register_values = sb2.ToString();
+            Properties.Settings.Default.configure_filtering_method = comboBoxFilteringMethod.SelectedIndex.ToString();
             Properties.Settings.Default.Save();
         }
 
         private void buttonReset_Click(object sender, EventArgs e)
         {
             Properties.Settings.Default.configure_register_values = "";
+            Properties.Settings.Default.configure_filtering_method = "0";
             Properties.Settings.Default.Save();
         }
 

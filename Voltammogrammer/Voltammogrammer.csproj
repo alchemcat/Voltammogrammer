@@ -119,6 +119,7 @@
     <Compile Include="Configure_Potentiostat.Designer.cs">
       <DependentUpon>Configure_Potentiostat.cs</DependentUpon>
     </Compile>
+    <Compile Include="DigitalFilter-BiQuad.cs" />
     <Compile Include="dwf_mod_17oct2019.cs" />
     <Compile Include="Export_DataAsCSV.cs">
       <SubType>Form</SubType>
