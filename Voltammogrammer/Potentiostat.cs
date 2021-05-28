@@ -2196,7 +2196,7 @@ namespace Voltammogrammer
                     {
                         if (_flag_digitalfilter)
                         {
-                            if (false)
+                            if (true)
                             {
                                 int k = (int)Math.Round(_herzAcquisition / _target_filtering_frequency * 2);
                                 //const int k = 16;
