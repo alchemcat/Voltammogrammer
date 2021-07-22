@@ -2064,7 +2064,7 @@ namespace Voltammogrammer
                                             true,
                                             (millivolt_actual_initial_voltage + (c * step)),
                                             formVoltammogram.typeAxisX.Potential_in_mV,
-                                            (double)(-1*(_recordingSeries[CHANNEL_CURRENT][trigger-sampling] - _recordingSeries[CHANNEL_CURRENT][end-sampling]) * ((double)_selectedCurrentFactor)),
+                                            (double)(1*(_recordingSeries[CHANNEL_CURRENT][trigger-sampling] - _recordingSeries[CHANNEL_CURRENT][end-sampling]) * ((double)_selectedCurrentFactor)),
                                             formVoltammogram.typeAxisY.Current_in_uA,
                                             _recordingSeries[0][trigger] / 1000.0
                                         );
