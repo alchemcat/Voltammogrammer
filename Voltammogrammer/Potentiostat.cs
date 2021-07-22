@@ -754,7 +754,9 @@ namespace Voltammogrammer
         private void DoVoltammetry(ref double[] rgdSamples, double secRecording, double millivoltHeight, ref DoWorkEventArgs e, bool fCA = true, bool fFinal = true)
         {
             //double herzAcquisition = 40.0;
-            double secCAing = 2.0, secDelta = 0.1;
+            double secCAing = 2.0;
+            //double secDelta = 0.03;
+            double secDelta = 1 / _target_filtering_frequency * 2; // digital filterによる遅延時間。この分だけ、余分にデータを収集する必要がある。
 
             if (!fCA)
             {
@@ -767,7 +769,7 @@ namespace Voltammogrammer
             FDwfAnalogInFrequencySet(_handle, ((double)_herzAcquisition)); // 取り込み周波数を設定
             Console.WriteLine($"FDwfAnalogInFrequencySet: {_herzAcquisition}");
             FDwfAnalogInChannelFilterSet(_handle, -1, filterAverage);
-            FDwfAnalogInRecordLengthSet(_handle, (secCAing + secRecording + secDelta + 5)); // 取り込みする時間[s]の設定。サンプル数[] / 周波数[s-1]
+            FDwfAnalogInRecordLengthSet(_handle, (secCAing + secRecording + secDelta)); // 取り込みする時間[s]の設定。サンプル数[] / 周波数[s-1]
 
 
             _clockingStopwatch.Restart();
@@ -803,7 +805,7 @@ namespace Voltammogrammer
             int cAvailable = 0, cLost = 0, cCorrupted = 0;
             bool fCVing = false;
             long t_previous_acquisition = 0, t_current_acquisition = 0;
-            long t_current = 0, t_next = -1, t_cnt = 0;
+            long t_current = 0, t_next = -1, t_cnt = 0; bool print_once = true;
 
             backgroundWorkerCV.ReportProgress((int)statusMeasurement.MeasurementGotStarted);
 
@@ -814,7 +816,8 @@ namespace Voltammogrammer
 
             _clockingStopwatch.Restart();
 
-            while (cSamples <= ((secCAing + secRecording + secDelta) * _herzAcquisition))
+            //while (cSamples <= ((secCAing + secRecording + secDelta) * _herzAcquisition))
+            while (cSamples <= ((secCAing + secRecording + 0) * _herzAcquisition))
             {
                 t_current = _clockingStopwatch.ElapsedMilliseconds;
                 if (t_current > t_next)
@@ -828,6 +831,10 @@ namespace Voltammogrammer
                     {
                         // Acquisition not yet started.
                         continue;
+                    }
+                    if(cSamples == 0)
+                    {
+                        Console.WriteLine($"Initial time after stsTrig: {sts}, {_clockingStopwatch.ElapsedMilliseconds}");
                     }
 
                     FDwfAnalogInStatusRecord(_handle, out cAvailable, out cLost, out cCorrupted);
@@ -847,6 +854,7 @@ namespace Voltammogrammer
 
                     if (cAvailable > 0)
                     {
+                        t_current = _clockingStopwatch.ElapsedMilliseconds;
                         t_current_acquisition = t_current;// _clockingStopwatch.ElapsedMilliseconds;
                         //_recordingSeries[0][cSamples] = (t_current_acquisition);
 
@@ -860,17 +868,19 @@ namespace Voltammogrammer
                                 _recordingSeries[0][cSamples + i] = t_current_acquisition + i * (1.0 / _herzAcquisition) * 1000;
                             }
 
+                            //if (print_once) { Console.WriteLine($"FDwfAnalogInStatusData: {_clockingStopwatch.ElapsedMilliseconds}"); }
                             FDwfAnalogInStatusData(_handle, (CHANNEL_POTENTIAL-1), _readingBuffers[(CHANNEL_POTENTIAL - 1)], cAvailable);
                             //_recordingSeries[1][cSamples] = (_readingBuffers[0][0] * -1000.0);// * -1)*1000.0;// とりあえず最初の値のみ記録。平均しない。
                             Array.Copy(_readingBuffers[(CHANNEL_POTENTIAL - 1)], 0, _recordingSeries[CHANNEL_POTENTIAL], cSamples, cAvailable);
                             FDwfAnalogInStatusData(_handle, (CHANNEL_CURRENT - 1), _readingBuffers[(CHANNEL_CURRENT - 1)], cAvailable);
                             //_recordingSeries[2][cSamples] = (_readingBuffers[1][0]) * 1000.0;// とりあえず最初の値のみ記録。平均しない。
                             Array.Copy(_readingBuffers[(CHANNEL_CURRENT - 1)], 0, _recordingSeries[CHANNEL_CURRENT], cSamples, cAvailable);
+                            //if (print_once) { Console.WriteLine($"FDwfAnalogInStatusData: {_clockingStopwatch.ElapsedMilliseconds}"); print_once = false; }
 
                             cSamples += cAvailable;
                             //if((cSamples % 10)==0)
                             //{
-                            if(++t_cnt == 20)
+                            if(++t_cnt == 100)
                             {
                                 backgroundWorkerCV.ReportProgress(cSamples); t_cnt = 0;
                             }
@@ -914,8 +924,8 @@ namespace Voltammogrammer
                     }
                     else
                     {
+                        Console.WriteLine("cAvailable: " + cAvailable.ToString() + ", cSamples: " + cSamples.ToString() + ", cLost: " + cLost.ToString());
                         continue;
-                        //Console.WriteLine("cAvailable: " + cAvailable.ToString() + ", cSamples: " + cSamples.ToString() + ", cLost: " + cLost.ToString());
                     }
 
                     if (backgroundWorkerCV.CancellationPending)
@@ -927,11 +937,13 @@ namespace Voltammogrammer
 
                     // とりあえず50msにしてあるだけで、高速掃引時には未対処 as of 11/11/2018。
                     // 200msの場合、0->1V, 10V/sの条件で、1取り込み以内に測定が終わることになる
-                    t_next = t_current + 50; // ReportProgressは20回に1回だけ実行するようにして、処理速度を稼ぐ
+                    t_next = t_current + 10; // ReportProgressは20回に1回だけ実行するようにして、処理速度を稼ぐ
                 }
 
                 if ((cSamples >= (secCAing * _herzAcquisition)) && (fCVing == false))
                 {
+                    Console.WriteLine(_clockingStopwatch.ElapsedMilliseconds);
+
                     // いよいよCV測定。AWGに波形等を設定する
                     //FDwfAnalogOutConfigure(_handle, 0, Convert.ToInt32(false)); // 一旦止めなくてもよい？？
                     // set custom function
@@ -950,7 +962,7 @@ namespace Voltammogrammer
 
                     FDwfAnalogOutConfigure(_handle, 0, Convert.ToInt32(true));
 
-
+                    Console.WriteLine(_clockingStopwatch.ElapsedMilliseconds);
                     fCVing = true;
                 }
 
@@ -964,7 +976,9 @@ namespace Voltammogrammer
             }
             else
             {
-                int cEnd = (int)Math.Floor((secCAing + secRecording + secDelta) * _herzAcquisition) - 5;
+                // secDeltaの分だけ最後に余分のデータがあるので、幾分か削る必要がある。「-5」はその場しのぎの値。
+                //int cEnd = (int)Math.Floor((secCAing + secRecording + secDelta) * _herzAcquisition) - 5;
+                int cEnd = (int)Math.Floor((secCAing + secRecording + 0) * _herzAcquisition);
                 backgroundWorkerCV.ReportProgress(cEnd);
             }
 
@@ -1253,6 +1267,8 @@ namespace Voltammogrammer
                                 if (i == _countRepeat)
                                 {
                                     DoVoltammetry(ref rgdSamples, secRecording, millivoltHeight, ref e, fCA: false, fFinal: true);
+
+                                    backgroundWorkerCV.ReportProgress((int)statusMeasurement.MeasuremetWasDone);
                                 }
                                 else if (i == 1)
                                 {
@@ -1273,6 +1289,8 @@ namespace Voltammogrammer
                             backgroundWorkerCV.ReportProgress((int)statusMeasurement.Initialized);
 
                             DoVoltammetry(ref rgdSamples, secRecording, millivoltHeight, ref e);
+
+                            backgroundWorkerCV.ReportProgress((int)statusMeasurement.MeasuremetWasDone);
                         }
                     }
                     else
@@ -1280,9 +1298,9 @@ namespace Voltammogrammer
                         backgroundWorkerCV.ReportProgress((int)statusMeasurement.Initialized);
 
                         DoVoltammetry_virtual();
-                    }
 
-                    backgroundWorkerCV.ReportProgress((int)statusMeasurement.MeasuremetWasDone);
+                        backgroundWorkerCV.ReportProgress((int)statusMeasurement.MeasuremetWasDone);
+                    }
                 }
                 else if (
                        _selectedMethod == methodMeasurement.CyclicvoltammetryQuick
@@ -1480,7 +1498,15 @@ namespace Voltammogrammer
                         FDwfAnalogInStatusData2(_handle, (CHANNEL_POTENTIAL - 1), _readingBuffers[(CHANNEL_POTENTIAL - 1)], pWrite, 1);
                         //_recordingSeries[1][cSamples] = (_readingBuffers[0][0] * -1000.0);// * -1)*1000.0;// とりあえず最初の値のみ記録。平均しない。
                         //Array.Copy(_readingBuffers[(CHANNEL_POTENTIAL - 1)], 0, _recordingSeries[CHANNEL_POTENTIAL], cSamples, cAvailable);
-                        _recordingSeries[CHANNEL_POTENTIAL][i] = _readingBuffers[(CHANNEL_POTENTIAL - 1)][0];// * -1000.0;
+
+                        if( _selectedMethod == methodMeasurement.OCP )
+                        {
+                            _recordingSeries[CHANNEL_POTENTIAL][i] = _readingBuffers[(CHANNEL_POTENTIAL - 1)][0] * -1;
+                        }
+                        else
+                        {
+                            _recordingSeries[CHANNEL_POTENTIAL][i] = _readingBuffers[(CHANNEL_POTENTIAL - 1)][0];// * -1000.0;
+                        }
 
                         //SampleSingleValue((CHANNEL_CURRENT-1), out double valueCh2);
                         FDwfAnalogInStatusData2(_handle, (CHANNEL_CURRENT - 1), _readingBuffers[(CHANNEL_CURRENT - 1)], pWrite, 1);
@@ -1845,8 +1871,8 @@ namespace Voltammogrammer
                     //{
                     //    _herzAcquisition = 400;
                     //}
-                    _digital_filter_notch.Notch(_target_filtering_frequency, _herzAcquisition, 1.0);
-                    _digital_filter_lowpass.LowPass(_target_filtering_frequency * 2, _herzAcquisition);
+                    _digital_filter_notch.Notch(_target_filtering_frequency, _herzAcquisition, 3.0);
+                    _digital_filter_lowpass.LowPass(_target_filtering_frequency * 1, _herzAcquisition);
                     break;
 
                 case (int)statusMeasurement.CAGotStarted: // CA got started
@@ -3631,7 +3657,7 @@ namespace Voltammogrammer
         {
             double value;
             SampleSingleValue((CHANNEL_POTENTIAL - 1), out value);
-            toolStripStatusCurrentEandI.Text = "(" + (value * POTENTIAL_SCALE).ToString("0.0") + " mV)";
+            toolStripStatusCurrentEandI.Text = "(" + (value * -1 * POTENTIAL_SCALE).ToString("0.0") + " mV)";
 
 
             int r = FDwfAnalogIOStatus(_handle);
@@ -3881,7 +3907,7 @@ namespace Voltammogrammer
             {
                 if (open)
                 {
-                    FDwfDigitalIOOutputSet(_handle, (dwRead & 0b1111101111111011) ^ 0b0000010000000000);
+                    FDwfDigitalIOOutputSet(_handle, (dwRead & 0b1111101011111010) ^ 0b0000010000000001);// 6/29/2021, 0 -> 1 @ 1st bit (for OCP measurement)
                 }
                 else
                 {
@@ -3889,7 +3915,14 @@ namespace Voltammogrammer
                     {
                         if (!toolStripMenuGalvanoStat.Checked)
                         {
-                            FDwfDigitalIOOutputSet(_handle, (dwRead & 0b1111101111111011) ^ 0b0000000000000100);
+                            if (toolStripMenuEIS.Checked)
+                            {
+                                FDwfDigitalIOOutputSet(_handle, (dwRead & 0b1111101011111010) ^ 0b0000000000000101);
+                            }
+                            else
+                            {
+                                FDwfDigitalIOOutputSet(_handle, (dwRead & 0b1111101011111010) ^ 0b0000000100000100);
+                            }
                         }
                         else
                         {
@@ -3898,21 +3931,28 @@ namespace Voltammogrammer
                     });
                 }
                 Thread.Sleep(DELAY_TIME_SWITCHING_RELAY);
-                FDwfDigitalIOOutputSet(_handle, (dwRead & 0b1111101111111011) ^ 0b0000000000000000);
+                FDwfDigitalIOOutputSet(_handle, (dwRead & 0b1111101011111010) ^ 0b0000000000000000);
             }
             else if (VERSION_0_9k) // DONE
             {
                 if (open)
                 {
-                    FDwfDigitalIOOutputSet(_handle, (dwRead & 0b1111111111111011) ^ 0b0000000000000100);
+                    FDwfDigitalIOOutputSet(_handle, (dwRead & 0b1111111111111010) ^ 0b0000000000000100); // 6/29/2021, (n/a) -> 0 @ 1 bit (for OCP measurement)
                 }
                 else
                 {
                     Invoke((Action)delegate ()
                     {
-                        if (!toolStripMenuGalvanoStat.Checked)
+                        if (!toolStripMenuGalvanoStat.Checked)// && !)
                         {
-                            FDwfDigitalIOOutputSet(_handle, (dwRead & 0b1111111111111011) ^ 0b0000000000000000);
+                            if(toolStripMenuEIS.Checked)
+                            {
+                                FDwfDigitalIOOutputSet(_handle, (dwRead & 0b1111111111111011) ^ 0b0000000000000000);
+                            }
+                            else
+                            {
+                                FDwfDigitalIOOutputSet(_handle, (dwRead & 0b1111111111111010) ^ 0b0000000000000001); // 6/29/2021, 0 -> 1 @ 1st bit (for OCP measurement)
+                            }
                         }
                         else
                         {

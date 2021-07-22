@@ -25,7 +25,7 @@ namespace Voltammogrammer.Properties {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("7.5")]
+        [global::System.Configuration.DefaultSettingValueAttribute("0")]
         public double offset_potential {
             get {
                 return ((double)(this["offset_potential"]));
@@ -37,7 +37,7 @@ namespace Voltammogrammer.Properties {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("-0.0045")]
+        [global::System.Configuration.DefaultSettingValueAttribute("0")]
         public double offset_current {
             get {
                 return ((double)(this["offset_current"]));

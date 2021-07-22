@@ -3,10 +3,10 @@
   <Profiles />
   <Settings>
     <Setting Name="offset_potential" Type="System.Double" Scope="User">
-      <Value Profile="(Default)">7.5</Value>
+      <Value Profile="(Default)">0</Value>
     </Setting>
     <Setting Name="offset_current" Type="System.Double" Scope="User">
-      <Value Profile="(Default)">-0.0045</Value>
+      <Value Profile="(Default)">0</Value>
     </Setting>
     <Setting Name="font_title" Type="System.Double" Scope="User">
       <Value Profile="(Default)">15</Value>
