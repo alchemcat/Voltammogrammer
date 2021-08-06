@@ -26,12 +26,12 @@ namespace Voltammogrammer.Properties {
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("0")]
-        public double offset_potential {
+        public double offset_potential_awg {
             get {
-                return ((double)(this["offset_potential"]));
+                return ((double)(this["offset_potential_awg"]));
             }
             set {
-                this["offset_potential"] = value;
+                this["offset_potential_awg"] = value;
             }
         }
         
@@ -170,12 +170,36 @@ namespace Voltammogrammer.Properties {
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("0")]
-        public string configure_filtering_method {
+        public int configure_filtering_method {
             get {
-                return ((string)(this["configure_filtering_method"]));
+                return ((int)(this["configure_filtering_method"]));
             }
             set {
                 this["configure_filtering_method"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("0")]
+        public int configure_referencing_for_initial_potential {
+            get {
+                return ((int)(this["configure_referencing_for_initial_potential"]));
+            }
+            set {
+                this["configure_referencing_for_initial_potential"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("0")]
+        public double offset_potential_osc {
+            get {
+                return ((double)(this["offset_potential_osc"]));
+            }
+            set {
+                this["offset_potential_osc"] = value;
             }
         }
     }

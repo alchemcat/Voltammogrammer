@@ -50,8 +50,9 @@
             this.toolStripButtonConnect = new System.Windows.Forms.ToolStripSplitButton();
             this.toolStripComboBoxSerialPort = new System.Windows.Forms.ToolStripComboBox();
             this.toolStripSeparator11 = new System.Windows.Forms.ToolStripSeparator();
-            this.toolStripMenuItemDebug = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripMenuItemConfigure = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStripSeparator12 = new System.Windows.Forms.ToolStripSeparator();
+            this.toolStripMenuItemDebug = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator1 = new System.Windows.Forms.ToolStripSeparator();
             this.toolStripButtonRecord = new System.Windows.Forms.ToolStripSplitButton();
             this.toolStripMenuItemOCV = new System.Windows.Forms.ToolStripMenuItem();
@@ -83,12 +84,13 @@
             this.toolStripMenuItemRange2 = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripMenuItemRange25VonlyforCurrent = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator8 = new System.Windows.Forms.ToolStripSeparator();
+            this.toolStripMenuPotentioStat = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStripMenuGalvanoStat = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripMenuEIS = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripMenuOpenComp = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripMenuShortComp = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator10 = new System.Windows.Forms.ToolStripSeparator();
             this.toolStripMenuClearComp = new System.Windows.Forms.ToolStripMenuItem();
-            this.toolStripMenuGalvanoStat = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator9 = new System.Windows.Forms.ToolStripSeparator();
             this.toolStripMenuItemCalibrate = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripButtonScan = new System.Windows.Forms.ToolStripButton();
@@ -112,6 +114,7 @@
             this.toolStrip2 = new System.Windows.Forms.ToolStrip();
             this.toolStripLabel1 = new System.Windows.Forms.ToolStripLabel();
             this.toolStripTextBoxInitialV = new System.Windows.Forms.ToolStripTextBox();
+            this.toolStripComboBoxReferenceForInitialPotential = new System.Windows.Forms.ToolStripComboBox();
             this.toolStripLabel2 = new System.Windows.Forms.ToolStripLabel();
             this.toolStripTextBoxVertexV = new System.Windows.Forms.ToolStripTextBox();
             this.toolStripLabel3 = new System.Windows.Forms.ToolStripLabel();
@@ -119,7 +122,6 @@
             this.toolStripLabel4 = new System.Windows.Forms.ToolStripLabel();
             this.toolStripTextBoxRepeat = new System.Windows.Forms.ToolStripTextBox();
             this.timerCurrentEandI = new System.Windows.Forms.Timer(this.components);
-            this.toolStripSeparator12 = new System.Windows.Forms.ToolStripSeparator();
             this.toolStrip1.SuspendLayout();
             this.statusStrip1.SuspendLayout();
             this.toolStripContainer1.ContentPanel.SuspendLayout();
@@ -227,19 +229,24 @@
             this.toolStripSeparator11.Name = "toolStripSeparator11";
             this.toolStripSeparator11.Size = new System.Drawing.Size(283, 6);
             //
-            // toolStripMenuItemDebug
-            //
-            this.toolStripMenuItemDebug.Name = "toolStripMenuItemDebug";
-            this.toolStripMenuItemDebug.Size = new System.Drawing.Size(286, 26);
-            this.toolStripMenuItemDebug.Text = "Debug mode";
-            this.toolStripMenuItemDebug.Click += new System.EventHandler(this.toolStripMenuItemDebug_Click);
-            //
             // toolStripMenuItemConfigure
             //
             this.toolStripMenuItemConfigure.Name = "toolStripMenuItemConfigure";
             this.toolStripMenuItemConfigure.Size = new System.Drawing.Size(286, 26);
             this.toolStripMenuItemConfigure.Text = "Configure PocketPotentiostat...";
             this.toolStripMenuItemConfigure.Click += new System.EventHandler(this.toolStripMenuItemConfigure_Click);
+            //
+            // toolStripSeparator12
+            //
+            this.toolStripSeparator12.Name = "toolStripSeparator12";
+            this.toolStripSeparator12.Size = new System.Drawing.Size(283, 6);
+            //
+            // toolStripMenuItemDebug
+            //
+            this.toolStripMenuItemDebug.Name = "toolStripMenuItemDebug";
+            this.toolStripMenuItemDebug.Size = new System.Drawing.Size(286, 26);
+            this.toolStripMenuItemDebug.Text = "Debug mode";
+            this.toolStripMenuItemDebug.Click += new System.EventHandler(this.toolStripMenuItemDebug_Click);
             //
             // toolStripSeparator1
             //
@@ -275,8 +282,9 @@
             this.toolStripMenuItemRange1,
             this.toolStripMenuItemRange2,
             this.toolStripSeparator8,
-            this.toolStripMenuEIS,
+            this.toolStripMenuPotentioStat,
             this.toolStripMenuGalvanoStat,
+            this.toolStripMenuEIS,
             this.toolStripSeparator9,
             this.toolStripMenuItemCalibrate});
             this.toolStripButtonRecord.Enabled = false;
@@ -519,6 +527,22 @@
             this.toolStripSeparator8.Name = "toolStripSeparator8";
             this.toolStripSeparator8.Size = new System.Drawing.Size(323, 6);
             //
+            // toolStripMenuPotentioStat
+            //
+            this.toolStripMenuPotentioStat.Name = "toolStripMenuPotentioStat";
+            this.toolStripMenuPotentioStat.Size = new System.Drawing.Size(326, 26);
+            this.toolStripMenuPotentioStat.Tag = "0";
+            this.toolStripMenuPotentioStat.Text = "Potentiostat mode";
+            this.toolStripMenuPotentioStat.Click += new System.EventHandler(this.toolStripMenuItemMode_Click);
+            //
+            // toolStripMenuGalvanoStat
+            //
+            this.toolStripMenuGalvanoStat.Name = "toolStripMenuGalvanoStat";
+            this.toolStripMenuGalvanoStat.Size = new System.Drawing.Size(326, 26);
+            this.toolStripMenuGalvanoStat.Tag = "1";
+            this.toolStripMenuGalvanoStat.Text = "Galvanostat mode";
+            this.toolStripMenuGalvanoStat.Click += new System.EventHandler(this.toolStripMenuGalvanoStat_Click);
+            //
             // toolStripMenuEIS
             //
             this.toolStripMenuEIS.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
@@ -528,6 +552,7 @@
             this.toolStripMenuClearComp});
             this.toolStripMenuEIS.Name = "toolStripMenuEIS";
             this.toolStripMenuEIS.Size = new System.Drawing.Size(326, 26);
+            this.toolStripMenuEIS.Tag = "2";
             this.toolStripMenuEIS.Text = "EIS mode";
             this.toolStripMenuEIS.Click += new System.EventHandler(this.toolStripMenuEIS_Click);
             //
@@ -554,13 +579,6 @@
             this.toolStripMenuClearComp.Size = new System.Drawing.Size(164, 26);
             this.toolStripMenuClearComp.Text = "Clear Comp";
             this.toolStripMenuClearComp.Click += new System.EventHandler(this.toolStripMenuClearComp_Click);
-            //
-            // toolStripMenuGalvanoStat
-            //
-            this.toolStripMenuGalvanoStat.Name = "toolStripMenuGalvanoStat";
-            this.toolStripMenuGalvanoStat.Size = new System.Drawing.Size(326, 26);
-            this.toolStripMenuGalvanoStat.Text = "Galvanostat mode";
-            this.toolStripMenuGalvanoStat.Click += new System.EventHandler(this.toolStripMenuGalvanoStat_Click);
             //
             // toolStripSeparator9
             //
@@ -700,7 +718,7 @@
             //
             this.toolStripContainer1.ContentPanel.Controls.Add(this.chartVoltammogram);
             this.toolStripContainer1.ContentPanel.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
-            this.toolStripContainer1.ContentPanel.Size = new System.Drawing.Size(1349, 339);
+            this.toolStripContainer1.ContentPanel.Size = new System.Drawing.Size(1349, 338);
             this.toolStripContainer1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.toolStripContainer1.LeftToolStripPanelVisible = false;
             this.toolStripContainer1.Location = new System.Drawing.Point(0, 0);
@@ -824,7 +842,7 @@
             this.chartVoltammogram.Series.Add(series5);
             this.chartVoltammogram.Series.Add(series6);
             this.chartVoltammogram.Series.Add(series7);
-            this.chartVoltammogram.Size = new System.Drawing.Size(1349, 339);
+            this.chartVoltammogram.Size = new System.Drawing.Size(1349, 338);
             this.chartVoltammogram.TabIndex = 1;
             this.chartVoltammogram.Text = "chart1";
             this.chartVoltammogram.CursorPositionChanged += new System.EventHandler<System.Windows.Forms.DataVisualization.Charting.CursorEventArgs>(this.chartVoltammogram_CursorPositionChanged);
@@ -855,6 +873,7 @@
             this.toolStrip2.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.toolStripLabel1,
             this.toolStripTextBoxInitialV,
+            this.toolStripComboBoxReferenceForInitialPotential,
             this.toolStripLabel2,
             this.toolStripTextBoxVertexV,
             this.toolStripLabel3,
@@ -865,68 +884,75 @@
             this.toolStrip2.Location = new System.Drawing.Point(3, 28);
             this.toolStrip2.Name = "toolStrip2";
             this.toolStrip2.RenderMode = System.Windows.Forms.ToolStripRenderMode.Professional;
-            this.toolStrip2.Size = new System.Drawing.Size(654, 27);
+            this.toolStrip2.Size = new System.Drawing.Size(785, 28);
             this.toolStrip2.TabIndex = 3;
             //
             // toolStripLabel1
             //
             this.toolStripLabel1.Name = "toolStripLabel1";
-            this.toolStripLabel1.Size = new System.Drawing.Size(85, 24);
+            this.toolStripLabel1.Size = new System.Drawing.Size(85, 25);
             this.toolStripLabel1.Text = "Initial [mV]:";
             //
             // toolStripTextBoxInitialV
             //
             this.toolStripTextBoxInitialV.Name = "toolStripTextBoxInitialV";
-            this.toolStripTextBoxInitialV.Size = new System.Drawing.Size(70, 27);
+            this.toolStripTextBoxInitialV.Size = new System.Drawing.Size(70, 28);
             this.toolStripTextBoxInitialV.Text = "0";
+            //
+            // toolStripComboBoxReferenceForInitialPotential
+            //
+            this.toolStripComboBoxReferenceForInitialPotential.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.toolStripComboBoxReferenceForInitialPotential.DropDownWidth = 75;
+            this.toolStripComboBoxReferenceForInitialPotential.Items.AddRange(new object[] {
+            "vs Ref",
+            "vs OCP"});
+            this.toolStripComboBoxReferenceForInitialPotential.Name = "toolStripComboBoxReferenceForInitialPotential";
+            this.toolStripComboBoxReferenceForInitialPotential.Size = new System.Drawing.Size(90, 28);
+            this.toolStripComboBoxReferenceForInitialPotential.SelectedIndexChanged += new System.EventHandler(this.toolStripComboBoxReferenceForInitialPotential_SelectedIndexChanged);
             //
             // toolStripLabel2
             //
             this.toolStripLabel2.Name = "toolStripLabel2";
-            this.toolStripLabel2.Size = new System.Drawing.Size(89, 24);
+            this.toolStripLabel2.Size = new System.Drawing.Size(89, 25);
             this.toolStripLabel2.Text = "Vertex [mV]:";
             //
             // toolStripTextBoxVertexV
             //
             this.toolStripTextBoxVertexV.Name = "toolStripTextBoxVertexV";
-            this.toolStripTextBoxVertexV.Size = new System.Drawing.Size(70, 27);
+            this.toolStripTextBoxVertexV.Size = new System.Drawing.Size(70, 28);
             this.toolStripTextBoxVertexV.Text = "500";
             this.toolStripTextBoxVertexV.Validating += new System.ComponentModel.CancelEventHandler(this.toolStripTextBoxVertexV_Validating);
             //
             // toolStripLabel3
             //
             this.toolStripLabel3.Name = "toolStripLabel3";
-            this.toolStripLabel3.Size = new System.Drawing.Size(121, 24);
+            this.toolStripLabel3.Size = new System.Drawing.Size(121, 25);
             this.toolStripLabel3.Text = "Scan rate [mV/s]:";
             //
             // toolStripTextBoxScanrate
             //
             this.toolStripTextBoxScanrate.Name = "toolStripTextBoxScanrate";
-            this.toolStripTextBoxScanrate.Size = new System.Drawing.Size(70, 27);
+            this.toolStripTextBoxScanrate.Size = new System.Drawing.Size(70, 28);
             this.toolStripTextBoxScanrate.Text = "100";
             this.toolStripTextBoxScanrate.Validating += new System.ComponentModel.CancelEventHandler(this.toolStripTextBoxScanrate_Validating);
             //
             // toolStripLabel4
             //
             this.toolStripLabel4.Name = "toolStripLabel4";
-            this.toolStripLabel4.Size = new System.Drawing.Size(59, 24);
+            this.toolStripLabel4.Size = new System.Drawing.Size(59, 25);
             this.toolStripLabel4.Text = "Repeat:";
             //
             // toolStripTextBoxRepeat
             //
             this.toolStripTextBoxRepeat.Name = "toolStripTextBoxRepeat";
-            this.toolStripTextBoxRepeat.Size = new System.Drawing.Size(70, 27);
+            this.toolStripTextBoxRepeat.Size = new System.Drawing.Size(70, 28);
             this.toolStripTextBoxRepeat.Text = "1";
+            this.toolStripTextBoxRepeat.Validating += new System.ComponentModel.CancelEventHandler(this.toolStripTextBoxRepeat_Validating);
             //
             // timerCurrentEandI
             //
             this.timerCurrentEandI.Interval = 1000;
             this.timerCurrentEandI.Tick += new System.EventHandler(this.timerCurrentEandI_Tick);
-            //
-            // toolStripSeparator12
-            //
-            this.toolStripSeparator12.Name = "toolStripSeparator12";
-            this.toolStripSeparator12.Size = new System.Drawing.Size(283, 6);
             //
             // Potentiostat
             //
@@ -1042,6 +1068,8 @@
         private System.Windows.Forms.ToolStripMenuItem toolStripMenuItemFiltering50Hz;
         private System.Windows.Forms.ToolStripMenuItem toolStripMenuItemConfigure;
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator12;
+        private System.Windows.Forms.ToolStripComboBox toolStripComboBoxReferenceForInitialPotential;
+        private System.Windows.Forms.ToolStripMenuItem toolStripMenuPotentioStat;
     }
 }
 

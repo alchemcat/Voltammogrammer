@@ -255,6 +255,21 @@ namespace Voltammogrammer
         {
             //chartVoltammogram.Series[0].Points.AddXY(0, 0);
             //chartVoltammogram.Update();
+
+            //toolStripContainer1.SuspendLayout();
+            //toolStripContainer1.BottomToolStripPanel.SuspendLayout();
+            //toolStrip1.SuspendLayout();
+
+            toolStripContainer1.TopToolStripPanel.Join(toolStrip2, 0, 0);
+            toolStripContainer1.TopToolStripPanel.Join(toolStrip3, toolStrip2.Width+1, 0);
+            toolStripContainer1.BottomToolStripPanel.Join(statusStrip1, toolStripContainer1.BottomToolStripPanel.Controls.Count);
+
+            //toolStripContainer1.BottomToolStripPanel.ResumeLayout(false);
+            //toolStripContainer1.BottomToolStripPanel.PerformLayout();
+            //toolStripContainer1.ResumeLayout(false);
+            //toolStripContainer1.PerformLayout();
+            //toolStrip1.ResumeLayout(false);
+            //toolStrip1.PerformLayout();
         }
 
         private void formVoltammogram_FormClosing(object sender, FormClosingEventArgs e)

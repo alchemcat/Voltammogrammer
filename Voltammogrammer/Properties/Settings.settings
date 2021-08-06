@@ -2,7 +2,7 @@
 <SettingsFile xmlns="http://schemas.microsoft.com/VisualStudio/2004/01/settings" CurrentProfile="(Default)" GeneratedClassNamespace="Voltammogrammer.Properties" GeneratedClassName="Settings">
   <Profiles />
   <Settings>
-    <Setting Name="offset_potential" Type="System.Double" Scope="User">
+    <Setting Name="offset_potential_awg" Type="System.Double" Scope="User">
       <Value Profile="(Default)">0</Value>
     </Setting>
     <Setting Name="offset_current" Type="System.Double" Scope="User">
@@ -38,7 +38,13 @@
     <Setting Name="configure_register_values" Type="System.String" Scope="User">
       <Value Profile="(Default)" />
     </Setting>
-    <Setting Name="configure_filtering_method" Type="System.String" Scope="User">
+    <Setting Name="configure_filtering_method" Type="System.Int32" Scope="User">
+      <Value Profile="(Default)">0</Value>
+    </Setting>
+    <Setting Name="configure_referencing_for_initial_potential" Type="System.Int32" Scope="User">
+      <Value Profile="(Default)">0</Value>
+    </Setting>
+    <Setting Name="offset_potential_osc" Type="System.Double" Scope="User">
       <Value Profile="(Default)">0</Value>
     </Setting>
   </Settings>

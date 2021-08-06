@@ -140,7 +140,7 @@
             this.toolStripComboSeriesScaleY});
             this.toolStrip1.Location = new System.Drawing.Point(8, 0);
             this.toolStrip1.Name = "toolStrip1";
-            this.toolStrip1.Size = new System.Drawing.Size(1144, 28);
+            this.toolStrip1.Size = new System.Drawing.Size(1103, 28);
             this.toolStrip1.TabIndex = 3;
             this.toolStrip1.Text = "toolStrip1";
             //
@@ -234,6 +234,7 @@
             //
             // statusStrip1
             //
+            this.statusStrip1.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
             this.statusStrip1.Dock = System.Windows.Forms.DockStyle.None;
             this.statusStrip1.ImageScalingSize = new System.Drawing.Size(20, 20);
             this.statusStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
@@ -592,7 +593,7 @@
             this.toolStripComboBoxRef});
             this.toolStrip3.Location = new System.Drawing.Point(489, 0);
             this.toolStrip3.Name = "toolStrip3";
-            this.toolStrip3.Size = new System.Drawing.Size(411, 28);
+            this.toolStrip3.Size = new System.Drawing.Size(452, 28);
             this.toolStrip3.TabIndex = 5;
             //
             // toolStripLabel2

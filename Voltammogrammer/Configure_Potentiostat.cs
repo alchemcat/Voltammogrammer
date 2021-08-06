@@ -60,8 +60,8 @@ namespace Voltammogrammer
             }
             dataGridView1.DataSource = _tableRegister;
 
-            string r2 = Properties.Settings.Default.configure_filtering_method;
-            comboBoxFilteringMethod.SelectedIndex = Int32.Parse(r2);
+            int r2 = Properties.Settings.Default.configure_filtering_method;
+            comboBoxFilteringMethod.SelectedIndex = (r2);
         }
 
         private void Configure_Potentiostat_FormClosing(object sender, FormClosingEventArgs e)
@@ -96,14 +96,14 @@ namespace Voltammogrammer
 
 
             Properties.Settings.Default.configure_register_values = sb2.ToString();
-            Properties.Settings.Default.configure_filtering_method = comboBoxFilteringMethod.SelectedIndex.ToString();
+            Properties.Settings.Default.configure_filtering_method = comboBoxFilteringMethod.SelectedIndex;
             Properties.Settings.Default.Save();
         }
 
         private void buttonReset_Click(object sender, EventArgs e)
         {
             Properties.Settings.Default.configure_register_values = "";
-            Properties.Settings.Default.configure_filtering_method = "0";
+            Properties.Settings.Default.configure_filtering_method = 0;
             Properties.Settings.Default.Save();
         }
 
