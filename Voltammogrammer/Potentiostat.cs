@@ -2556,17 +2556,26 @@ namespace Voltammogrammer
                         )
                       )
                     {
-                        if ((progress % 10) == 0)
+                        if ((true) && (((progress+1) % 10) == 0))
                         {
                             //toolStripStatusCurrentEandI.Text = "("
                             //                                    + (_recordingSeries[0][progress] / 1000.00).ToString("0.0") + " s, "
                             //                                    + (_recordingSeries[1][progress]).ToString("0.0") + " mV, "
                             //                                    + ((double)_recordingSeries[2][progress] * ((double)_selectedRange / 1000.0)).ToString("0.0") + " uA"
                             //                                    + ")";
+
+                            double p = 0.0, c = 0.0;
+                            for (int i = 0; i < 10; i++)
+                            {
+                                p += (_recordingSeries[CHANNEL_POTENTIAL][progress - i] * POTENTIAL_SCALE - POTENTIAL_OFFSET_OSC);
+                                c += ((_recordingSeries[CHANNEL_CURRENT][progress - i] - CURRENT_OFFSET) * (factorCurrent));
+                            }
+                            p /= 10; c /= 10;
+
                             toolStripStatusCurrentEandI.Text = "("
                                                                 + (_recordingSeries[0][progress] / 1000.00).ToString("0.0") + " s, "
-                                                                + (_recordingSeries[CHANNEL_POTENTIAL][progress] * POTENTIAL_SCALE - POTENTIAL_OFFSET_OSC).ToString("0.0") + " mV, "
-                                                                + ((double)(_recordingSeries[CHANNEL_CURRENT][progress] - CURRENT_OFFSET) * (factorCurrent)).ToString("0.0") + " uA"
+                                                                + p.ToString("0.00") + " mV, "
+                                                                + c.ToString("0.00") + " uA"
                                                                 + ")";
                         }
                     }

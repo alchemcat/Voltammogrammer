@@ -50,9 +50,9 @@
             this.label1.AutoSize = true;
             this.label1.Location = new System.Drawing.Point(28, 108);
             this.label1.Name = "label1";
-            this.label1.Size = new System.Drawing.Size(466, 15);
+            this.label1.Size = new System.Drawing.Size(443, 15);
             this.label1.TabIndex = 0;
-            this.label1.Text = "3. Set the potential (of WE vs RE) read out from an external multimeter:";
+            this.label1.Text = "3. Set the potential (of WE vs. RE) read from an external multimeter:";
             this.label1.Click += new System.EventHandler(this.label1_Click);
             //
             // textBoxPotential
@@ -67,9 +67,9 @@
             this.label2.AutoSize = true;
             this.label2.Location = new System.Drawing.Point(28, 192);
             this.label2.Name = "label2";
-            this.label2.Size = new System.Drawing.Size(339, 15);
+            this.label2.Size = new System.Drawing.Size(313, 15);
             this.label2.TabIndex = 2;
-            this.label2.Text = "6. Set the current read out from Voltammogrammer:";
+            this.label2.Text = "6. Set the current read from Voltammogrammer:";
             //
             // textBoxCurrent
             //
@@ -127,9 +127,9 @@
             this.label6.AutoSize = true;
             this.label6.Location = new System.Drawing.Point(28, 164);
             this.label6.Name = "label6";
-            this.label6.Size = new System.Drawing.Size(439, 15);
+            this.label6.Size = new System.Drawing.Size(416, 15);
             this.label6.TabIndex = 7;
-            this.label6.Text = "5. Set the potential (of WE vs RE) read out from Voltammogrammer:";
+            this.label6.Text = "5. Set the potential (of WE vs. RE) read from Voltammogrammer:";
             //
             // label7
             //
@@ -154,18 +154,18 @@
             this.label9.AutoSize = true;
             this.label9.Location = new System.Drawing.Point(28, 80);
             this.label9.Name = "label9";
-            this.label9.Size = new System.Drawing.Size(324, 15);
+            this.label9.Size = new System.Drawing.Size(327, 15);
             this.label9.TabIndex = 12;
-            this.label9.Text = "2. Run the method at the potential of \"0 vs Ref\".";
+            this.label9.Text = "2. Run the method at the potential of \"0 vs. Ref\".";
             //
             // label10
             //
             this.label10.AutoSize = true;
             this.label10.Location = new System.Drawing.Point(28, 136);
             this.label10.Name = "label10";
-            this.label10.Size = new System.Drawing.Size(279, 15);
+            this.label10.Size = new System.Drawing.Size(255, 15);
             this.label10.TabIndex = 13;
-            this.label10.Text = "4. Click \"Apply\" and run the method again.";
+            this.label10.Text = "4. Click \"Apply\" and rerun the method.";
             //
             // label11
             //
