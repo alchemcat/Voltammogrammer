@@ -3651,14 +3651,39 @@ namespace Voltammogrammer
             double X2 = Math.Pow(10, e.ChartArea.AxisX2.PositionToValue(e.ChartArea.AxisX.ValueToPosition(e.ChartArea.CursorX.Position)));
             double Y2 = e.ChartArea.AxisY2.PositionToValue(e.ChartArea.AxisY.ValueToPosition(e.ChartArea.CursorY.Position));// / 1000 * ((long)_selectedRange / 1000);
 
-            Console.WriteLine($"x1, y1, x2, y2: {X}, {Y1}, {X2}, {Y2}");
+
+            double F1 = 0.0;
+            for(int i = 0; i < chartVoltammogram.Series[1].Points.Count; i++)
+            {
+                if(chartVoltammogram.Series[1].Points[i].XValue < X)
+                {
+                    if(i > 0)
+                    {
+                        // Bode plot: chartVoltammogram.Series[6].Points
+                        // Cole-Cole plot: chartVoltammogram.Series[1].Points
+
+                        // indexがiとi-1のデータ間にXがある
+
+                        double F1_1 = chartVoltammogram.Series[6].Points[i].XValue;
+                        double F1_0 = chartVoltammogram.Series[6].Points[i-1].XValue;
+                        double X1_1 = chartVoltammogram.Series[1].Points[i].XValue;
+                        double X1_0 = chartVoltammogram.Series[1].Points[i-1].XValue;
+
+                        F1 = (F1_1 - F1_0) / (X1_1 - X1_0) * (X - X1_0) + F1_0;
+
+                        break;
+                    }
+                }
+            }
+
+            Console.WriteLine($"x1, y1, f1, x2, y2: {X}, {Y1}, {F1}, {X2}, {Y2}");
 
             string XY = "";
             switch (_selectedMode)
             {
                 case modeMeasurement.eis:
                     //XY = "(" + X + " ohm, " + Y1 + " ohm, " + Math.Sqrt(Math.Pow(X,2) + Math.Pow(Y1, 2)).ToString("0") + " ohm)";
-                    XY = "(" + X + " ohm, " + Y1 + " ohm, " + X2.ToString("0.0") + " Hz, " + Math.Pow(10, Y2).ToString("0.0") + " ohm)";
+                    XY = "[(" + X + " ohm, " + Y1 + " ohm, " + F1.ToString("0.0") + " Hz), (" + X2.ToString("0.0") + " Hz, " + Math.Pow(10, Y2).ToString("0.0") + " ohm)]";
                     break;
                 default:
                     XY = "(" + X + " s, " + Y1 + " mV, " + Y2.ToString("0.000") + " uA)";

@@ -884,7 +884,7 @@
             this.toolStrip2.Location = new System.Drawing.Point(3, 28);
             this.toolStrip2.Name = "toolStrip2";
             this.toolStrip2.RenderMode = System.Windows.Forms.ToolStripRenderMode.Professional;
-            this.toolStrip2.Size = new System.Drawing.Size(785, 28);
+            this.toolStrip2.Size = new System.Drawing.Size(746, 28);
             this.toolStrip2.TabIndex = 3;
             //
             // toolStripLabel1

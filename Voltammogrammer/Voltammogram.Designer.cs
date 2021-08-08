@@ -624,7 +624,8 @@
             this.toolStripComboBoxAxisX.Items.AddRange(new object[] {
             "Potential / mV",
             "Potential / V",
-            "Time / s"});
+            "Time / s",
+            "Time / h"});
             this.toolStripComboBoxAxisX.Name = "toolStripComboBoxAxisX";
             this.toolStripComboBoxAxisX.Size = new System.Drawing.Size(130, 28);
             this.toolStripComboBoxAxisX.SelectedIndexChanged += new System.EventHandler(this.toolStripComboBoxAxisX_SelectedIndexChanged);

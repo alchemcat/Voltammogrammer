@@ -85,10 +85,11 @@ namespace Voltammogrammer
             Potential_in_mV = 0,
             Potential_in_V = 1,
             Time_in_sec = 2,
-            NEED_TO_RENEW = 3,
+            Time_in_hour = 3,
+            NEED_TO_RENEW = 4,
         }
         typeAxisX _selectedAxisX = typeAxisX.Potential_in_mV;
-        double[] _scaleAxisX = { 1000, 1, 1 };
+        double[] _scaleAxisX = { 1000, 1, 1, 0.0002777778 };
 
         const int POTENTIAL = 1, CURRENT = 2, TIME = 3, COULOMB = 4; // POTENTIAL [mV], CURRENT [uA], TIME [s], COULOMB [mC]
 
@@ -1047,6 +1048,10 @@ namespace Voltammogrammer
                                 x = time;
                                 break;
 
+                            case typeAxisX.Time_in_hour:
+                                x = time * _scaleAxisX[(int)typeAxisX.Time_in_hour];
+                                break;
+
                             default:
                                 break;
                         }
@@ -1067,6 +1072,10 @@ namespace Voltammogrammer
 
                             case typeAxisY.Coulomb_in_mC:
                                 y = coulomb;
+                                break;
+
+                            case typeAxisY.Coulomb_in_C:
+                                y = coulomb / _scaleAxisY[(int)typeAxisY.Coulomb_in_mC] * _scaleAxisY[(int)typeAxisY.Coulomb_in_C];
                                 break;
 
                             case typeAxisY.Potential_in_mV:
@@ -1322,7 +1331,7 @@ namespace Voltammogrammer
 
                     int step = (chartVoltammogram.Series[i].Points.Count() < 200) ? 1 : reduced;
 
-                    for (int j = 0; j < chartVoltammogram.Series[i].Points.Count(); j += step)
+                    for (int j = 0, k = 0; j < chartVoltammogram.Series[i].Points.Count(); /* j += step */ )
                     {
                         //serializedSeries += (
                         //      "\t\t"
@@ -1337,13 +1346,37 @@ namespace Voltammogrammer
 
                         //writer.WriteString(chartVoltammogram.Series[i].Points[j].XValue.ToString() + "," + chartVoltammogram.Series[i].Points[j].YValues[0].ToString()+ "\n");
 
-                        writer.WriteString(
-                              "\t\t"
-                            + chartVoltammogram.Series[i].Points[j].XValue.ToString()
-                            + ", "
-                            + String.Join(",", chartVoltammogram.Series[i].Points[j].YValues.Select(o => o.ToString()).ToArray())
-                            + "\n"
-                        );
+                        if (true)
+                        {
+                            // stepずつのpointのみを残す。それ以外のpointはchartVoltammogram.Series[i].Pointsから削除する。
+                            if ((k % step) == 0)
+                            {
+                                writer.WriteString(
+                                      "\t\t"
+                                    + chartVoltammogram.Series[i].Points[j].XValue.ToString()
+                                    + ", "
+                                    + String.Join(",", chartVoltammogram.Series[i].Points[j].YValues.Select(o => o.ToString()).ToArray())
+                                    + "\n"
+                                );
+                                j++;
+                            }
+                            else
+                            {
+                                chartVoltammogram.Series[i].Points.RemoveAt(j);
+                                 // if (k == step) k = 0;
+                            }
+                            k++;
+                        }
+                        else
+                        {
+                            writer.WriteString(
+                                  "\t\t"
+                                + chartVoltammogram.Series[i].Points[j].XValue.ToString()
+                                + ", "
+                                + String.Join(",", chartVoltammogram.Series[i].Points[j].YValues.Select(o => o.ToString()).ToArray())
+                                + "\n"
+                            );
+                        }
                     }
 
                     //writer.WriteElementString("Series", serializedSeries);
@@ -1879,6 +1912,12 @@ namespace Voltammogrammer
                     //chartVoltammogram.ChartAreas[0].AxisX.LabelStyle.Format = "0";
                     break;
 
+                case 3:
+                    _selectedAxisX = typeAxisX.Time_in_hour;
+                    chartVoltammogram.ChartAreas[0].AxisX.Title = "Time / h";
+                    //chartVoltammogram.ChartAreas[0].AxisX.LabelStyle.Format = "0";
+                    break;
+
                 default:
                     break;
             }
@@ -1904,6 +1943,7 @@ namespace Voltammogrammer
                             break;
 
                         case typeAxisX.Time_in_sec:
+                        case typeAxisX.Time_in_hour:
                             itr.XValue = itr.YValues[TIME] / _scaleAxisX[(int)typeAxisX.Time_in_sec] * _scaleAxisX[(int)_selectedAxisX];
                             break;
 
@@ -1924,10 +1964,11 @@ namespace Voltammogrammer
                 }
             }
 
+            if (double.IsNaN(_currentMinX) || double.IsNaN(_currentMaxX)) return;
+
             //   1. 最小値と最大値の更新 (ここでは値のリセットはしない)
             double length = Math.Abs(_currentMaxX - _currentMinX);
             double ext = length * 0.10;
-
             _currentMinX -= ext;
             _currentMaxX += ext;
 
@@ -2014,10 +2055,11 @@ namespace Voltammogrammer
                 }
             }
 
+            if (double.IsNaN(_currentMinY) || double.IsNaN(_currentMaxY)) return;
+
             //   1. 最小値と最大値の更新 (ここでは値のリセットはしない)
             double length = Math.Abs(_currentMaxY - _currentMinY);
             double ext = length * 0.10;
-
             _currentMinY -= ext;
             _currentMaxY += ext;
 
