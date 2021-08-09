@@ -2494,6 +2494,19 @@ namespace Voltammogrammer
                         {
                             chartVoltammogram.Series[1].Points.AddXY(_recordingSeries[CHANNEL_VIRTUAL_REAL_Z][i], _recordingSeries[CHANNEL_VIRTUAL_IM_Z][i]);
                             chartVoltammogram.Series[6].Points.AddXY(_recordingSeries[CHANNEL_VIRTUAL_FREQ][i], Math.Sqrt(Math.Pow(_recordingSeries[CHANNEL_VIRTUAL_REAL_Z][i], 2) + Math.Pow(_recordingSeries[CHANNEL_VIRTUAL_IM_Z][i], 2))); //CHANNEL_VIRTUAL_ATTN
+
+                            _voltammogram.AddDataToCurrentSeries(
+                                _series,
+                                true,
+                                _millivoltInitial + (POTENTIAL_OFFSET_AWG),
+                                formVoltammogram.typeAxisX.Potential_in_mV,
+                                0,
+                                formVoltammogram.typeAxisY.Current_in_uA,
+                                _recordingSeries[0][i] / 1000.00, // [s]
+                                _recordingSeries[CHANNEL_VIRTUAL_REAL_Z][i],
+                                _recordingSeries[CHANNEL_VIRTUAL_IM_Z][i],
+                                _recordingSeries[CHANNEL_VIRTUAL_FREQ][i]
+                            );
                         }
 
                         //Console.WriteLine("_itrRecording: {0}", _itrRecording);
@@ -3650,7 +3663,6 @@ namespace Voltammogrammer
             double Y1 = e.ChartArea.CursorY.Position;
             double X2 = Math.Pow(10, e.ChartArea.AxisX2.PositionToValue(e.ChartArea.AxisX.ValueToPosition(e.ChartArea.CursorX.Position)));
             double Y2 = e.ChartArea.AxisY2.PositionToValue(e.ChartArea.AxisY.ValueToPosition(e.ChartArea.CursorY.Position));// / 1000 * ((long)_selectedRange / 1000);
-
 
             double F1 = 0.0;
             for(int i = 0; i < chartVoltammogram.Series[1].Points.Count; i++)

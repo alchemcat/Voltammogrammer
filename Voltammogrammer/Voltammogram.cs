@@ -76,9 +76,10 @@ namespace Voltammogrammer
             Coulomb_in_C = 3,
             Potential_in_mV = 4,
             Current_in_nA = 5,
+            ImZ_in_ohm = 6,
         }
         typeAxisY _selectedAxisY = typeAxisY.Current_in_uA;
-        double[] _scaleAxisY = { 1000, 1, 1, 0.001, 1, 1000000 };
+        double[] _scaleAxisY = { 1000, 1, 1, 0.001, 1, 1000000, 1 };
 
         public enum typeAxisX : int
         {
@@ -86,12 +87,13 @@ namespace Voltammogrammer
             Potential_in_V = 1,
             Time_in_sec = 2,
             Time_in_hour = 3,
-            NEED_TO_RENEW = 4,
+            ReZ_in_ohm = 4,
+            NEED_TO_RENEW = 5,
         }
         typeAxisX _selectedAxisX = typeAxisX.Potential_in_mV;
-        double[] _scaleAxisX = { 1000, 1, 1, 0.0002777778 };
+        double[] _scaleAxisX = { 1000, 1, 1, 0.0002777778, 1 };
 
-        const int POTENTIAL = 1, CURRENT = 2, TIME = 3, COULOMB = 4; // POTENTIAL [mV], CURRENT [uA], TIME [s], COULOMB [mC]
+        const int POTENTIAL = 1, CURRENT = 2, TIME = 3, COULOMB = 4, RE_Z = 5, IM_Z = 6, FREQ = 7; // POTENTIAL [mV], CURRENT [uA], TIME [s], COULOMB [mC], RE_Z [ohm], IM_Z [ohm], FREQ [Hz]
 
         public formVoltammogram()
         {
@@ -368,8 +370,9 @@ namespace Voltammogrammer
 
             TextReader reader = new StreamReader(file);
 
-            string line; int line_number = 1; int idxPotential = 0, idxCurrent = 0, idxTime = 0; int line_header = 73;
-            double potential, current, time, p = Double.NaN, t = Double.NaN, c = Double.NaN, q = Double.NaN;
+            string line; int line_number = 1; int idxPotential = -1, idxCurrent = -1, idxTime = -1, idxReZ = -1, idxImZ = -1, idxFreq = -1;
+            int line_header = 73;
+            double potential, current, time, ReZ, ImZ, freq, p = Double.NaN, t = Double.NaN, c = Double.NaN, q = Double.NaN;
             while ((line = reader.ReadLine()) != null)
             {
                 switch (line_number)
@@ -416,7 +419,7 @@ namespace Voltammogrammer
                                 //    }
                                 //}
                                 System.Text.RegularExpressions.CaptureCollection cc1 = mcs2[0].Groups[1].Captures;
-                                for (int i = 1; i < cc1.Count; i++)
+                                for (int i = 0; i < cc1.Count; i++)
                                 {
                                     if (cc1[i].Value == "Ewe/V")
                                     {
@@ -433,6 +436,18 @@ namespace Voltammogrammer
                                     else if (cc1[i].Value == "time/s")
                                     {
                                         idxTime = i;
+                                    }
+                                    else if (cc1[i].Value == "-Im(Z)/Ohm")
+                                    {
+                                        idxImZ = i;
+                                    }
+                                    else if (cc1[i].Value == "Re(Z)/Ohm")
+                                    {
+                                        idxReZ = i;
+                                    }
+                                    else if (cc1[i].Value == "freq/Hz")
+                                    {
+                                        idxFreq = i;
                                     }
                                 }
                             }
@@ -471,20 +486,30 @@ namespace Voltammogrammer
                                     //{
                                     if (true || !_mode_coulomb_counting)
                                     {
-                                        if (Double.TryParse(cc[idxTime].Value, out time) && Double.TryParse(cc[idxPotential].Value, out potential) && Double.TryParse(cc[idxCurrent].Value, out current))
+                                        if(idxPotential != -1 && idxCurrent != -1 && idxTime != -1)
                                         {
-                                            potential *= 1000.0; current *= 1000.0;
-
-                                            if (true || Double.IsNaN(p) || Math.Abs(potential - p) >= 0.1)
+                                            if (Double.TryParse(cc[idxTime].Value, out time) && Double.TryParse(cc[idxPotential].Value, out potential) && Double.TryParse(cc[idxCurrent].Value, out current))
                                             {
-                                                if (true)
+                                                potential *= 1000.0; current *= 1000.0;
+
+                                                if (true || Double.IsNaN(p) || Math.Abs(potential - p) >= 0.1)
                                                 {
-                                                    AddDataToCurrentSeries(series, !_mode_coulomb_counting, potential, typeAxisX.Potential_in_mV, current, typeAxisY.Current_in_uA, time);
-                                                    p = potential;
+                                                    if (true)
+                                                    {
+                                                        AddDataToCurrentSeries(series, !_mode_coulomb_counting, potential, typeAxisX.Potential_in_mV, current, typeAxisY.Current_in_uA, time);
+                                                        p = potential;
+                                                    }
+                                                }
+                                                else
+                                                {
                                                 }
                                             }
-                                            else
+                                        }
+                                        else if(idxReZ != -1 && idxImZ != -1)
+                                        {
+                                            if (Double.TryParse(cc[idxReZ].Value, out ReZ) && Double.TryParse(cc[idxImZ].Value, out ImZ) && Double.TryParse(cc[idxFreq].Value, out freq))
                                             {
+                                                AddDataToCurrentSeries(series, !_mode_coulomb_counting, 0, typeAxisX.Potential_in_mV, 0, typeAxisY.Current_in_uA, 0, ReZ, ImZ, freq);
                                             }
                                         }
                                         else
@@ -698,7 +723,7 @@ namespace Voltammogrammer
 
                 string lines;
                 string line; string[] values;
-                double x, y, y1, y2, y3, y4;
+                double x, y, y1, y2, y3, y4, y5, y6, y7;
                 string name, original_name;
                 string color, width, dash;
 
@@ -756,6 +781,30 @@ namespace Voltammogrammer
                                     y3, //time,
                                     y4  //coulomb
                                 );
+                            }
+                            else if (
+                                values.Length == 9
+                                && Double.TryParse(values[0], out x)
+                                && Double.TryParse(values[1], out y)
+                                && Double.TryParse(values[2], out y1)
+                                && Double.TryParse(values[3], out y2)
+                                && Double.TryParse(values[4], out y3)
+                                && Double.TryParse(values[5], out y4)
+                                && Double.TryParse(values[6], out y5)
+                                && Double.TryParse(values[7], out y6)
+                                && Double.TryParse(values[8], out y7)
+                            )
+                            {
+                                series.Points.AddXY(
+                                    x,
+                                    y,
+                                    y1, //potential,
+                                    y2, //current,
+                                    y3, //time,
+                                    y4, //coulomb
+                                    y5, y6, y7 // ReZ, ImZ, Freq
+                                );
+
                             }
                             else
                             {
@@ -963,7 +1012,7 @@ namespace Voltammogrammer
             chartVoltammogram.Series[_currentIndex].Color = chartVoltammogram.PaletteCustomColors[(_currentIndex % 10)];
             chartVoltammogram.Series[_currentIndex].BorderDashStyle = System.Windows.Forms.DataVisualization.Charting.ChartDashStyle.Solid;
             chartVoltammogram.Series[_currentIndex].BorderWidth = 1;
-            chartVoltammogram.Series[_currentIndex].YValuesPerPoint = 5;
+            chartVoltammogram.Series[_currentIndex].YValuesPerPoint = 5+3;
             XMLDataHolder dh = new XMLDataHolder();
             dh.SetDatum("reference", "0");
             dh.SetDatumAttribute("reference", "unit", "mV");
@@ -999,7 +1048,7 @@ namespace Voltammogrammer
             _show_information.SetInformation(((XMLDataHolder)chartVoltammogram.Series[idx].Tag).GetData());
         }
 
-        public void AddDataToCurrentSeries(System.Windows.Forms.DataVisualization.Charting.Series series, bool mode_voltammmetry, double x_value, typeAxisX scaleX, double y_value, typeAxisY scaleY, double time)
+        public void AddDataToCurrentSeries(System.Windows.Forms.DataVisualization.Charting.Series series, bool mode_voltammmetry, double x_value, typeAxisX scaleX, double y_value, typeAxisY scaleY, double time, double ReZ = 0, double ImZ = 0, double freq = 0)
         {
             // chronoamperogramモードなのに、現インスタンスが_mode_coulomb_countingでない場合には、_chronoamperogramのそれを呼び出し
             if (false && !mode_voltammmetry && !_mode_coulomb_counting)
@@ -1052,6 +1101,10 @@ namespace Voltammogrammer
                                 x = time * _scaleAxisX[(int)typeAxisX.Time_in_hour];
                                 break;
 
+                            case typeAxisX.ReZ_in_ohm:
+                                x = ReZ;
+                                break;
+
                             default:
                                 break;
                         }
@@ -1082,6 +1135,10 @@ namespace Voltammogrammer
                                 y = potential;
                                 break;
 
+                            case typeAxisY.ImZ_in_ohm:
+                                y = ImZ;
+                                break;
+
                             default:
                                 break;
                         }
@@ -1093,7 +1150,8 @@ namespace Voltammogrammer
                             potential,
                             current,
                             time,
-                            coulomb
+                            coulomb,
+                            ReZ, ImZ, freq
                         );
                     });
                 }
@@ -1470,8 +1528,9 @@ namespace Voltammogrammer
                     switch (_selectedAxisX)
                     {
                         case typeAxisX.Potential_in_mV: potential = "mV"; break;
-                        case typeAxisX.Potential_in_V: potential = "V"; break;
-                        case typeAxisX.Time_in_sec: potential = "s"; break;
+                        case typeAxisX.Potential_in_V:  potential = "V"; break;
+                        case typeAxisX.Time_in_sec:     potential = "s"; break;
+                        case typeAxisX.ReZ_in_ohm:      potential = "ohm(ReZ)"; break;
                         default: break;
                     }
                     writer.Write(", {0}", potential);
@@ -1485,6 +1544,8 @@ namespace Voltammogrammer
                             case typeAxisY.Current_in_uA: current = "uA"; break;
                             case typeAxisY.Current_in_mA: current = "mA"; break;
                             case typeAxisY.Coulomb_in_mC: current = "mC"; break;
+                            case typeAxisY.Coulomb_in_C:  current = "C"; break;
+                            case typeAxisY.ImZ_in_ohm:    current = "ohm(ImZ)"; break;
                             default: break;
                         }
 
@@ -1519,8 +1580,9 @@ namespace Voltammogrammer
                         switch (_selectedAxisX)
                         {
                             case typeAxisX.Potential_in_mV: potential = "mV"; break;
-                            case typeAxisX.Potential_in_V: potential = "V"; break;
-                            case typeAxisX.Time_in_sec: potential = "s"; break;
+                            case typeAxisX.Potential_in_V:  potential = "V"; break;
+                            case typeAxisX.Time_in_sec:     potential = "s"; break;
+                            case typeAxisX.ReZ_in_ohm:      potential = "ohm(ReZ)"; break;
                             default: break;
                         }
                         switch (_selectedAxisY)
@@ -1529,6 +1591,8 @@ namespace Voltammogrammer
                             case typeAxisY.Current_in_uA: current = "uA"; break;
                             case typeAxisY.Current_in_mA: current = "mA"; break;
                             case typeAxisY.Coulomb_in_mC: current = "mC"; break;
+                            case typeAxisY.Coulomb_in_C:  current = "C"; break;
+                            case typeAxisY.ImZ_in_ohm:    current = "ohm(ImZ)"; break;
                             default: break;
                         }
 
@@ -1612,39 +1676,86 @@ namespace Voltammogrammer
 
         private void chartVoltammogram_CursorPositionChanged(object sender, System.Windows.Forms.DataVisualization.Charting.CursorEventArgs e)
         {
-            if (_selectedAxisY != typeAxisY.Coulomb_in_mC && _selectedAxisY != typeAxisY.Coulomb_in_C)
-            {
-                string format_volt = "0", format_current = "0";
-                string unit_x = "", unit_y= "";
-                switch(_selectedAxisX)
-                {
-                    case typeAxisX.Potential_in_mV: unit_x = "mV"; format_volt = "0.0"; break;
-                    case typeAxisX.Potential_in_V: unit_x = "V"; format_volt = "0.0000"; break;
-                }
-                switch(_selectedAxisY)
-                {
-                    case typeAxisY.Current_in_nA: unit_y = "nA"; format_current = "0.000"; break;
-                    case typeAxisY.Current_in_uA: unit_y = "uA"; format_current = "0.000"; break;
-                    case typeAxisY.Current_in_mA: unit_y = "mA"; format_current = "0.000"; break;
-                }
+            string X, Y1, XY;
 
-                string X = e.ChartArea.CursorX.Position.ToString(format_volt);
-                string Y1 = e.ChartArea.CursorY.Position.ToString(format_current);
-                string XY = "(" + X + " " + unit_x + ", " + Y1 + " " + unit_y + ")";
-                toolStripStatusCursor.Text = XY;
-
-                if (_calc_halfwavepotential.Visible)
-                {
-                    _calc_halfwavepotential.SetCursor(e.ChartArea.CursorX.Position / _scaleAxisX[(int)_selectedAxisX] * _scaleAxisX[(int)typeAxisX.Potential_in_mV]);
-                }
-            }
-            else
+            switch(_selectedAxisY)
             {
-                string X = e.ChartArea.CursorX.Position.ToString("0");
-                string Y1 = (e.ChartArea.CursorY.Position / _scaleAxisY[(int)_selectedAxisY]).ToString("0.000");
-                string XY = "(" + X + " s, " + Y1 + " mC corresponding to " + (e.ChartArea.CursorY.Position/96485.3329 * 1000 / _scaleAxisY[(int)_selectedAxisY]).ToString("0.000") + " umol of electron)";
-                toolStripStatusCursor.Text = XY;
+                case typeAxisY.Coulomb_in_mC:
+                case typeAxisY.Coulomb_in_C:
+                    X = e.ChartArea.CursorX.Position.ToString("0");
+                    Y1 = (e.ChartArea.CursorY.Position / _scaleAxisY[(int)_selectedAxisY]).ToString("0.000");
+                    XY = "(" + X + " s, " + Y1 + " mC corresponding to " + (e.ChartArea.CursorY.Position/96485.3329 * 1000 / _scaleAxisY[(int)_selectedAxisY]).ToString("0.000") + " umol of electron)";
+                    toolStripStatusCursor.Text = XY;
+                    break;
+
+                case typeAxisY.Current_in_mA:
+                case typeAxisY.Current_in_nA:
+                case typeAxisY.Current_in_uA:
+                case typeAxisY.Potential_in_mV:
+                    string format_volt = "0", format_current = "0";
+                    string unit_x = "", unit_y= "";
+                    switch(_selectedAxisX)
+                    {
+                        case typeAxisX.Potential_in_mV: unit_x = "mV"; format_volt = "0.0"; break;
+                        case typeAxisX.Potential_in_V: unit_x = "V"; format_volt = "0.0000"; break;
+                    }
+                    switch(_selectedAxisY)
+                    {
+                        case typeAxisY.Current_in_nA: unit_y = "nA"; format_current = "0.000"; break;
+                        case typeAxisY.Current_in_uA: unit_y = "uA"; format_current = "0.000"; break;
+                        case typeAxisY.Current_in_mA: unit_y = "mA"; format_current = "0.000"; break;
+                    }
+
+                    X = e.ChartArea.CursorX.Position.ToString(format_volt);
+                    Y1 = e.ChartArea.CursorY.Position.ToString(format_current);
+                    XY = "(" + X + " " + unit_x + ", " + Y1 + " " + unit_y + ")";
+                    toolStripStatusCursor.Text = XY;
+
+                    if (_calc_halfwavepotential.Visible)
+                    {
+                        _calc_halfwavepotential.SetCursor(e.ChartArea.CursorX.Position / _scaleAxisX[(int)_selectedAxisX] * _scaleAxisX[(int)typeAxisX.Potential_in_mV]);
+                    }
+                    break;
+
+                case typeAxisY.ImZ_in_ohm:
+                    double x = e.ChartArea.CursorX.Position;
+                    double y = e.ChartArea.CursorY.Position;
+                    double f1 = 0.0;
+                    for (int i = 0; i < chartVoltammogram.Series[_currentIndex].Points.Count; i++)
+                    {
+                        if (chartVoltammogram.Series[_currentIndex].Points[i].XValue < x)
+                        {
+                            if (i > 0)
+                            {
+                                // Bode plot: chartVoltammogram.Series[6].Points
+                                // Cole-Cole plot: chartVoltammogram.Series[1].Points
+
+                                // indexがiとi-1のデータ間にXがある
+
+                                double f1_1 = chartVoltammogram.Series[_currentIndex].Points[i].YValues[FREQ];
+                                double f1_0 = chartVoltammogram.Series[_currentIndex].Points[i - 1].YValues[FREQ];
+                                double x1_1 = chartVoltammogram.Series[_currentIndex].Points[i].XValue;
+                                double x1_0 = chartVoltammogram.Series[_currentIndex].Points[i - 1].XValue;
+
+                                f1 = (f1_1 - f1_0) / (x1_1 - x1_0) * (x - x1_0) + f1_0;
+
+                                break;
+                            }
+                        }
+                    }
+                    XY = "(" + x.ToString() + " ohm" + ", " + y.ToString() + " ohm, " + f1.ToString("0.0") + " Hz)";
+                    toolStripStatusCursor.Text = XY;
+                    break;
+
+                default:
+                    break;
             }
+            //if (_selectedAxisY != typeAxisY.Coulomb_in_mC && _selectedAxisY != typeAxisY.Coulomb_in_C)
+            //{
+            //}
+            //else
+            //{
+            //}
         }
 
         private void chartVoltammogram_AxisViewChanging(object sender, System.Windows.Forms.DataVisualization.Charting.ViewEventArgs e)
@@ -1918,6 +2029,12 @@ namespace Voltammogrammer
                     //chartVoltammogram.ChartAreas[0].AxisX.LabelStyle.Format = "0";
                     break;
 
+                case 4:
+                    _selectedAxisX = typeAxisX.ReZ_in_ohm;
+                    chartVoltammogram.ChartAreas[0].AxisX.Title = "Re[Z] / ohm";
+                    //chartVoltammogram.ChartAreas[0].AxisX.LabelStyle.Format = "0";
+                    break;
+
                 default:
                     break;
             }
@@ -1945,6 +2062,10 @@ namespace Voltammogrammer
                         case typeAxisX.Time_in_sec:
                         case typeAxisX.Time_in_hour:
                             itr.XValue = itr.YValues[TIME] / _scaleAxisX[(int)typeAxisX.Time_in_sec] * _scaleAxisX[(int)_selectedAxisX];
+                            break;
+
+                        case typeAxisX.ReZ_in_ohm:
+                            itr.XValue = itr.YValues[RE_Z];
                             break;
 
                         default:
@@ -2006,6 +2127,10 @@ namespace Voltammogrammer
                     _selectedAxisY = typeAxisY.Potential_in_mV;
                     chartVoltammogram.ChartAreas[0].AxisY.Title = "Potential / mV";
                     break;
+                case 6:
+                    _selectedAxisY = typeAxisY.ImZ_in_ohm;
+                    chartVoltammogram.ChartAreas[0].AxisY.Title = "Im[Z] / ohm";
+                    break;
                 default:
                     break;
             }
@@ -2038,6 +2163,10 @@ namespace Voltammogrammer
 
                         case typeAxisY.Potential_in_mV:
                             itr.YValues[0] = itr.YValues[POTENTIAL] / _scaleAxisY[(int)typeAxisY.Potential_in_mV] * _scaleAxisY[(int)_selectedAxisY];
+                            break;
+
+                        case typeAxisY.ImZ_in_ohm:
+                            itr.YValues[0] = itr.YValues[IM_Z];
                             break;
 
                         default:
