@@ -1387,6 +1387,8 @@ namespace Voltammogrammer
                     writer.WriteAttributeString("width", chartVoltammogram.Series[i].BorderWidth.ToString());
                     writer.WriteAttributeString("dash", ((int)chartVoltammogram.Series[i].BorderDashStyle).ToString());
 
+                    writer.WriteString("\n");
+
                     int step = (chartVoltammogram.Series[i].Points.Count() < 200) ? 1 : reduced;
 
                     for (int j = 0, k = 0; j < chartVoltammogram.Series[i].Points.Count(); /* j += step */ )
