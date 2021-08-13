@@ -194,12 +194,60 @@ namespace Voltammogrammer.Properties {
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("0")]
-        public double offset_potential_osc {
+        public double offset_potential_osc1 {
             get {
-                return ((double)(this["offset_potential_osc"]));
+                return ((double)(this["offset_potential_osc1"]));
             }
             set {
-                this["offset_potential_osc"] = value;
+                this["offset_potential_osc1"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("0")]
+        public double offset_potential_osc2 {
+            get {
+                return ((double)(this["offset_potential_osc2"]));
+            }
+            set {
+                this["offset_potential_osc2"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("1000")]
+        public double offset_resistor_ref {
+            get {
+                return ((double)(this["offset_resistor_ref"]));
+            }
+            set {
+                this["offset_resistor_ref"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("1000")]
+        public double slope_potential {
+            get {
+                return ((double)(this["slope_potential"]));
+            }
+            set {
+                this["slope_potential"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("1000")]
+        public double slope_current {
+            get {
+                return ((double)(this["slope_current"]));
+            }
+            set {
+                this["slope_current"] = value;
             }
         }
     }
