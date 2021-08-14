@@ -230,12 +230,12 @@ namespace Voltammogrammer.Properties {
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("1000")]
-        public double slope_potential {
+        public double slope_potential_awg {
             get {
-                return ((double)(this["slope_potential"]));
+                return ((double)(this["slope_potential_awg"]));
             }
             set {
-                this["slope_potential"] = value;
+                this["slope_potential_awg"] = value;
             }
         }
         
@@ -248,6 +248,30 @@ namespace Voltammogrammer.Properties {
             }
             set {
                 this["slope_current"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("1000")]
+        public double slope_potential_osc1 {
+            get {
+                return ((double)(this["slope_potential_osc1"]));
+            }
+            set {
+                this["slope_potential_osc1"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("1000")]
+        public double slope_potential_osc2 {
+            get {
+                return ((double)(this["slope_potential_osc2"]));
+            }
+            set {
+                this["slope_potential_osc2"] = value;
             }
         }
     }

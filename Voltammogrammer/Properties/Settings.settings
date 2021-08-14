@@ -53,10 +53,16 @@
     <Setting Name="offset_resistor_ref" Type="System.Double" Scope="User">
       <Value Profile="(Default)">1000</Value>
     </Setting>
-    <Setting Name="slope_potential" Type="System.Double" Scope="User">
+    <Setting Name="slope_potential_awg" Type="System.Double" Scope="User">
       <Value Profile="(Default)">1000</Value>
     </Setting>
     <Setting Name="slope_current" Type="System.Double" Scope="User">
+      <Value Profile="(Default)">1000</Value>
+    </Setting>
+    <Setting Name="slope_potential_osc1" Type="System.Double" Scope="User">
+      <Value Profile="(Default)">1000</Value>
+    </Setting>
+    <Setting Name="slope_potential_osc2" Type="System.Double" Scope="User">
       <Value Profile="(Default)">1000</Value>
     </Setting>
   </Settings>

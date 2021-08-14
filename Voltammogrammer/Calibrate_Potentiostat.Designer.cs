@@ -52,19 +52,27 @@
             this.label14 = new System.Windows.Forms.Label();
             this.label16 = new System.Windows.Forms.Label();
             this.label17 = new System.Windows.Forms.Label();
-            this.label18 = new System.Windows.Forms.Label();
-            this.textBoxPotentialSlope = new System.Windows.Forms.TextBox();
-            this.label19 = new System.Windows.Forms.Label();
-            this.textBoxCurrentSlope = new System.Windows.Forms.TextBox();
-            this.label20 = new System.Windows.Forms.Label();
-            this.label21 = new System.Windows.Forms.Label();
             this.toolStrip1 = new System.Windows.Forms.ToolStrip();
             this.toolStripButton1 = new System.Windows.Forms.ToolStripButton();
+            this.toolStripSeparator1 = new System.Windows.Forms.ToolStripSeparator();
             this.toolStripButton2 = new System.Windows.Forms.ToolStripButton();
             this.toolStripLabel1 = new System.Windows.Forms.ToolStripLabel();
             this.toolStripTextBoxID = new System.Windows.Forms.ToolStripTextBox();
             this.toolStripLabel2 = new System.Windows.Forms.ToolStripLabel();
-            this.toolStripSeparator1 = new System.Windows.Forms.ToolStripSeparator();
+            this.label22 = new System.Windows.Forms.Label();
+            this.label23 = new System.Windows.Forms.Label();
+            this.textBoxPotential2 = new System.Windows.Forms.TextBox();
+            this.label24 = new System.Windows.Forms.Label();
+            this.label25 = new System.Windows.Forms.Label();
+            this.textBoxPotentialSlopeOsc2 = new System.Windows.Forms.TextBox();
+            this.label26 = new System.Windows.Forms.Label();
+            this.label27 = new System.Windows.Forms.Label();
+            this.textBoxPotentialSlopeOsc1 = new System.Windows.Forms.TextBox();
+            this.label28 = new System.Windows.Forms.Label();
+            this.label29 = new System.Windows.Forms.Label();
+            this.textBoxCurrentSlope = new System.Windows.Forms.TextBox();
+            this.label30 = new System.Windows.Forms.Label();
+            this.buttonSave = new System.Windows.Forms.Button();
             this.toolStrip1.SuspendLayout();
             this.SuspendLayout();
             //
@@ -104,10 +112,10 @@
             //
             // buttonApply
             //
-            this.buttonApply.Location = new System.Drawing.Point(661, 474);
+            this.buttonApply.Location = new System.Drawing.Point(543, 540);
             this.buttonApply.Name = "buttonApply";
             this.buttonApply.Size = new System.Drawing.Size(103, 28);
-            this.buttonApply.TabIndex = 10;
+            this.buttonApply.TabIndex = 20;
             this.buttonApply.Text = "Apply";
             this.buttonApply.UseVisualStyleBackColor = true;
             this.buttonApply.Click += new System.EventHandler(this.buttonApply_Click);
@@ -169,7 +177,7 @@
             // label8
             //
             this.label8.AutoSize = true;
-            this.label8.Location = new System.Drawing.Point(46, 160);
+            this.label8.Location = new System.Drawing.Point(46, 134);
             this.label8.Name = "label8";
             this.label8.Size = new System.Drawing.Size(516, 15);
             this.label8.TabIndex = 11;
@@ -205,17 +213,17 @@
             // label12
             //
             this.label12.AutoSize = true;
-            this.label12.Location = new System.Drawing.Point(46, 105);
+            this.label12.Location = new System.Drawing.Point(46, 79);
             this.label12.Name = "label12";
-            this.label12.Size = new System.Drawing.Size(577, 30);
+            this.label12.Size = new System.Drawing.Size(639, 30);
             this.label12.TabIndex = 15;
             this.label12.Text = "0. Configure an external multimeter (DMM) and the potentiostat with an external r" +
-    "esistor.\r\n    Set the actual value for the resistor:";
+    "esistor (1 kohm).\r\n    Set the actual value for the resistor:";
             //
             // label13
             //
             this.label13.AutoSize = true;
-            this.label13.Location = new System.Drawing.Point(449, 129);
+            this.label13.Location = new System.Drawing.Point(449, 103);
             this.label13.Name = "label13";
             this.label13.Size = new System.Drawing.Size(37, 15);
             this.label13.TabIndex = 17;
@@ -223,7 +231,7 @@
             //
             // textBoxResistor
             //
-            this.textBoxResistor.Location = new System.Drawing.Point(384, 126);
+            this.textBoxResistor.Location = new System.Drawing.Point(384, 100);
             this.textBoxResistor.Name = "textBoxResistor";
             this.textBoxResistor.Size = new System.Drawing.Size(60, 22);
             this.textBoxResistor.TabIndex = 1;
@@ -250,7 +258,7 @@
             //
             this.label14.AutoSize = true;
             this.label14.Font = new System.Drawing.Font("MS UI Gothic", 9F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(128)));
-            this.label14.Location = new System.Drawing.Point(25, 79);
+            this.label14.Location = new System.Drawing.Point(25, 162);
             this.label14.Name = "label14";
             this.label14.Size = new System.Drawing.Size(78, 15);
             this.label14.TabIndex = 22;
@@ -262,9 +270,9 @@
             this.label16.Font = new System.Drawing.Font("MS UI Gothic", 9F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(128)));
             this.label16.Location = new System.Drawing.Point(25, 357);
             this.label16.Name = "label16";
-            this.label16.Size = new System.Drawing.Size(71, 15);
+            this.label16.Size = new System.Drawing.Size(146, 15);
             this.label16.TabIndex = 24;
-            this.label16.Text = "[ Slope ]";
+            this.label16.Text = "[ Slope (optional) ]";
             //
             // label17
             //
@@ -274,58 +282,6 @@
             this.label17.Size = new System.Drawing.Size(384, 15);
             this.label17.TabIndex = 25;
             this.label17.Text = "8. Run the method at the potential of \"+1000 mV vs. Ref\".";
-            //
-            // label18
-            //
-            this.label18.AutoSize = true;
-            this.label18.Location = new System.Drawing.Point(46, 418);
-            this.label18.Name = "label18";
-            this.label18.Size = new System.Drawing.Size(495, 15);
-            this.label18.TabIndex = 26;
-            this.label18.Text = "9. Set the potential (of WE vs. RE) and current read from Voltammogrammer:";
-            //
-            // textBoxPotentialSlope
-            //
-            this.textBoxPotentialSlope.Location = new System.Drawing.Point(547, 415);
-            this.textBoxPotentialSlope.Name = "textBoxPotentialSlope";
-            this.textBoxPotentialSlope.Size = new System.Drawing.Size(60, 22);
-            this.textBoxPotentialSlope.TabIndex = 6;
-            this.textBoxPotentialSlope.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
-            //
-            // label19
-            //
-            this.label19.AutoSize = true;
-            this.label19.Location = new System.Drawing.Point(613, 418);
-            this.label19.Name = "label19";
-            this.label19.Size = new System.Drawing.Size(59, 15);
-            this.label19.TabIndex = 28;
-            this.label19.Text = "mV and ";
-            //
-            // textBoxCurrentSlope
-            //
-            this.textBoxCurrentSlope.Location = new System.Drawing.Point(668, 415);
-            this.textBoxCurrentSlope.Name = "textBoxCurrentSlope";
-            this.textBoxCurrentSlope.Size = new System.Drawing.Size(60, 22);
-            this.textBoxCurrentSlope.TabIndex = 7;
-            this.textBoxCurrentSlope.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
-            //
-            // label20
-            //
-            this.label20.AutoSize = true;
-            this.label20.Location = new System.Drawing.Point(734, 418);
-            this.label20.Name = "label20";
-            this.label20.Size = new System.Drawing.Size(27, 15);
-            this.label20.TabIndex = 30;
-            this.label20.Text = "uA.";
-            //
-            // label21
-            //
-            this.label21.AutoSize = true;
-            this.label21.Location = new System.Drawing.Point(38, 444);
-            this.label21.Name = "label21";
-            this.label21.Size = new System.Drawing.Size(156, 15);
-            this.label21.TabIndex = 31;
-            this.label21.Text = "10. Click \"Apply\" again.";
             //
             // toolStrip1
             //
@@ -339,7 +295,7 @@
             this.toolStripLabel2});
             this.toolStrip1.Location = new System.Drawing.Point(0, 0);
             this.toolStrip1.Name = "toolStrip1";
-            this.toolStrip1.Size = new System.Drawing.Size(778, 27);
+            this.toolStrip1.Size = new System.Drawing.Size(773, 27);
             this.toolStrip1.TabIndex = 35;
             this.toolStrip1.Text = "toolStrip1";
             //
@@ -351,6 +307,11 @@
             this.toolStripButton1.Name = "toolStripButton1";
             this.toolStripButton1.Size = new System.Drawing.Size(46, 24);
             this.toolStripButton1.Text = "Load";
+            //
+            // toolStripSeparator1
+            //
+            this.toolStripSeparator1.Name = "toolStripSeparator1";
+            this.toolStripSeparator1.Size = new System.Drawing.Size(6, 27);
             //
             // toolStripButton2
             //
@@ -379,23 +340,149 @@
             this.toolStripLabel2.Size = new System.Drawing.Size(14, 24);
             this.toolStripLabel2.Text = ")";
             //
-            // toolStripSeparator1
+            // label22
             //
-            this.toolStripSeparator1.Name = "toolStripSeparator1";
-            this.toolStripSeparator1.Size = new System.Drawing.Size(6, 27);
+            this.label22.AutoSize = true;
+            this.label22.Location = new System.Drawing.Point(38, 445);
+            this.label22.Name = "label22";
+            this.label22.Size = new System.Drawing.Size(263, 15);
+            this.label22.TabIndex = 39;
+            this.label22.Text = "10. Click \"Apply\" and rerun the method.";
+            //
+            // label23
+            //
+            this.label23.AutoSize = true;
+            this.label23.Location = new System.Drawing.Point(450, 418);
+            this.label23.Name = "label23";
+            this.label23.Size = new System.Drawing.Size(30, 15);
+            this.label23.TabIndex = 38;
+            this.label23.Text = "mV.";
+            //
+            // textBoxPotential2
+            //
+            this.textBoxPotential2.Location = new System.Drawing.Point(384, 415);
+            this.textBoxPotential2.Name = "textBoxPotential2";
+            this.textBoxPotential2.Size = new System.Drawing.Size(60, 22);
+            this.textBoxPotential2.TabIndex = 6;
+            this.textBoxPotential2.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
+            //
+            // label24
+            //
+            this.label24.AutoSize = true;
+            this.label24.Location = new System.Drawing.Point(46, 418);
+            this.label24.Name = "label24";
+            this.label24.Size = new System.Drawing.Size(332, 15);
+            this.label24.TabIndex = 36;
+            this.label24.Text = "9. Set the potential (of WE vs. RE) read from DMM:";
+            //
+            // label25
+            //
+            this.label25.AutoSize = true;
+            this.label25.Location = new System.Drawing.Point(734, 473);
+            this.label25.Name = "label25";
+            this.label25.Size = new System.Drawing.Size(30, 15);
+            this.label25.TabIndex = 48;
+            this.label25.Text = "mV.";
+            //
+            // textBoxPotentialSlopeOsc2
+            //
+            this.textBoxPotentialSlopeOsc2.Location = new System.Drawing.Point(668, 470);
+            this.textBoxPotentialSlopeOsc2.Name = "textBoxPotentialSlopeOsc2";
+            this.textBoxPotentialSlopeOsc2.Size = new System.Drawing.Size(60, 22);
+            this.textBoxPotentialSlopeOsc2.TabIndex = 8;
+            this.textBoxPotentialSlopeOsc2.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
+            //
+            // label26
+            //
+            this.label26.AutoSize = true;
+            this.label26.Location = new System.Drawing.Point(38, 529);
+            this.label26.Name = "label26";
+            this.label26.Size = new System.Drawing.Size(172, 15);
+            this.label26.TabIndex = 47;
+            this.label26.Text = "13. Click \"Save && Close\".";
+            //
+            // label27
+            //
+            this.label27.AutoSize = true;
+            this.label27.Location = new System.Drawing.Point(450, 472);
+            this.label27.Name = "label27";
+            this.label27.Size = new System.Drawing.Size(212, 15);
+            this.label27.TabIndex = 46;
+            this.label27.Text = "mV and from Voltammogrammer:";
+            //
+            // textBoxPotentialSlopeOsc1
+            //
+            this.textBoxPotentialSlopeOsc1.Location = new System.Drawing.Point(384, 469);
+            this.textBoxPotentialSlopeOsc1.Name = "textBoxPotentialSlopeOsc1";
+            this.textBoxPotentialSlopeOsc1.Size = new System.Drawing.Size(60, 22);
+            this.textBoxPotentialSlopeOsc1.TabIndex = 7;
+            this.textBoxPotentialSlopeOsc1.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
+            //
+            // label28
+            //
+            this.label28.AutoSize = true;
+            this.label28.Location = new System.Drawing.Point(38, 473);
+            this.label28.Name = "label28";
+            this.label28.Size = new System.Drawing.Size(340, 15);
+            this.label28.TabIndex = 45;
+            this.label28.Text = "11. Set the potential (of WE vs. RE) read from DMM:";
+            //
+            // label29
+            //
+            this.label29.AutoSize = true;
+            this.label29.Location = new System.Drawing.Point(450, 501);
+            this.label29.Name = "label29";
+            this.label29.Size = new System.Drawing.Size(27, 15);
+            this.label29.TabIndex = 44;
+            this.label29.Text = "uA.";
+            //
+            // textBoxCurrentSlope
+            //
+            this.textBoxCurrentSlope.Location = new System.Drawing.Point(384, 498);
+            this.textBoxCurrentSlope.Name = "textBoxCurrentSlope";
+            this.textBoxCurrentSlope.Size = new System.Drawing.Size(60, 22);
+            this.textBoxCurrentSlope.TabIndex = 9;
+            this.textBoxCurrentSlope.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
+            //
+            // label30
+            //
+            this.label30.AutoSize = true;
+            this.label30.Location = new System.Drawing.Point(38, 501);
+            this.label30.Name = "label30";
+            this.label30.Size = new System.Drawing.Size(321, 15);
+            this.label30.TabIndex = 40;
+            this.label30.Text = "12. Set the current read from Voltammogrammer:";
+            //
+            // buttonSave
+            //
+            this.buttonSave.Location = new System.Drawing.Point(658, 540);
+            this.buttonSave.Name = "buttonSave";
+            this.buttonSave.Size = new System.Drawing.Size(103, 28);
+            this.buttonSave.TabIndex = 21;
+            this.buttonSave.Text = "Save && Close";
+            this.buttonSave.UseVisualStyleBackColor = true;
+            this.buttonSave.Click += new System.EventHandler(this.buttonSave_Click);
             //
             // Calibrate_Potentiostat
             //
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 15F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(778, 519);
-            this.Controls.Add(this.toolStrip1);
-            this.Controls.Add(this.label21);
-            this.Controls.Add(this.label20);
+            this.ClientSize = new System.Drawing.Size(773, 580);
+            this.Controls.Add(this.buttonSave);
+            this.Controls.Add(this.label25);
+            this.Controls.Add(this.textBoxPotentialSlopeOsc2);
+            this.Controls.Add(this.label26);
+            this.Controls.Add(this.label27);
+            this.Controls.Add(this.textBoxPotentialSlopeOsc1);
+            this.Controls.Add(this.label28);
+            this.Controls.Add(this.label29);
             this.Controls.Add(this.textBoxCurrentSlope);
-            this.Controls.Add(this.label19);
-            this.Controls.Add(this.textBoxPotentialSlope);
-            this.Controls.Add(this.label18);
+            this.Controls.Add(this.label30);
+            this.Controls.Add(this.label22);
+            this.Controls.Add(this.label23);
+            this.Controls.Add(this.textBoxPotential2);
+            this.Controls.Add(this.label24);
+            this.Controls.Add(this.toolStrip1);
             this.Controls.Add(this.label17);
             this.Controls.Add(this.label16);
             this.Controls.Add(this.label14);
@@ -460,12 +547,6 @@
         private System.Windows.Forms.Label label14;
         private System.Windows.Forms.Label label16;
         private System.Windows.Forms.Label label17;
-        private System.Windows.Forms.Label label18;
-        private System.Windows.Forms.TextBox textBoxPotentialSlope;
-        private System.Windows.Forms.Label label19;
-        private System.Windows.Forms.TextBox textBoxCurrentSlope;
-        private System.Windows.Forms.Label label20;
-        private System.Windows.Forms.Label label21;
         private System.Windows.Forms.ToolStrip toolStrip1;
         private System.Windows.Forms.ToolStripButton toolStripButton1;
         private System.Windows.Forms.ToolStripButton toolStripButton2;
@@ -473,5 +554,19 @@
         private System.Windows.Forms.ToolStripTextBox toolStripTextBoxID;
         private System.Windows.Forms.ToolStripLabel toolStripLabel2;
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator1;
+        private System.Windows.Forms.Label label22;
+        private System.Windows.Forms.Label label23;
+        private System.Windows.Forms.TextBox textBoxPotential2;
+        private System.Windows.Forms.Label label24;
+        private System.Windows.Forms.Label label25;
+        private System.Windows.Forms.TextBox textBoxPotentialSlopeOsc2;
+        private System.Windows.Forms.Label label26;
+        private System.Windows.Forms.Label label27;
+        private System.Windows.Forms.TextBox textBoxPotentialSlopeOsc1;
+        private System.Windows.Forms.Label label28;
+        private System.Windows.Forms.Label label29;
+        private System.Windows.Forms.TextBox textBoxCurrentSlope;
+        private System.Windows.Forms.Label label30;
+        private System.Windows.Forms.Button buttonSave;
     }
 }

@@ -110,6 +110,7 @@ namespace Voltammogrammer
 
         double POTENTIAL_OFFSET_AWG = 0.0;
         double POTENTIAL_OFFSET_OSC = 0.0;
+        double POTENTIAL_SLOPE_AWG = 1.0;
         double POTENTIAL_SLOPE_OSC = 1.0;
         double CURRENT_OFFSET = 0.0;
         double CURRENT_SLOPE = 1.0;
@@ -1199,7 +1200,7 @@ namespace Voltammogrammer
                     FDwfAnalogInConfigure(_handle, Convert.ToInt32(false), Convert.ToInt32(false));
                     FDwfAnalogInBufferSizeSet(_handle, maxBuffer);
 
-                    _millivoltInitial += ocp;
+                    _millivoltInitial += (ocp * 1000);
                 }
 
                 //if(_selectedMethod != methodMeasurement.OCP) SetCircuit(open:false);
@@ -2940,6 +2941,7 @@ namespace Voltammogrammer
                             _millivoltInitial *= (1000 / (_selectedCurrentFactor));
 
                             _millivoltInitial -= POTENTIAL_OFFSET_AWG;
+                            _millivoltInitial /= POTENTIAL_SLOPE_AWG;
                         }
                         else { MessageBox.Show(this, "The value of Initial [uA] is invalid."); return; }
 
@@ -2950,6 +2952,7 @@ namespace Voltammogrammer
                             _millivoltVertex *= (1000 / ((int)_selectedCurrentFactor));
 
                             _millivoltVertex -= POTENTIAL_OFFSET_AWG;
+                            _millivoltVertex /= POTENTIAL_SLOPE_AWG;
                         }
                         else { MessageBox.Show(this, "The value of Vertex [uA] is invalid."); return; }
 
@@ -2975,6 +2978,7 @@ namespace Voltammogrammer
                             }
 
                             _millivoltScanrate *= (1000 / ((int)_selectedCurrentFactor));
+                            _millivoltScanrate /= POTENTIAL_SLOPE_AWG;
                         }
                         else { MessageBox.Show(this, "The value of Scan rate [uA/s] is invalid."); return; }
 
@@ -2996,6 +3000,7 @@ namespace Voltammogrammer
                             _millivoltInitial = (_millivoltInitial * (-1000.0 / (double)_selectedCurrentFactor));
 
                             _millivoltInitial -= POTENTIAL_OFFSET_AWG;
+                            _millivoltInitial /= POTENTIAL_SLOPE_AWG;
                         }
                         else { MessageBox.Show(this, "The value of Current [uA] is invalid."); return; }
 
@@ -3032,6 +3037,7 @@ namespace Voltammogrammer
                             && (_millivoltInitial >= -5000))
                         {
                             _millivoltInitial -= POTENTIAL_OFFSET_AWG;
+                            _millivoltInitial /= POTENTIAL_SLOPE_AWG;
                         }
                         else { MessageBox.Show(this, "The value of Potential [mV] is invalid."); return; }
 
@@ -3040,6 +3046,7 @@ namespace Voltammogrammer
                             && (_millivoltVertex >= 1))
                         {
                             _millivoltVertex -= POTENTIAL_OFFSET_AWG;
+                            _millivoltVertex /= POTENTIAL_SLOPE_AWG;
                         }
                         else { MessageBox.Show(this, "The value of Amplitude [mV] is invalid."); return; }
 
@@ -3062,6 +3069,7 @@ namespace Voltammogrammer
                             && (_millivoltInitial >= -5000))
                         {
                             _millivoltInitial -= POTENTIAL_OFFSET_AWG;
+                            _millivoltInitial /= POTENTIAL_SLOPE_AWG;
                         }
                         else { MessageBox.Show(this, "The value of Initial [mV] is invalid."); return; }
 
@@ -3070,6 +3078,7 @@ namespace Voltammogrammer
                             && (_millivoltVertex >= -5000))
                         {
                             _millivoltVertex -= POTENTIAL_OFFSET_AWG;
+                            _millivoltVertex /= POTENTIAL_SLOPE_AWG;
                         }
                         else { MessageBox.Show(this, "The value of Vertex [mV] is invalid."); return; }
 
@@ -3077,6 +3086,7 @@ namespace Voltammogrammer
                             && (_millivoltScanrate <= 1000000000)
                             && (_millivoltScanrate > 0))
                         {
+                            _millivoltScanrate /= POTENTIAL_SLOPE_AWG;
                         }
                         else { MessageBox.Show(this, "The value of Scan rate [mV/s] is invalid."); return; }
 
@@ -3157,6 +3167,7 @@ namespace Voltammogrammer
                             && (_millivoltInitial >= -5000))
                         {
                             _millivoltInitial -= POTENTIAL_OFFSET_AWG;
+                            _millivoltInitial /= POTENTIAL_SLOPE_AWG;
                         }
                         else { MessageBox.Show(this, "The value of Initial [mV] is invalid."); return; }
 
@@ -3165,6 +3176,7 @@ namespace Voltammogrammer
                             && (_millivoltVertex >= -5000))
                         {
                             _millivoltVertex -= POTENTIAL_OFFSET_AWG;
+                            _millivoltVertex /= POTENTIAL_SLOPE_AWG;
                         }
                         else { MessageBox.Show(this, "The value of Vertex [mV] is invalid."); return; }
 
@@ -3173,6 +3185,7 @@ namespace Voltammogrammer
                             && (_millivoltScanrate >= 1))
                         {
                             _millivoltScanrate *= 1000;
+                            _millivoltScanrate /= POTENTIAL_SLOPE_AWG;
                         }
                         else { MessageBox.Show(this, "The value of Scan rate [V/s] is invalid."); return; }
 
@@ -3231,6 +3244,7 @@ namespace Voltammogrammer
                             && (_millivoltInitial >= -5000))
                         {
                             _millivoltInitial -= POTENTIAL_OFFSET_AWG;
+                            _millivoltInitial /= POTENTIAL_SLOPE_AWG;
                         }
                         else { MessageBox.Show(this, "The value of Potential [mV] is invalid."); return; }
 
@@ -3301,6 +3315,7 @@ namespace Voltammogrammer
                             && (_millivoltInitial >= -5000))
                         {
                             _millivoltInitial -= POTENTIAL_OFFSET_AWG;
+                            _millivoltInitial /= POTENTIAL_SLOPE_AWG;
                         }
                         else { MessageBox.Show(this, "The value of Initial [mV] is invalid."); return; }
 
@@ -3308,7 +3323,11 @@ namespace Voltammogrammer
                             && (_millivoltVertex <= 5000)
                             && (_millivoltVertex >= -5000))
                         {
-                            if(_selectedMethod == methodMeasurement.DPSCA) _millivoltVertex -= POTENTIAL_OFFSET_AWG;
+                            if (_selectedMethod == methodMeasurement.DPSCA)
+                            {
+                                _millivoltVertex -= POTENTIAL_OFFSET_AWG;
+                                _millivoltVertex /= POTENTIAL_SLOPE_AWG;
+                            }
                         }
                         else { MessageBox.Show(this, "The value of Step in [mV] is invalid."); return; }
 
@@ -4885,13 +4904,18 @@ namespace Voltammogrammer
             }
         }
 
-        public void SetCalibrationData(double potential_awg, double potential_osc, double current, double potential_slope_osc, double current_slope_osc)
+        public void SetCalibrationData(
+            double potential_awg, double potential_osc, double current,
+            double potential_slope_awg, double potential_slope_osc, double current_slope_osc
+            )
         {
             POTENTIAL_OFFSET_AWG = potential_awg;
             POTENTIAL_OFFSET_OSC = potential_osc;
             CURRENT_OFFSET = current;
             POTENTIAL_SLOPE_OSC = potential_slope_osc;
+            POTENTIAL_SLOPE_AWG = potential_slope_awg;
             CURRENT_SLOPE = current_slope_osc;
+            Console.WriteLine("CURRENT_SLOPE: {0}", CURRENT_SLOPE);
         }
 
         private void SetFrequencyOfAcquisition(int index)
