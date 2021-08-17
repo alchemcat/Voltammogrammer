@@ -1384,7 +1384,8 @@ namespace Voltammogrammer
                                 }
                                 else if (i == 1)
                                 {
-                                    DoVoltammetry(ref rgdSamples, secRecording, millivoltHeight, ref e, fCA: !is_initial_potential_referring_to_OCP, fFinal: false);
+
+                                    DoVoltammetry(ref rgdSamples, secRecording, millivoltHeight, ref e, fCA: ((!is_initial_potential_referring_to_OCP) && (_selectedMethod != methodMeasurement.Cyclicgalvanometry)), fFinal: false);
 
                                     backgroundWorkerCV.ReportProgress((int)statusMeasurement.MeasuremetWasDone);
                                 }
@@ -1401,7 +1402,7 @@ namespace Voltammogrammer
                             // In the case of a one shot measurement...
                             backgroundWorkerCV.ReportProgress((int)statusMeasurement.Initialized);
 
-                            DoVoltammetry(ref rgdSamples, secRecording, millivoltHeight, ref e, fCA: !is_initial_potential_referring_to_OCP);
+                            DoVoltammetry(ref rgdSamples, secRecording, millivoltHeight, ref e, fCA: ((!is_initial_potential_referring_to_OCP) && (_selectedMethod != methodMeasurement.Cyclicgalvanometry)));
 
                             backgroundWorkerCV.ReportProgress((int)statusMeasurement.MeasuremetWasDone);
                         }
@@ -2343,6 +2344,7 @@ namespace Voltammogrammer
                         || _selectedMethod == methodMeasurement.Cyclicgalvanometry
                        )
                     {
+                        double polarity = (_selectedMethod != methodMeasurement.Cyclicgalvanometry) ? 1 : -1;
                         if (_flag_digitalfilter)
                         {
                             if (true)
@@ -2360,15 +2362,15 @@ namespace Voltammogrammer
                                         }
                                         c /= k;
 
-                                        chartVoltammogram.Series[1].Points.AddXY(_recordingSeries[0][i] / 1000.00, (_recordingSeries[CHANNEL_POTENTIAL][i] * POTENTIAL_SCALE - POTENTIAL_OFFSET_OSC)/POTENTIAL_SLOPE_OSC); // E [mV]
-                                        chartVoltammogram.Series[2].Points.AddXY(_recordingSeries[0][i] / 1000.00, (double)c * (factorCurrent) / CURRENT_SLOPE); // I [uA]
+                                        chartVoltammogram.Series[1].Points.AddXY(_recordingSeries[0][i] / 1000.00, polarity * (_recordingSeries[CHANNEL_POTENTIAL][i] * POTENTIAL_SCALE - POTENTIAL_OFFSET_OSC)/POTENTIAL_SLOPE_OSC); // E [mV]
+                                        chartVoltammogram.Series[2].Points.AddXY(_recordingSeries[0][i] / 1000.00, polarity * (double)c * (factorCurrent) / CURRENT_SLOPE); // I [uA]
 
                                         _voltammogram.AddDataToCurrentSeries(
                                             _series,
                                             true,
-                                            (_recordingSeries[CHANNEL_POTENTIAL][i] * POTENTIAL_SCALE - POTENTIAL_OFFSET_OSC)/POTENTIAL_SLOPE_OSC,
+                                            polarity * (_recordingSeries[CHANNEL_POTENTIAL][i] * POTENTIAL_SCALE - POTENTIAL_OFFSET_OSC)/POTENTIAL_SLOPE_OSC,
                                             formVoltammogram.typeAxisX.Potential_in_mV,
-                                            (double)c * (factorCurrent) / CURRENT_SLOPE,
+                                            polarity * (double)c * (factorCurrent) / CURRENT_SLOPE,
                                             formVoltammogram.typeAxisY.Current_in_uA,
                                             _recordingSeries[0][i] / 1000.00
                                         );
@@ -2415,17 +2417,17 @@ namespace Voltammogrammer
                             //}
                             for (int i = _itrRecording; i < progress; i++)
                             {
-                                chartVoltammogram.Series[1].Points.AddXY(_recordingSeries[0][i] / 1000.00, (_recordingSeries[CHANNEL_POTENTIAL][i] * POTENTIAL_SCALE - POTENTIAL_OFFSET_OSC) / POTENTIAL_SLOPE_OSC); // E [mV]
-                                chartVoltammogram.Series[2].Points.AddXY(_recordingSeries[0][i] / 1000.00, (double)(_recordingSeries[CHANNEL_CURRENT][i] - CURRENT_OFFSET) * (factorCurrent) / CURRENT_SLOPE); // I [uA]
+                                chartVoltammogram.Series[1].Points.AddXY(_recordingSeries[0][i] / 1000.00, polarity * (_recordingSeries[CHANNEL_POTENTIAL][i] * POTENTIAL_SCALE - POTENTIAL_OFFSET_OSC) / POTENTIAL_SLOPE_OSC); // E [mV]
+                                chartVoltammogram.Series[2].Points.AddXY(_recordingSeries[0][i] / 1000.00, polarity * (double)(_recordingSeries[CHANNEL_CURRENT][i] - CURRENT_OFFSET) * (factorCurrent) / CURRENT_SLOPE); // I [uA]
 
                                 // Show the actual voltammogram
                                 //_voltammogram.AddDataToCurrentSeries(_recordingSeries[1][progress], (double)_recordingSeries[2][progress] * ((double)_selectedRange / 1000.0));
                                 _voltammogram.AddDataToCurrentSeries(
                                     _series,
                                     true,
-                                    (_recordingSeries[CHANNEL_POTENTIAL][i] * POTENTIAL_SCALE - POTENTIAL_OFFSET_OSC) / POTENTIAL_SLOPE_OSC,
+                                    polarity * (_recordingSeries[CHANNEL_POTENTIAL][i] * POTENTIAL_SCALE - POTENTIAL_OFFSET_OSC) / POTENTIAL_SLOPE_OSC,
                                     formVoltammogram.typeAxisX.Potential_in_mV,
-                                    (double)(_recordingSeries[CHANNEL_CURRENT][i] - CURRENT_OFFSET) * (factorCurrent) / CURRENT_SLOPE,
+                                    polarity * (double)(_recordingSeries[CHANNEL_CURRENT][i] - CURRENT_OFFSET) * (factorCurrent) / CURRENT_SLOPE,
                                     formVoltammogram.typeAxisY.Current_in_uA,
                                     _recordingSeries[0][i] / 1000.00
                                 );
@@ -2455,18 +2457,19 @@ namespace Voltammogrammer
                             }
                         }
 
+                        double polarity = (_selectedMethod != methodMeasurement.ConstantCurrent) ? 1 : -1;
                         for (int i = _itrRecording; i < progress; i++)
                         {
-                            chartVoltammogram.Series[1].Points.AddXY(_recordingSeries[0][i] / 1000.00, (_recordingSeries[CHANNEL_POTENTIAL][i] * POTENTIAL_SCALE - POTENTIAL_OFFSET_OSC) / POTENTIAL_SLOPE_OSC); // E [mV]
-                            chartVoltammogram.Series[2].Points.AddXY(_recordingSeries[0][i] / 1000.00, (double)(_recordingSeries[CHANNEL_CURRENT][i] - CURRENT_OFFSET) * (factorCurrent) / CURRENT_SLOPE); // I [uA]
+                            chartVoltammogram.Series[1].Points.AddXY(_recordingSeries[0][i] / 1000.00, polarity * (_recordingSeries[CHANNEL_POTENTIAL][i] * POTENTIAL_SCALE - POTENTIAL_OFFSET_OSC) / POTENTIAL_SLOPE_OSC); // E [mV]
+                            chartVoltammogram.Series[2].Points.AddXY(_recordingSeries[0][i] / 1000.00, polarity * (double)(_recordingSeries[CHANNEL_CURRENT][i] - CURRENT_OFFSET) * (factorCurrent) / CURRENT_SLOPE); // I [uA]
                             //Console.WriteLine("{0}, {1}", _recordingSeries[CHANNEL_CURRENT][i], CURRENT_OFFSET);
 
                             _voltammogram.AddDataToCurrentSeries(
                                 _series,
                                 false,
-                                (_recordingSeries[CHANNEL_POTENTIAL][i] * POTENTIAL_SCALE - POTENTIAL_OFFSET_OSC) / POTENTIAL_SLOPE_OSC,
+                                polarity * (_recordingSeries[CHANNEL_POTENTIAL][i] * POTENTIAL_SCALE - POTENTIAL_OFFSET_OSC) / POTENTIAL_SLOPE_OSC,
                                 formVoltammogram.typeAxisX.Potential_in_mV,
-                                (double)(_recordingSeries[CHANNEL_CURRENT][i] - CURRENT_OFFSET) * (factorCurrent) / CURRENT_SLOPE,
+                                polarity * (double)(_recordingSeries[CHANNEL_CURRENT][i] - CURRENT_OFFSET) * (factorCurrent) / CURRENT_SLOPE,
                                 formVoltammogram.typeAxisY.Current_in_uA,
                                 _recordingSeries[0][i] / 1000.00 // [s]
                             );
@@ -2480,8 +2483,8 @@ namespace Voltammogrammer
 
                             _writer_temp.WriteLine(
                                 "{0}\t{1}\t{2}",
-                                (_recordingSeries[CHANNEL_POTENTIAL][i] * POTENTIAL_SCALE - (POTENTIAL_OFFSET_OSC)) / POTENTIAL_SLOPE_OSC / 1000,
-                                (double)(_recordingSeries[CHANNEL_CURRENT][i] - CURRENT_OFFSET) * (factorCurrent) / CURRENT_SLOPE / 1000,
+                                polarity * (_recordingSeries[CHANNEL_POTENTIAL][i] * POTENTIAL_SCALE - (POTENTIAL_OFFSET_OSC)) / POTENTIAL_SLOPE_OSC / 1000,
+                                polarity * (double)(_recordingSeries[CHANNEL_CURRENT][i] - CURRENT_OFFSET) * (factorCurrent) / CURRENT_SLOPE / 1000,
                                 _recordingSeries[0][i] / 1000.00
                             );
                         }
@@ -2938,7 +2941,7 @@ namespace Voltammogrammer
                             && (_millivoltInitial <= 50000)
                             && (_millivoltInitial >= -50000))
                         {
-                            _millivoltInitial *= (1000 / (_selectedCurrentFactor));
+                            _millivoltInitial *= (-1000.0 / (_selectedCurrentFactor));
 
                             _millivoltInitial -= POTENTIAL_OFFSET_AWG;
                             _millivoltInitial /= POTENTIAL_SLOPE_AWG;
@@ -2949,7 +2952,7 @@ namespace Voltammogrammer
                             && (_millivoltVertex <= 50000)
                             && (_millivoltVertex >= -50000))
                         {
-                            _millivoltVertex *= (1000 / ((int)_selectedCurrentFactor));
+                            _millivoltVertex *= (-1000.0 / (_selectedCurrentFactor));
 
                             _millivoltVertex -= POTENTIAL_OFFSET_AWG;
                             _millivoltVertex /= POTENTIAL_SLOPE_AWG;
@@ -2977,7 +2980,7 @@ namespace Voltammogrammer
                                 }
                             }
 
-                            _millivoltScanrate *= (1000 / ((int)_selectedCurrentFactor));
+                            _millivoltScanrate *= (1000 / (_selectedCurrentFactor));
                             _millivoltScanrate /= POTENTIAL_SLOPE_AWG;
                         }
                         else { MessageBox.Show(this, "The value of Scan rate [uA/s] is invalid."); return; }
@@ -3485,11 +3488,11 @@ namespace Voltammogrammer
                         chartVoltammogram.ChartAreas[0].AxisX.Title = "Time / s";
                         chartVoltammogram.ChartAreas[0].AxisX.Maximum = Double.NaN;
                         chartVoltammogram.ChartAreas[0].AxisX.Minimum = 0;
-                        chartVoltammogram.ChartAreas[0].AxisY.Title = "Potential of Ref. / mV\nvs S. electrode";
+                        chartVoltammogram.ChartAreas[0].AxisY.Title = "Potential of S. / mV\nvs Ref. electrode";
                         chartVoltammogram.ChartAreas[0].AxisX2.Title = "";
                         chartVoltammogram.ChartAreas[0].AxisX2.IsLogarithmic = false;
                         chartVoltammogram.ChartAreas[0].AxisX2.Enabled = System.Windows.Forms.DataVisualization.Charting.AxisEnabled.False;
-                        chartVoltammogram.ChartAreas[0].AxisY2.Title = "Potential of C. / mV\nvs W. electrode";
+                        chartVoltammogram.ChartAreas[0].AxisY2.Title = "Potential of W. / mV\nvs C. electrode";
                         chartVoltammogram.ChartAreas[0].AxisY2.IsLogarithmic = false;
                         chartVoltammogram.ChartAreas[0].AxisY2.MinorTickMark.Enabled = false;
 
@@ -3541,6 +3544,7 @@ namespace Voltammogrammer
                         break;
                 }
             //}
+            _selectedMode_previous = _selectedMode;
 
             toolStripLabel1.ToolTipText = ""; toolStripLabel1.AutoToolTip = true;
 
