@@ -24,7 +24,7 @@ namespace Voltammogrammer
             double p_awg = Properties.Settings.Default.offset_potential_awg;
             double p_osc1 = Properties.Settings.Default.offset_potential_osc1;
             double p_osc2 = Properties.Settings.Default.offset_potential_osc2;
-            double c = Properties.Settings.Default.offset_current * 10000; // Assuming calibration was done using +-20mA range
+            double c = Properties.Settings.Default.offset_current * (double)Potentiostat.rangeCurrent.Range20mA; // Assuming calibration was done using +-20mA range
 
             double p_slope_awg = Properties.Settings.Default.slope_potential_awg;
             double p_slope_osc1 = Properties.Settings.Default.slope_potential_osc1;
@@ -46,7 +46,7 @@ namespace Voltammogrammer
             _ps.SetCalibrationData(
                 p_awg,
                 (p_osc2 - p_osc1),
-                (c - p_osc1 * 1000 / r_ref) / 10000,
+                (c - p_osc1 * 1000 / r_ref) / (double)Potentiostat.rangeCurrent.Range20mA, // (c [uA] - (p_osc1 * 1000) [uV] / r_ref [ohm]) / 10000
                 p_slope_awg / 1000,
                 p_slope_osc2 / p_slope_osc1,
                 (c_slope / (p_slope_osc1 * 1000.0 / r_ref)) // * (r_ref / 1000.0)),
@@ -83,7 +83,7 @@ namespace Voltammogrammer
                 _ps.SetCalibrationData(
                     p_awg,
                     (p_osc2 - p_osc1),
-                    (c - p_osc1 * 1000 / r_ref) / 10000,
+                    (c - p_osc1 * 1000 / r_ref) / (double)Potentiostat.rangeCurrent.Range20mA,
                     p_slope_awg / 1000.0,
                     p_slope_osc2 / p_slope_osc1,
                     1.0 // * (r_ref / 1000.0)),
@@ -133,7 +133,7 @@ namespace Voltammogrammer
                 _ps.SetCalibrationData(
                     p_awg,
                     (p_osc2 - p_osc1),
-                    (c - p_osc1 * 1000 / r_ref) / 10000,
+                    (c - p_osc1 * 1000 / r_ref) / (double)Potentiostat.rangeCurrent.Range20mA,
                     p_slope_awg / 1000.0,
                     p_slope_osc2 / p_slope_osc1,
                     (c_slope / (p_slope_osc1 * 1000.0/ r_ref)) // * (r_ref / 1000.0)),
@@ -144,7 +144,7 @@ namespace Voltammogrammer
                 Properties.Settings.Default.offset_potential_awg = p_awg;
                 Properties.Settings.Default.offset_potential_osc1 = p_osc1;
                 Properties.Settings.Default.offset_potential_osc2 = p_osc2;
-                Properties.Settings.Default.offset_current = c / 10000; // Assuming calibration was done using +-20mA range
+                Properties.Settings.Default.offset_current = c / (double)Potentiostat.rangeCurrent.Range20mA; // Assuming calibration was done using +-20mA range
 
                 Properties.Settings.Default.slope_potential_awg = p_slope_awg;
                 Properties.Settings.Default.slope_potential_osc1 = p_slope_osc1;

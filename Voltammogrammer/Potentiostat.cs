@@ -134,7 +134,7 @@ namespace Voltammogrammer
         double[][] _recordingSeries;
         System.Diagnostics.Stopwatch _clockingStopwatch = new System.Diagnostics.Stopwatch();
 
-        double _millivoltInitial;
+        double _millivoltInitial, _millivoltInitial_raw;
         double _millivoltVertex;
         double _countRepeat;
         double _millivoltScanrate;
@@ -2332,7 +2332,7 @@ namespace Voltammogrammer
                     switch (_selectedMode)
                     {
                         case modeMeasurement.voltammetry: factorCurrent = (double)_selectedCurrentFactor; break;
-                        case modeMeasurement.galvanometry: factorCurrent = (double)rangeCurrent.RangeRAW; break;
+                        case modeMeasurement.galvanometry: factorCurrent = 1000.0; break; // (double)rangeCurrent.RangeRAW; break; (RangeRAW is 999, which is for the sake of expedience.)
                         case modeMeasurement.eis: break;
                     }
 
@@ -2363,14 +2363,14 @@ namespace Voltammogrammer
                                         c /= k;
 
                                         chartVoltammogram.Series[1].Points.AddXY(_recordingSeries[0][i] / 1000.00, polarity * (_recordingSeries[CHANNEL_POTENTIAL][i] * POTENTIAL_SCALE - POTENTIAL_OFFSET_OSC)/POTENTIAL_SLOPE_OSC); // E [mV]
-                                        chartVoltammogram.Series[2].Points.AddXY(_recordingSeries[0][i] / 1000.00, polarity * (double)c * (factorCurrent) / CURRENT_SLOPE); // I [uA]
+                                        chartVoltammogram.Series[2].Points.AddXY(_recordingSeries[0][i] / 1000.00, polarity * c * (factorCurrent) / CURRENT_SLOPE); // I [uA]
 
                                         _voltammogram.AddDataToCurrentSeries(
                                             _series,
                                             true,
                                             polarity * (_recordingSeries[CHANNEL_POTENTIAL][i] * POTENTIAL_SCALE - POTENTIAL_OFFSET_OSC)/POTENTIAL_SLOPE_OSC,
                                             formVoltammogram.typeAxisX.Potential_in_mV,
-                                            polarity * (double)c * (factorCurrent) / CURRENT_SLOPE,
+                                            polarity * c * (factorCurrent) / CURRENT_SLOPE,
                                             formVoltammogram.typeAxisY.Current_in_uA,
                                             _recordingSeries[0][i] / 1000.00
                                         );
@@ -2438,7 +2438,8 @@ namespace Voltammogrammer
                              || _selectedMethod == methodMeasurement.ConstantCurrent
                             )
                     {
-                        if(Math.Abs(_recordingSeries[CHANNEL_CURRENT][_itrRecording] - CURRENT_OFFSET)*2 > _voltAnalogInChannelRange_Current)
+                        if(    Math.Abs(_recordingSeries[CHANNEL_CURRENT][_itrRecording] - CURRENT_OFFSET) > (_voltAnalogInChannelRange_Current / 2 - 0.05)
+                            || Math.Abs(_recordingSeries[CHANNEL_CURRENT][_itrRecording] - CURRENT_OFFSET) > 11.6)
                         {
                             if(!_is_warned_about_potential_limit)
                             {
@@ -2448,7 +2449,7 @@ namespace Voltammogrammer
                                 {
                                     MessageBox.Show
                                     (
-                                      "The potential of the current folower indicated that the current might be overflowed.",
+                                      "The potential of the current follower indicated that the current might be overflowed. Try to switch the potential range to +-25V.",
                                       "Warning",
                                       MessageBoxButtons.OK,
                                       MessageBoxIcon.Warning
@@ -2457,25 +2458,43 @@ namespace Voltammogrammer
                             }
                         }
 
-                        double polarity = (_selectedMethod != methodMeasurement.ConstantCurrent) ? 1 : -1;
+                        //double polarity = (_selectedMethod != methodMeasurement.ConstantCurrent) ? 1 : -1;
                         for (int i = _itrRecording; i < progress; i++)
                         {
-                            chartVoltammogram.Series[1].Points.AddXY(_recordingSeries[0][i] / 1000.00, polarity * (_recordingSeries[CHANNEL_POTENTIAL][i] * POTENTIAL_SCALE - POTENTIAL_OFFSET_OSC) / POTENTIAL_SLOPE_OSC); // E [mV]
-                            chartVoltammogram.Series[2].Points.AddXY(_recordingSeries[0][i] / 1000.00, polarity * (double)(_recordingSeries[CHANNEL_CURRENT][i] - CURRENT_OFFSET) * (factorCurrent) / CURRENT_SLOPE); // I [uA]
+                            double p = 0.0, c_raw = 0.0, c = 0.0;
+                            p = (_recordingSeries[CHANNEL_POTENTIAL][i] * POTENTIAL_SCALE - POTENTIAL_OFFSET_OSC) / POTENTIAL_SLOPE_OSC; // E [mV]
+                            c_raw = (_recordingSeries[CHANNEL_CURRENT][i] - CURRENT_OFFSET) * (factorCurrent) / CURRENT_SLOPE; // I [uA]
+
+                            if (_selectedMode == modeMeasurement.galvanometry)
+                            {
+                                double polarity = -1;
+                                p *= polarity / POTENTIAL_SLOPE_AWG;
+                                c_raw *= polarity * CURRENT_SLOPE / POTENTIAL_SLOPE_OSC / POTENTIAL_SLOPE_AWG;
+                                c = _millivoltInitial_raw;
+                            }
+                            else
+                            {
+                                c = c_raw;
+                            }
+
+                            chartVoltammogram.Series[1].Points.AddXY(_recordingSeries[0][i] / 1000.00, p); // E [mV]
+                            chartVoltammogram.Series[2].Points.AddXY(_recordingSeries[0][i] / 1000.00, c_raw); // I [uA]
                             //Console.WriteLine("{0}, {1}", _recordingSeries[CHANNEL_CURRENT][i], CURRENT_OFFSET);
+
+                            //c_actual = -1 * _millivoltInitial * (double)_selectedCurrentFactor / 1000
 
                             _voltammogram.AddDataToCurrentSeries(
                                 _series,
                                 false,
-                                polarity * (_recordingSeries[CHANNEL_POTENTIAL][i] * POTENTIAL_SCALE - POTENTIAL_OFFSET_OSC) / POTENTIAL_SLOPE_OSC,
+                                p,
                                 formVoltammogram.typeAxisX.Potential_in_mV,
-                                polarity * (double)(_recordingSeries[CHANNEL_CURRENT][i] - CURRENT_OFFSET) * (factorCurrent) / CURRENT_SLOPE,
+                                c,
                                 formVoltammogram.typeAxisY.Current_in_uA,
                                 _recordingSeries[0][i] / 1000.00 // [s]
                             );
 
-                            double dt = _recordingSeries[0][i] - ((i > 0)? _recordingSeries[0][i-1] : 0);
-                            _coulombPassingThroughCell += (double)(_recordingSeries[CHANNEL_CURRENT][i] - CURRENT_OFFSET) * (factorCurrent) * dt / 1000.0 / 1000000.0; // [C]
+                            double dt = _recordingSeries[0][i] - ((i > 0)? _recordingSeries[0][i-1] : 0); // [ms]
+                            _coulombPassingThroughCell += c * (dt / 1000.0) / 1000000.0; // [C]
                             if( (_countRepeat > 0.0) && Math.Abs(_coulombPassingThroughCell) >= _countRepeat )
                             {
                                 backgroundWorkerCV.CancelAsync();
@@ -2483,8 +2502,8 @@ namespace Voltammogrammer
 
                             _writer_temp.WriteLine(
                                 "{0}\t{1}\t{2}",
-                                polarity * (_recordingSeries[CHANNEL_POTENTIAL][i] * POTENTIAL_SCALE - (POTENTIAL_OFFSET_OSC)) / POTENTIAL_SLOPE_OSC / 1000,
-                                polarity * (double)(_recordingSeries[CHANNEL_CURRENT][i] - CURRENT_OFFSET) * (factorCurrent) / CURRENT_SLOPE / 1000,
+                                p / 1000,
+                                c / 1000,
                                 _recordingSeries[0][i] / 1000.00
                             );
                         }
@@ -2583,13 +2602,24 @@ namespace Voltammogrammer
                             //                                    + ((double)_recordingSeries[2][progress] * ((double)_selectedRange / 1000.0)).ToString("0.0") + " uA"
                             //                                    + ")";
 
+                            //double polarity = (_selectedMode != modeMeasurement.galvanometry) ? 1 : -1;
                             double p = 0.0, c = 0.0;
                             for (int i = 0; i < 10; i++)
                             {
                                 p += (_recordingSeries[CHANNEL_POTENTIAL][progress - i] * POTENTIAL_SCALE - POTENTIAL_OFFSET_OSC);
                                 c += ((_recordingSeries[CHANNEL_CURRENT][progress - i] - CURRENT_OFFSET) * (factorCurrent));
                             }
-                            p /= (10 * POTENTIAL_SLOPE_OSC); c /= (10 * CURRENT_SLOPE);
+                            if(_selectedMode == modeMeasurement.galvanometry)
+                            {
+                                double polarity = -1;
+                                p /= polarity * (10 * POTENTIAL_SLOPE_OSC) * POTENTIAL_SLOPE_AWG;
+                                c /= polarity * (10 * CURRENT_SLOPE) / (CURRENT_SLOPE / POTENTIAL_SLOPE_OSC) * POTENTIAL_SLOPE_AWG;
+                            }
+                            else
+                            {
+                                p /= (10 * POTENTIAL_SLOPE_OSC);
+                                c /= (10 * CURRENT_SLOPE);
+                            }
 
                             toolStripStatusCurrentEandI.Text = "("
                                                                 + (_recordingSeries[0][progress] / 1000.00).ToString("0.0") + " s, "
@@ -3000,10 +3030,13 @@ namespace Voltammogrammer
                             && (_millivoltInitial <= 50000)
                             && (_millivoltInitial >= -50000))
                         {
+                            _millivoltInitial_raw = _millivoltInitial;
                             _millivoltInitial = (_millivoltInitial * (-1000.0 / (double)_selectedCurrentFactor));
 
-                            _millivoltInitial -= POTENTIAL_OFFSET_AWG;
+                            _millivoltInitial -= (POTENTIAL_OFFSET_AWG);// - POTENTIAL_OFFSET_OSC);
                             _millivoltInitial /= POTENTIAL_SLOPE_AWG;
+                            _millivoltInitial *= CURRENT_SLOPE;// * POTENTIAL_SLOPE_OSC;
+                            Console.WriteLine("_millivoltInitial (corrected): {0}", _millivoltInitial);
                         }
                         else { MessageBox.Show(this, "The value of Current [uA] is invalid."); return; }
 
@@ -4283,14 +4316,28 @@ namespace Voltammogrammer
             FDwfAnalogInChannelOffsetSet(_handle, (CHANNEL_CURRENT - 1), 0.0);
             FDwfAnalogInChannelRangeSet(_handle, (CHANNEL_CURRENT - 1), ((double)range / 1000)); // +-0.5Vレンジに設定
 
-            double actual = 0.0;
 
+            double actual = 0.0;
             FDwfAnalogInChannelRangeGet(_handle, (CHANNEL_POTENTIAL - 1), out actual);
             Console.WriteLine("Actual Channel(0) Range: " + actual.ToString());
             FDwfAnalogInChannelRangeGet(_handle, (CHANNEL_CURRENT - 1), out actual);
             Console.WriteLine("Actual Channel(1) Range: " + actual.ToString());
-
             _voltAnalogInChannelRange_Current = actual;
+
+
+            for (int i = 0; i < _toolstripmenuitemsRange.Length; i++)
+            {
+                int idx = int.Parse(_toolstripmenuitemsRange[i].Tag.ToString());
+
+                if ((rangePotential)idx == range)
+                {
+                    _toolstripmenuitemsRange[i].Checked = true;
+                }
+                else
+                {
+                    _toolstripmenuitemsRange[i].Checked = false;
+                }
+            }
         }
 
         public void SelectCurrentRange(Potentiostat.rangeCurrent range)
@@ -4916,9 +4963,15 @@ namespace Voltammogrammer
             POTENTIAL_OFFSET_AWG = potential_awg;
             POTENTIAL_OFFSET_OSC = potential_osc;
             CURRENT_OFFSET = current;
-            POTENTIAL_SLOPE_OSC = potential_slope_osc;
             POTENTIAL_SLOPE_AWG = potential_slope_awg;
+            POTENTIAL_SLOPE_OSC = potential_slope_osc;
             CURRENT_SLOPE = current_slope_osc;
+            Console.WriteLine("--");
+            Console.WriteLine("POTENTIAL_OFFSET_AWG: {0}", POTENTIAL_OFFSET_AWG);
+            Console.WriteLine("POTENTIAL_OFFSET_OSC: {0}", POTENTIAL_OFFSET_OSC);
+            Console.WriteLine("CURRENT_OFFSET: {0}", CURRENT_OFFSET);
+            Console.WriteLine("POTENTIAL_SLOPE_AWG: {0}", POTENTIAL_SLOPE_AWG);
+            Console.WriteLine("POTENTIAL_SLOPE_OSC: {0}", POTENTIAL_SLOPE_OSC);
             Console.WriteLine("CURRENT_SLOPE: {0}", CURRENT_SLOPE);
         }
 
@@ -5003,6 +5056,7 @@ namespace Voltammogrammer
                         SetGalvanostat(false);
                         SetEIS(false);
                     }
+                    SelectPotentialRange(rangePotential.Range5V);
 
                     break;
 
@@ -5011,6 +5065,7 @@ namespace Voltammogrammer
 
                     toolStripComboBoxMethod.SelectedIndex = 1;
                     SetGalvanostat(true);
+                    SelectPotentialRange(rangePotential.Range50V);
 
                     break;
 
@@ -5019,6 +5074,7 @@ namespace Voltammogrammer
 
                     toolStripComboBoxMethod.SelectedIndex = 2;
                     SetEIS(true);
+                    SelectPotentialRange(rangePotential.Range5V);
 
                     break;
             }
@@ -5337,44 +5393,46 @@ namespace Voltammogrammer
 
         private void toolStripMenuItemRange_Click(object sender, EventArgs e)
         {
-            string senderName = ((ToolStripMenuItem)(sender)).Name;
+            //string senderName = ((ToolStripMenuItem)(sender)).Name;
 
-            //ボタンのベース名　長さの取得に使用
-            string strBut = "toolStripMenuItemRange";
+            ////ボタンのベース名　長さの取得に使用
+            //string strBut = "toolStripMenuItemRange";
 
-            //Buttonxxのxxを取得して数字に直している
-            int index = int.Parse(senderName.Substring(strBut.Length, senderName.Length - strBut.Length));
+            ////Buttonxxのxxを取得して数字に直している
+            //int index = int.Parse(senderName.Substring(strBut.Length, senderName.Length - strBut.Length));
 
             if (((ToolStripMenuItem)sender).Checked)
             {
             }
             else
             {
-                for (int i = 0; i < _toolstripmenuitemsRange.Length; i++)
-                {
-                    if ((i + 1) == index)
-                    {
-                        _toolstripmenuitemsRange[i].Checked = true;
-                        int range = int.Parse(_toolstripmenuitemsRange[i].Tag.ToString());
+                SelectPotentialRange((rangePotential)int.Parse(((ToolStripMenuItem)(sender)).Tag.ToString()));
 
-                        //FDwfAnalogInChannelOffsetSet(_handle, 0, 0.0);
-                        //FDwfAnalogInChannelRangeSet(_handle, 0, range); // for E measurement
-                        //FDwfAnalogInChannelOffsetSet(_handle, 1, 0.0);
-                        //FDwfAnalogInChannelRangeSet(_handle, 1, range); // for I measurement
-                        switch(range)
-                        {
-                            case 1: _selectedPotentialRange = rangePotential.Range50V; break;
-                            case 2: _selectedPotentialRange = rangePotential.Range5V; break;
-                            case 3: _selectedPotentialRange = rangePotential.Range500mV; break;
-                            default: _selectedPotentialRange = rangePotential.Range5V;  break;
-                        }
-                        SelectPotentialRange(_selectedPotentialRange);
-                    }
-                    else
-                    {
-                        _toolstripmenuitemsRange[i].Checked = false;
-                    }
-                }
+                //for (int i = 0; i < _toolstripmenuitemsRange.Length; i++)
+                //{
+                //    if ((i + 1) == index)
+                //    {
+                //        _toolstripmenuitemsRange[i].Checked = true;
+                //        int range = int.Parse(_toolstripmenuitemsRange[i].Tag.ToString());
+
+                //        //FDwfAnalogInChannelOffsetSet(_handle, 0, 0.0);
+                //        //FDwfAnalogInChannelRangeSet(_handle, 0, range); // for E measurement
+                //        //FDwfAnalogInChannelOffsetSet(_handle, 1, 0.0);
+                //        //FDwfAnalogInChannelRangeSet(_handle, 1, range); // for I measurement
+                //        switch(range)
+                //        {
+                //            case 1: _selectedPotentialRange = rangePotential.Range50V; break;
+                //            case 2: _selectedPotentialRange = rangePotential.Range5V; break;
+                //            case 3: _selectedPotentialRange = rangePotential.Range500mV; break;
+                //            default: _selectedPotentialRange = rangePotential.Range5V;  break;
+                //        }
+                //        SelectPotentialRange(_selectedPotentialRange);
+                //    }
+                //    else
+                //    {
+                //        _toolstripmenuitemsRange[i].Checked = false
+                //    }
+                //}
             }
         }
     }
