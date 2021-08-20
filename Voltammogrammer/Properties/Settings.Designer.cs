@@ -274,5 +274,17 @@ namespace Voltammogrammer.Properties {
                 this["slope_potential_osc2"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("0.5")]
+        public double internal_resistance {
+            get {
+                return ((double)(this["internal_resistance"]));
+            }
+            set {
+                this["internal_resistance"] = value;
+            }
+        }
     }
 }

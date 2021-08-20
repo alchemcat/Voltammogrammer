@@ -59,6 +59,8 @@
             this.toolStripLabel1 = new System.Windows.Forms.ToolStripLabel();
             this.toolStripTextBoxID = new System.Windows.Forms.ToolStripTextBox();
             this.toolStripLabel2 = new System.Windows.Forms.ToolStripLabel();
+            this.toolStripTextBoxInternalResistance = new System.Windows.Forms.ToolStripTextBox();
+            this.toolStripLabel3 = new System.Windows.Forms.ToolStripLabel();
             this.label22 = new System.Windows.Forms.Label();
             this.label23 = new System.Windows.Forms.Label();
             this.textBoxPotential2 = new System.Windows.Forms.TextBox();
@@ -73,6 +75,7 @@
             this.textBoxCurrentSlope = new System.Windows.Forms.TextBox();
             this.label30 = new System.Windows.Forms.Label();
             this.buttonSave = new System.Windows.Forms.Button();
+            this.buttonReset = new System.Windows.Forms.Button();
             this.toolStrip1.SuspendLayout();
             this.SuspendLayout();
             //
@@ -112,7 +115,7 @@
             //
             // buttonApply
             //
-            this.buttonApply.Location = new System.Drawing.Point(543, 540);
+            this.buttonApply.Location = new System.Drawing.Point(543, 567);
             this.buttonApply.Name = "buttonApply";
             this.buttonApply.Size = new System.Drawing.Size(103, 28);
             this.buttonApply.TabIndex = 20;
@@ -292,7 +295,9 @@
             this.toolStripButton2,
             this.toolStripLabel1,
             this.toolStripTextBoxID,
-            this.toolStripLabel2});
+            this.toolStripLabel2,
+            this.toolStripTextBoxInternalResistance,
+            this.toolStripLabel3});
             this.toolStrip1.Location = new System.Drawing.Point(0, 0);
             this.toolStrip1.Name = "toolStrip1";
             this.toolStrip1.Size = new System.Drawing.Size(773, 27);
@@ -337,8 +342,21 @@
             // toolStripLabel2
             //
             this.toolStripLabel2.Name = "toolStripLabel2";
-            this.toolStripLabel2.Size = new System.Drawing.Size(14, 24);
-            this.toolStripLabel2.Text = ")";
+            this.toolStripLabel2.Size = new System.Drawing.Size(179, 24);
+            this.toolStripLabel2.Text = ") + P.P. (internal resistance:";
+            //
+            // toolStripTextBoxInternalResistance
+            //
+            this.toolStripTextBoxInternalResistance.Name = "toolStripTextBoxInternalResistance";
+            this.toolStripTextBoxInternalResistance.Size = new System.Drawing.Size(40, 27);
+            this.toolStripTextBoxInternalResistance.Text = "0.5";
+            this.toolStripTextBoxInternalResistance.TextBoxTextAlign = System.Windows.Forms.HorizontalAlignment.Right;
+            //
+            // toolStripLabel3
+            //
+            this.toolStripLabel3.Name = "toolStripLabel3";
+            this.toolStripLabel3.Size = new System.Drawing.Size(44, 24);
+            this.toolStripLabel3.Text = "ohm)";
             //
             // label22
             //
@@ -455,7 +473,7 @@
             //
             // buttonSave
             //
-            this.buttonSave.Location = new System.Drawing.Point(658, 540);
+            this.buttonSave.Location = new System.Drawing.Point(658, 567);
             this.buttonSave.Name = "buttonSave";
             this.buttonSave.Size = new System.Drawing.Size(103, 28);
             this.buttonSave.TabIndex = 21;
@@ -463,11 +481,22 @@
             this.buttonSave.UseVisualStyleBackColor = true;
             this.buttonSave.Click += new System.EventHandler(this.buttonSave_Click);
             //
+            // buttonReset
+            //
+            this.buttonReset.Location = new System.Drawing.Point(12, 567);
+            this.buttonReset.Name = "buttonReset";
+            this.buttonReset.Size = new System.Drawing.Size(103, 28);
+            this.buttonReset.TabIndex = 49;
+            this.buttonReset.Text = "Reset";
+            this.buttonReset.UseVisualStyleBackColor = true;
+            this.buttonReset.Click += new System.EventHandler(this.buttonReset_Click);
+            //
             // Calibrate_Potentiostat
             //
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 15F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(773, 580);
+            this.ClientSize = new System.Drawing.Size(773, 607);
+            this.Controls.Add(this.buttonReset);
             this.Controls.Add(this.buttonSave);
             this.Controls.Add(this.label25);
             this.Controls.Add(this.textBoxPotentialSlopeOsc2);
@@ -568,5 +597,8 @@
         private System.Windows.Forms.TextBox textBoxCurrentSlope;
         private System.Windows.Forms.Label label30;
         private System.Windows.Forms.Button buttonSave;
+        private System.Windows.Forms.ToolStripTextBox toolStripTextBoxInternalResistance;
+        private System.Windows.Forms.ToolStripLabel toolStripLabel3;
+        private System.Windows.Forms.Button buttonReset;
     }
 }

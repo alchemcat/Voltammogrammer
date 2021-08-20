@@ -65,5 +65,8 @@
     <Setting Name="slope_potential_osc2" Type="System.Double" Scope="User">
       <Value Profile="(Default)">1000</Value>
     </Setting>
+    <Setting Name="internal_resistance" Type="System.Double" Scope="User">
+      <Value Profile="(Default)">0.5</Value>
+    </Setting>
   </Settings>
 </SettingsFile>

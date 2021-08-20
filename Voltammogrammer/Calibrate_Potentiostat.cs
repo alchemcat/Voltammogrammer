@@ -14,11 +14,16 @@ namespace Voltammogrammer
     {
         Potentiostat _ps;
 
+        public double ohmInternalResistance = 0.0;
+
         public Calibrate_Potentiostat(Potentiostat ps)
         {
             InitializeComponent();
 
             _ps = ps;
+
+
+            double ohmInternalResistance = Properties.Settings.Default.internal_resistance;
             double r_ref = Properties.Settings.Default.offset_resistor_ref;
 
             double p_awg = Properties.Settings.Default.offset_potential_awg;
@@ -31,6 +36,7 @@ namespace Voltammogrammer
             double p_slope_osc2 = Properties.Settings.Default.slope_potential_osc2;
             double c_slope = Properties.Settings.Default.slope_current;
 
+            this.toolStripTextBoxInternalResistance.Text = ohmInternalResistance.ToString();
             this.textBoxResistor.Text = r_ref.ToString();
 
             this.textBoxPotential1.Text = p_awg.ToString();
@@ -46,10 +52,10 @@ namespace Voltammogrammer
             _ps.SetCalibrationData(
                 p_awg,
                 (p_osc2 - p_osc1),
-                (c - p_osc1 * 1000 / r_ref) / (double)Potentiostat.rangeCurrent.Range20mA, // (c [uA] - (p_osc1 * 1000) [uV] / r_ref [ohm]) / 10000
+                (c - p_osc1 * 1000 / r_ref) * ((1 / (double)Potentiostat.rangeCurrent.Range20mA) + ohmInternalResistance / 1000000), // (c [uA] - (p_osc1 * 1000) [uV] / r_ref [ohm]) / 10000
                 p_slope_awg / 1000,
                 p_slope_osc2 / p_slope_osc1,
-                (c_slope / (p_slope_osc1 * 1000.0 / r_ref)) // * (r_ref / 1000.0)),
+                (c_slope / (p_slope_osc1 * 1000.0 / r_ref))//     / (1 + 0.5 / (1000000 / (double)Potentiostat.rangeCurrent.Range20mA))// * (r_ref / 1000.0)),
                 );
         }
 
@@ -69,7 +75,8 @@ namespace Voltammogrammer
             double r_ref, p_awg, p_osc1, p_osc2, c, c_slope, p_slope_osc1, p_slope_osc2, p_slope_awg;
 
             if(
-                   Double.TryParse(this.textBoxPotential1.Text, out p_awg)
+                   Double.TryParse(this.toolStripTextBoxInternalResistance.Text, out ohmInternalResistance)
+                && Double.TryParse(this.textBoxPotential1.Text, out p_awg)
                 && Double.TryParse(this.textBoxResistor.Text, out r_ref)
                 && Double.TryParse(this.textBoxPotentialOsc1.Text, out p_osc1)
                 && Double.TryParse(this.textBoxPotentialOsc2.Text, out p_osc2)
@@ -83,10 +90,10 @@ namespace Voltammogrammer
                 _ps.SetCalibrationData(
                     p_awg,
                     (p_osc2 - p_osc1),
-                    (c - p_osc1 * 1000 / r_ref) / (double)Potentiostat.rangeCurrent.Range20mA,
+                    (c - p_osc1 * 1000 / r_ref) * ((1 / (double)Potentiostat.rangeCurrent.Range20mA) + ohmInternalResistance / 1000000),
                     p_slope_awg / 1000.0,
                     p_slope_osc2 / p_slope_osc1,
-                    1.0 // * (r_ref / 1000.0)),
+                    (1.0)// / (1 + 0.5 / (1000000 / (double)Potentiostat.rangeCurrent.Range20mA))) // * (r_ref / 1000.0)),
                     );
 
                 //Properties.Settings.Default.offset_resistor_ref = r_ref;
@@ -119,7 +126,8 @@ namespace Voltammogrammer
             double r_ref, p_awg, p_osc1, p_osc2, c, c_slope, p_slope_osc1, p_slope_osc2, p_slope_awg;
 
             if(
-                   Double.TryParse(this.textBoxPotential1.Text, out p_awg)
+                   Double.TryParse(this.toolStripTextBoxInternalResistance.Text, out ohmInternalResistance)
+                && Double.TryParse(this.textBoxPotential1.Text, out p_awg)
                 && Double.TryParse(this.textBoxResistor.Text, out r_ref)
                 && Double.TryParse(this.textBoxPotentialOsc1.Text, out p_osc1)
                 && Double.TryParse(this.textBoxPotentialOsc2.Text, out p_osc2)
@@ -133,12 +141,13 @@ namespace Voltammogrammer
                 _ps.SetCalibrationData(
                     p_awg,
                     (p_osc2 - p_osc1),
-                    (c - p_osc1 * 1000 / r_ref) / (double)Potentiostat.rangeCurrent.Range20mA,
+                    (c - p_osc1 * 1000 / r_ref) * ((1/(double)Potentiostat.rangeCurrent.Range20mA) + ohmInternalResistance / 1000000),
                     p_slope_awg / 1000.0,
                     p_slope_osc2 / p_slope_osc1,
-                    (c_slope / (p_slope_osc1 * 1000.0/ r_ref)) // * (r_ref / 1000.0)),
+                    (c_slope / (p_slope_osc1 * 1000.0/ r_ref)) //      / (1 + 0.5 / (1000000 / (double)Potentiostat.rangeCurrent.Range20mA)) // * (r_ref / 1000.0)),
                     );
 
+                Properties.Settings.Default.internal_resistance = ohmInternalResistance;
                 Properties.Settings.Default.offset_resistor_ref = r_ref;
 
                 Properties.Settings.Default.offset_potential_awg = p_awg;
@@ -159,6 +168,22 @@ namespace Voltammogrammer
             {
                 MessageBox.Show(this, "Input number(s)!", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
+        }
+
+        private void buttonReset_Click(object sender, EventArgs e)
+        {
+            toolStripTextBoxInternalResistance.Text = "0.5";
+            textBoxResistor.Text = "1000";
+
+            textBoxPotential1.Text = "0";
+            textBoxPotentialOsc1.Text = "0";
+            textBoxPotentialOsc2.Text = "0";
+            textBoxCurrent.Text = "0";
+
+            textBoxPotential2.Text = "1000";
+            textBoxPotentialSlopeOsc1.Text = "1000";
+            textBoxPotentialSlopeOsc2.Text = "1000";
+            textBoxCurrentSlope.Text = "1000";
         }
     }
 }
