@@ -5,12 +5,12 @@ using System.Runtime.InteropServices;
 // アセンブリに関する一般情報は以下の属性セットをとおして制御されます。
 // アセンブリに関連付けられている情報を変更するには、
 // これらの属性値を変更してください。
-[assembly: AssemblyTitle("PS3000APotentiostat")]
-[assembly: AssemblyDescription("")]
+[assembly: AssemblyTitle("Voltammogrammer")]
+[assembly: AssemblyDescription("A software for PocketPotentiostat")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("")]
-[assembly: AssemblyProduct("PS3000APotentiostat")]
-[assembly: AssemblyCopyright("Copyright ©  2017")]
+[assembly: AssemblyProduct("Voltammogrammer")]
+[assembly: AssemblyCopyright("Copyright(C)2021 Yasuo Matsubara")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 
@@ -32,5 +32,5 @@ using System.Runtime.InteropServices;
 // すべての値を指定するか、次を使用してビルド番号とリビジョン番号を既定に設定できます
 // 既定値にすることができます:
 // [assembly: AssemblyVersion("1.0.0")]
-[assembly: AssemblyVersion("1.0.6.1244")]
-[assembly: AssemblyFileVersion("1.0.0.1244")]
+[assembly: AssemblyVersion("1.0.7.1245")]
+[assembly: AssemblyFileVersion("1.0.0.1245")]

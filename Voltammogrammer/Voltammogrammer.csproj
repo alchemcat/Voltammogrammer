@@ -7,7 +7,7 @@
     <ProjectGuid>{A1482912-0F53-4973-9307-DFFE82BC2314}</ProjectGuid>
     <OutputType>Exe</OutputType>
     <RootNamespace>Voltammogrammer</RootNamespace>
-    <AssemblyName>PocketPotentiostat</AssemblyName>
+    <AssemblyName>Voltammogrammer</AssemblyName>
     <TargetFrameworkVersion>v4.6.1</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
