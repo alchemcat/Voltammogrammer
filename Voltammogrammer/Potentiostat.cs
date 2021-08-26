@@ -144,7 +144,7 @@ namespace Voltammogrammer
         double _coulombPassingThroughCell;
 
         string _file_path = null;
-        TextWriter _writer_temp;
+        TextWriter _writer;
 
         int[] _rotation_speeds = { 3600 };
 
@@ -277,7 +277,7 @@ namespace Voltammogrammer
             if (r == "")
             {
                 _tableRegister.Columns.Add("Register");
-                _tableRegister.Columns.Add("Value [ohm]", typeof(int));
+                _tableRegister.Columns.Add("Value [ohm]", typeof(double));
                 _tableRegister.Columns.Add("Caption (Current)", typeof(string));
                 _tableRegister.Columns.Add("Caption (EIS)", typeof(string));
                 _tableRegister.Rows.Add("R1", 10, "+- 200 mA", "10 Ohm");
@@ -1090,15 +1090,38 @@ namespace Voltammogrammer
 
         private void Potentiostat_FormClosing(object sender, FormClosingEventArgs e)
         {
-            if (_handle != 0 && _handle != -1)
+            if ((_handle != 0 && _handle != -1) && backgroundWorkerCV.IsBusy)
             {
-                if (backgroundWorkerCV.IsBusy)
+                DialogResult r = MessageBox.Show
+                (
+                    "Do you stop the current measurement?",
+                    "Warning",
+                    MessageBoxButtons.YesNo,
+                    MessageBoxIcon.Warning
+                );
+
+                if(r == DialogResult.Yes)
                 {
                     backgroundWorkerCV.CancelAsync();
 
                     toolStripButtonRecord.Enabled = false;
                     toolStripButtonRecord.Text = "Stopping...";
+                }
 
+                e.Cancel = true;
+            }
+            else
+            {
+                DialogResult r = MessageBox.Show
+                (
+                    "Do you close Voltammogrammer?",
+                    "Warning",
+                    MessageBoxButtons.YesNo,
+                    MessageBoxIcon.Warning
+                );
+
+                if(r == DialogResult.No)
+                {
                     e.Cancel = true;
                 }
             }
@@ -1980,12 +2003,54 @@ namespace Voltammogrammer
                     }
                     _voltammogram.AddExpConditions(_series, _exp_conditions);
 
-                    _writer_temp = new StreamWriter(Application.StartupPath + @"\_temp.mpt", false);
-                    //_writer_temp.WriteLine("time/s, i/uA");
-                    _writer_temp.WriteLine("EC-Lab ASCII FILE");
-                    _writer_temp.WriteLine("Nb header lines : 4");
-                    _writer_temp.WriteLine(System.DateTime.Now.ToString());
-                    _writer_temp.WriteLine("Ewe/V	I/mA	time/s");
+                    //_writer_temp = new StreamWriter(Application.StartupPath + @"\_temp.mpt", false);
+                    ////_writer_temp.WriteLine("time/s, i/uA");
+                    //_writer_temp.WriteLine("EC-Lab ASCII FILE");
+                    //_writer_temp.WriteLine("Nb header lines : 4");
+                    //_writer_temp.WriteLine(System.DateTime.Now.ToString());
+                    //_writer_temp.WriteLine("Ewe/V	I/mA	time/s");
+
+                    if (_file_path == null || DEBUG_VOLTAMMOGRAM)
+                    {
+
+                    }
+                    else if (
+                                _selectedMethod == methodMeasurement.Cyclicvoltammetry
+                             || _selectedMethod == methodMeasurement.CyclicvoltammetryQuick
+                             || _selectedMethod == methodMeasurement.LSV
+                             || _selectedMethod == methodMeasurement.Series_of_RDE_CV
+                             || _selectedMethod == methodMeasurement.Series_of_RDE_LSV
+                             || _selectedMethod == methodMeasurement.Cyclicgalvanometry
+                            )
+                    {
+                        _writer = new StreamWriter(_file_path, false);
+                        _writer.WriteLine("EC-Lab ASCII FILE");
+                        _writer.WriteLine("Nb header lines : 4");
+                        _writer.WriteLine(_exp_conditions.GetData().OuterXml);
+                        _writer.WriteLine("Ewe/V	I/mA	time/s");
+                    }
+                    else if (_selectedMethod == methodMeasurement.OSWV)
+                    {
+                    }
+                    else if (_selectedMethod == methodMeasurement.EIS
+                             || _selectedMethod == methodMeasurement.EIS_Open_Circuit
+                             || _selectedMethod == methodMeasurement.EIS_Short_Circuit
+                            )
+                    {
+                        _writer = new StreamWriter(_file_path, false);
+                        _writer.WriteLine("EC-Lab ASCII FILE");
+                        _writer.WriteLine("Nb header lines : 4");
+                        _writer.WriteLine(_exp_conditions.GetData().OuterXml);
+                        _writer.WriteLine("-Im(Z)/Ohm	Re(Z)/Ohm	freq/Hz");
+                    }
+                    else //if (_selectedMethod == methodMeasurement.BulkElectrolysis)
+                    {
+                        _writer = new StreamWriter(_file_path, false);
+                        _writer.WriteLine("EC-Lab ASCII FILE");
+                        _writer.WriteLine("Nb header lines : 4");
+                        _writer.WriteLine(_exp_conditions.GetData().OuterXml);
+                        _writer.WriteLine("Ewe/V	I/mA	time/s");
+                    }
 
                     //_herzAcquisition_prev = _herzAcquisition;
                     //if (_selectedMethod == methodMeasurement.DPSCA
@@ -2207,24 +2272,22 @@ namespace Voltammogrammer
                         toolStripStatusLabelStatus.Text = "Measurement was done";
                     }
 
-                    if (   _selectedMethod != methodMeasurement.BulkElectrolysis
-                        && _selectedMethod != methodMeasurement.EIS
-                        && _selectedMethod != methodMeasurement.EIS_Open_Circuit
-                        && _selectedMethod != methodMeasurement.EIS_Short_Circuit
-                       )
-                    {
-                        for (int i = 1; i < chartVoltammogram.Series[1].Points.Count; i++)
-                        {
-                            _writer_temp.Write("{0}\t{1}\t{2}", chartVoltammogram.Series[1].Points[i].YValues[0] / 1000.00, chartVoltammogram.Series[2].Points[i].YValues[0] / 1000.000, chartVoltammogram.Series[1].Points[i].XValue);
-                            //writer.Write("{0}\t{1}\t{2}", chartVoltammogram.Series[1].Points[i].YValues[0], chartVoltammogram.Series[2].Points[i].YValues[0], chartVoltammogram.Series[1].Points[i].XValue);
-                            _writer_temp.WriteLine();
-                        }
-                    }
-                    _writer_temp.Close();
-
+                    //if (   _selectedMethod != methodMeasurement.BulkElectrolysis
+                    //    && _selectedMethod != methodMeasurement.EIS
+                    //    && _selectedMethod != methodMeasurement.EIS_Open_Circuit
+                    //    && _selectedMethod != methodMeasurement.EIS_Short_Circuit
+                    //   )
+                    //{
+                    //    for (int i = 1; i < chartVoltammogram.Series[1].Points.Count; i++)
+                    //    {
+                    //        _writer_temp.Write("{0}\t{1}\t{2}", chartVoltammogram.Series[1].Points[i].YValues[0] / 1000.00, chartVoltammogram.Series[2].Points[i].YValues[0] / 1000.000, chartVoltammogram.Series[1].Points[i].XValue);
+                    //        //writer.Write("{0}\t{1}\t{2}", chartVoltammogram.Series[1].Points[i].YValues[0], chartVoltammogram.Series[2].Points[i].YValues[0], chartVoltammogram.Series[1].Points[i].XValue);
+                    //        _writer_temp.WriteLine();
+                    //    }
+                    //}
+                    //_writer_temp.Close();
 
                     //_herzAcquisition = _herzAcquisition_prev;
-
 
                     if (_file_path == null || DEBUG_VOLTAMMOGRAM)
                     {
@@ -2239,73 +2302,43 @@ namespace Voltammogrammer
                              || _selectedMethod == methodMeasurement.Cyclicgalvanometry
                             )
                     {
-                        TextWriter writer = new StreamWriter(_file_path, false);
-                        writer.WriteLine("EC-Lab ASCII FILE");
-                        writer.WriteLine("Nb header lines : 4");
-                        writer.WriteLine(_exp_conditions.GetData().OuterXml);
-                        writer.WriteLine("Ewe/V	I/mA	time/s");
-                        //if(toolStripMenuItemSaveAvaragedData.Checked)
-                        //{
-                        //    for (int i = 1; i < chartVoltammogram.Series[4].Points.Count; i++)
-                        //    {
-                        //        writer.Write("{0}\t{1}\t{2}", chartVoltammogram.Series[4].Points[i].YValues[0]/1000.00, chartVoltammogram.Series[5].Points[i].YValues[0]/1000.000, chartVoltammogram.Series[4].Points[i].XValue);
-                        //        writer.WriteLine();
-                        //    }
-                        //}
-                        //else
-                        //{
                         for (int i = 1; i < chartVoltammogram.Series[1].Points.Count; i++)
                         {
-                            writer.Write("{0}\t{1}\t{2}", chartVoltammogram.Series[1].Points[i].YValues[0] / 1000.00, chartVoltammogram.Series[2].Points[i].YValues[0] / 1000.000, chartVoltammogram.Series[1].Points[i].XValue);
-                            //writer.Write("{0}\t{1}\t{2}", chartVoltammogram.Series[1].Points[i].YValues[0], chartVoltammogram.Series[2].Points[i].YValues[0], chartVoltammogram.Series[1].Points[i].XValue);
-                            writer.WriteLine();
+                            _writer.Write("{0}\t{1}\t{2}", chartVoltammogram.Series[1].Points[i].YValues[0] / 1000.00, chartVoltammogram.Series[2].Points[i].YValues[0] / 1000.000, chartVoltammogram.Series[1].Points[i].XValue);
+                            _writer.WriteLine();
                         }
-                        //}
-                        writer.Close();
+                        _writer.Close();
                     }
                     else if (_selectedMethod == methodMeasurement.OSWV)
                     {
                         _voltammogram.SaveDataOfCurrentSeries(_file_path, _exp_conditions);
-
-                        //for (int i = 1; i < chartVoltammogram.Series[1].Points.Count; i++)
-                        //{
-                        //    writer.Write("{0}\t{1}\t{2}", chartVoltammogram.Series[1].Points[i].YValues[0] / 1000.00, chartVoltammogram.Series[2].Points[i].YValues[0] / 1000.000, chartVoltammogram.Series[1].Points[i].XValue);
-                        //    //writer.Write("{0}\t{1}\t{2}", chartVoltammogram.Series[1].Points[i].YValues[0], chartVoltammogram.Series[2].Points[i].YValues[0], chartVoltammogram.Series[1].Points[i].XValue);
-                        //    writer.WriteLine();
-                        //}
                     }
                     else if (   _selectedMethod == methodMeasurement.EIS
                              || _selectedMethod == methodMeasurement.EIS_Open_Circuit
                              || _selectedMethod == methodMeasurement.EIS_Short_Circuit
                             )
                     {
-                        TextWriter writer = new StreamWriter(_file_path, false);
-                        writer.WriteLine("EC-Lab ASCII FILE");
-                        writer.WriteLine("Nb header lines : 4");
-                        writer.WriteLine(_exp_conditions.GetData().OuterXml);
-                        writer.WriteLine("-Im(Z)/Ohm	Re(Z)/Ohm	freq/Hz");
                         for (int i = 1; i < chartVoltammogram.Series[1].Points.Count; i++)
                         {
-                            writer.Write("{0}\t{1}\t{2}", chartVoltammogram.Series[1].Points[i].YValues[0], chartVoltammogram.Series[1].Points[i].XValue, chartVoltammogram.Series[6].Points[i].XValue);
-                            //writer.Write("{0}\t{1}\t{2}", chartVoltammogram.Series[1].Points[i].YValues[0], chartVoltammogram.Series[2].Points[i].YValues[0], chartVoltammogram.Series[1].Points[i].XValue);
-                            writer.WriteLine();
+                            _writer.Write("{0}\t{1}\t{2}", chartVoltammogram.Series[1].Points[i].YValues[0], chartVoltammogram.Series[1].Points[i].XValue, chartVoltammogram.Series[6].Points[i].XValue);
+                            _writer.WriteLine();
                         }
-                        writer.Close();
+                        _writer.Close();
                     }
-                    else //if (_selectedMethod == methodMeasurement.BulkElectrolysis)
+                    else if (   _selectedMethod == methodMeasurement.BulkElectrolysis
+                             || _selectedMethod == methodMeasurement.ConstantCurrent
+                            )
                     {
-                        TextWriter writer = new StreamWriter(_file_path, false);
-                        writer.WriteLine("EC-Lab ASCII FILE");
-                        writer.WriteLine("Nb header lines : 4");
-                        writer.WriteLine(_exp_conditions.GetData().OuterXml);
-                        writer.WriteLine("Ewe/V	I/mA	time/s");
+                        _writer.Close();
+                    }
+                    else
+                    {
                         for (int i = 1; i < chartVoltammogram.Series[1].Points.Count; i++)
                         {
-                            writer.Write("{0}\t{1}\t{2}", chartVoltammogram.Series[1].Points[i].YValues[0] / 1000.00, chartVoltammogram.Series[2].Points[i].YValues[0] / 1000.000, chartVoltammogram.Series[1].Points[i].XValue);
-                            //writer.Write("{0}\t{1}\t{2}", chartVoltammogram.Series[1].Points[i].YValues[0], chartVoltammogram.Series[2].Points[i].YValues[0], chartVoltammogram.Series[1].Points[i].XValue);
-                            writer.WriteLine();
+                            _writer.Write("{0}\t{1}\t{2}", chartVoltammogram.Series[1].Points[i].YValues[0] / 1000.00, chartVoltammogram.Series[2].Points[i].YValues[0] / 1000.000, chartVoltammogram.Series[1].Points[i].XValue);
+                            _writer.WriteLine();
                         }
-                        writer.Close();
+                        _writer.Close();
                     }
                     _voltammogram.EndRecording();
                     break;
@@ -2336,7 +2369,7 @@ namespace Voltammogrammer
                         case modeMeasurement.eis: break;
                     }
 
-                    if (   _selectedMethod == methodMeasurement.Cyclicvoltammetry
+                    if (_selectedMethod == methodMeasurement.Cyclicvoltammetry
                         || _selectedMethod == methodMeasurement.CyclicvoltammetryQuick
                         || _selectedMethod == methodMeasurement.LSV
                         || _selectedMethod == methodMeasurement.Series_of_RDE_CV
@@ -2346,72 +2379,72 @@ namespace Voltammogrammer
                     {
                         //if (_flag_digitalfilter)
                         //{
-                            if (true)
+                        if (true)
+                        {
+                            int k = (_flag_digitalfilter) ? (int)Math.Round(_herzAcquisition / _target_filtering_frequency * 2) : 1;
+                            //const int k = 16;
+                            if (progress >= (k - 1))
                             {
-                                int k = (_flag_digitalfilter)? (int)Math.Round(_herzAcquisition / _target_filtering_frequency * 2) : 1;
-                                //const int k = 16;
-                                if (progress >= (k - 1))
+                                for (int i = ((_itrRecording > 0) ? _itrRecording : (k - 1)); i < progress; i++)
                                 {
-                                    for (int i = ((_itrRecording > 0) ? _itrRecording : (k - 1)); i < progress; i++)
+                                    double p = 0.0, c = 0.0;
+                                    p = (_recordingSeries[CHANNEL_POTENTIAL][i] * POTENTIAL_SCALE - POTENTIAL_OFFSET_OSC); // E [mV]
+                                    for (int j = 0; j < k; j++)
                                     {
-                                        double p = 0.0, c = 0.0;
-                                        p = (_recordingSeries[CHANNEL_POTENTIAL][i] * POTENTIAL_SCALE - POTENTIAL_OFFSET_OSC); // E [mV]
-                                        for (int j = 0; j < k; j++)
-                                        {
-                                            c += _recordingSeries[CHANNEL_CURRENT][i - j] - CURRENT_OFFSET;
-                                        }
-                                        c /= k;
-                                        c *= (factorCurrent); // I [uA]
-
-                                        if (_selectedMode == modeMeasurement.galvanometry)
-                                        {
-                                            double polarity = -1;
-                                            p *= polarity / POTENTIAL_SLOPE_OSC / POTENTIAL_SLOPE_AWG;
-                                            c *= polarity / POTENTIAL_SLOPE_OSC / POTENTIAL_SLOPE_AWG;
-                                            //c = _millivoltInitial_raw;
-                                        }
-                                        else
-                                        {
-                                            p /= POTENTIAL_SLOPE_OSC;
-                                            c /= CURRENT_SLOPE * (1 + _calibrate_potentiostat.ohmInternalResistance / (1000000 / factorCurrent));
-                                        }
-
-                                        chartVoltammogram.Series[1].Points.AddXY(_recordingSeries[0][i] / 1000.00, p); // E [mV]
-                                        chartVoltammogram.Series[2].Points.AddXY(_recordingSeries[0][i] / 1000.00, c); // I [uA]
-
-                                        _voltammogram.AddDataToCurrentSeries(
-                                            _series,
-                                            true,
-                                            p,
-                                            formVoltammogram.typeAxisX.Potential_in_mV,
-                                            c,
-                                            formVoltammogram.typeAxisY.Current_in_uA,
-                                            _recordingSeries[0][i] / 1000.00
-                                        );
+                                        c += _recordingSeries[CHANNEL_CURRENT][i - j] - CURRENT_OFFSET;
                                     }
-                                }
-                            }
-                            else
-                            {
-                                for (int i = _itrRecording; i < progress; i++)
-                                {
-                                    double c = _digital_filter_notch.Process(_recordingSeries[CHANNEL_CURRENT][i] - CURRENT_OFFSET);
-                                    c = _digital_filter_lowpass.Process(_recordingSeries[CHANNEL_CURRENT][i] - CURRENT_OFFSET);
+                                    c /= k;
+                                    c *= (factorCurrent); // I [uA]
 
-                                    chartVoltammogram.Series[1].Points.AddXY(_recordingSeries[0][i] / 1000.00, _recordingSeries[CHANNEL_POTENTIAL][i] * POTENTIAL_SCALE); // E [mV]
-                                    chartVoltammogram.Series[2].Points.AddXY(_recordingSeries[0][i] / 1000.00, (double)c * (factorCurrent)); // I [uA]
+                                    if (_selectedMode == modeMeasurement.galvanometry)
+                                    {
+                                        double polarity = -1;
+                                        p *= polarity / POTENTIAL_SLOPE_OSC / POTENTIAL_SLOPE_AWG;
+                                        c *= polarity / POTENTIAL_SLOPE_OSC / POTENTIAL_SLOPE_AWG;
+                                        //c = _millivoltInitial_raw;
+                                    }
+                                    else
+                                    {
+                                        p /= POTENTIAL_SLOPE_OSC;
+                                        c /= CURRENT_SLOPE * (1 + _calibrate_potentiostat.ohmInternalResistance / (1000000 / factorCurrent));
+                                    }
+
+                                    chartVoltammogram.Series[1].Points.AddXY(_recordingSeries[0][i] / 1000.00, p); // E [mV]
+                                    chartVoltammogram.Series[2].Points.AddXY(_recordingSeries[0][i] / 1000.00, c); // I [uA]
 
                                     _voltammogram.AddDataToCurrentSeries(
                                         _series,
                                         true,
-                                        _recordingSeries[CHANNEL_POTENTIAL][i] * POTENTIAL_SCALE,
+                                        p,
                                         formVoltammogram.typeAxisX.Potential_in_mV,
-                                        (double)c * (factorCurrent),
+                                        c,
                                         formVoltammogram.typeAxisY.Current_in_uA,
                                         _recordingSeries[0][i] / 1000.00
                                     );
                                 }
                             }
+                        }
+                        else
+                        {
+                            for (int i = _itrRecording; i < progress; i++)
+                            {
+                                double c = _digital_filter_notch.Process(_recordingSeries[CHANNEL_CURRENT][i] - CURRENT_OFFSET);
+                                c = _digital_filter_lowpass.Process(_recordingSeries[CHANNEL_CURRENT][i] - CURRENT_OFFSET);
+
+                                chartVoltammogram.Series[1].Points.AddXY(_recordingSeries[0][i] / 1000.00, _recordingSeries[CHANNEL_POTENTIAL][i] * POTENTIAL_SCALE); // E [mV]
+                                chartVoltammogram.Series[2].Points.AddXY(_recordingSeries[0][i] / 1000.00, (double)c * (factorCurrent)); // I [uA]
+
+                                _voltammogram.AddDataToCurrentSeries(
+                                    _series,
+                                    true,
+                                    _recordingSeries[CHANNEL_POTENTIAL][i] * POTENTIAL_SCALE,
+                                    formVoltammogram.typeAxisX.Potential_in_mV,
+                                    (double)c * (factorCurrent),
+                                    formVoltammogram.typeAxisY.Current_in_uA,
+                                    _recordingSeries[0][i] / 1000.00
+                                );
+                            }
+                        }
                         //}
                         //else
                         //{
@@ -2451,14 +2484,14 @@ namespace Voltammogrammer
                         //    }
                         //}
                     }
-                    else if (   _selectedMethod == methodMeasurement.BulkElectrolysis
+                    else if (_selectedMethod == methodMeasurement.BulkElectrolysis
                              || _selectedMethod == methodMeasurement.ConstantCurrent
                             )
                     {
-                        if(    Math.Abs(_recordingSeries[CHANNEL_CURRENT][_itrRecording] - CURRENT_OFFSET) > (_voltAnalogInChannelRange_Current / 2 - 0.05)
+                        if (Math.Abs(_recordingSeries[CHANNEL_CURRENT][_itrRecording] - CURRENT_OFFSET) > (_voltAnalogInChannelRange_Current / 2 - 0.05)
                             || Math.Abs(_recordingSeries[CHANNEL_CURRENT][_itrRecording] - CURRENT_OFFSET) > 11.6)
                         {
-                            if(!_is_warned_about_potential_limit)
+                            if (!_is_warned_about_potential_limit)
                             {
                                 _is_warned_about_potential_limit = true;
 
@@ -2479,19 +2512,19 @@ namespace Voltammogrammer
                         for (int i = _itrRecording; i < progress; i++)
                         {
                             double p = 0.0, c_raw = 0.0, c = 0.0;
-                            p = (_recordingSeries[CHANNEL_POTENTIAL][i] * POTENTIAL_SCALE - POTENTIAL_OFFSET_OSC) ; // E [mV]
-                            c_raw = (_recordingSeries[CHANNEL_CURRENT][i] - CURRENT_OFFSET) * (factorCurrent) ; // I [uA]
+                            p = (_recordingSeries[CHANNEL_POTENTIAL][i] * POTENTIAL_SCALE - POTENTIAL_OFFSET_OSC); // E [mV]
+                            c_raw = (_recordingSeries[CHANNEL_CURRENT][i] - CURRENT_OFFSET) * (factorCurrent); // I [uA]
 
                             if (_selectedMode == modeMeasurement.galvanometry)
                             {
                                 double polarity = -1;
-                                    p *= polarity / POTENTIAL_SLOPE_OSC / POTENTIAL_SLOPE_AWG;
+                                p *= polarity / POTENTIAL_SLOPE_OSC / POTENTIAL_SLOPE_AWG;
                                 c_raw *= polarity / POTENTIAL_SLOPE_OSC / POTENTIAL_SLOPE_AWG;
                                 c = _millivoltInitial_raw;
                             }
                             else
                             {
-                                    p /= POTENTIAL_SLOPE_OSC;
+                                p /= POTENTIAL_SLOPE_OSC;
                                 c_raw /= CURRENT_SLOPE * (1 + _calibrate_potentiostat.ohmInternalResistance / (1000000 / factorCurrent));
                                 c = c_raw;
                             }
@@ -2512,22 +2545,28 @@ namespace Voltammogrammer
                                 _recordingSeries[0][i] / 1000.00 // [s]
                             );
 
-                            double dt = _recordingSeries[0][i] - ((i > 0)? _recordingSeries[0][i-1] : 0); // [ms]
+                            double dt = _recordingSeries[0][i] - ((i > 0) ? _recordingSeries[0][i - 1] : 0); // [ms]
                             _coulombPassingThroughCell += c * (dt / 1000.0) / 1000000.0; // [C]
-                            if( (_countRepeat > 0.0) && Math.Abs(_coulombPassingThroughCell) >= _countRepeat )
+                            if ((_countRepeat > 0.0) && Math.Abs(_coulombPassingThroughCell) >= _countRepeat)
                             {
                                 backgroundWorkerCV.CancelAsync();
                             }
 
-                            _writer_temp.WriteLine(
-                                "{0}\t{1}\t{2}",
-                                p / 1000,
-                                c / 1000,
-                                _recordingSeries[0][i] / 1000.00
-                            );
-                        }
+                            if (_file_path != null && !DEBUG_VOLTAMMOGRAM)
+                            {
+                                _writer.WriteLine(
+                                    "{0}\t{1}\t{2}",
+                                    p / 1000,
+                                    c / 1000,
+                                    _recordingSeries[0][i] / 1000.00
+                                );
 
-                        //_writer_temp.WriteLine("{0}, {1}", _recordingSeries[0][_itrRecording] / 1000, (double)_recordingSeries[CHANNEL_CURRENT][_itrRecording] * ((double)_selectedCurrentFactor));
+                                if (((progress + 1) % 10) == 0)
+                                {
+                                    _writer.Flush();
+                                }
+                            }
+                        }
                     }
                     else if (   _selectedMethod == methodMeasurement.EIS
                              || _selectedMethod == methodMeasurement.EIS_Open_Circuit
@@ -2580,7 +2619,7 @@ namespace Voltammogrammer
                             }
                             else
                             {
-                                if(chartVoltammogram.ChartAreas[0].AxisX.Maximum < (+1 * min) ) chartVoltammogram.ChartAreas[0].AxisX.Maximum = +1 * min;
+                                if (chartVoltammogram.ChartAreas[0].AxisX.Maximum < (+1 * min)) chartVoltammogram.ChartAreas[0].AxisX.Maximum = +1 * min;
                             }
 
                             if (Double.IsNaN(chartVoltammogram.ChartAreas[0].AxisX2.Minimum))
@@ -2589,7 +2628,7 @@ namespace Voltammogrammer
                             }
                             else
                             {
-                                if(chartVoltammogram.ChartAreas[0].AxisX2.Minimum >= (min2) ) chartVoltammogram.ChartAreas[0].AxisX2.Minimum = min2;
+                                if (chartVoltammogram.ChartAreas[0].AxisX2.Minimum >= (min2)) chartVoltammogram.ChartAreas[0].AxisX2.Minimum = min2;
                             }
                         }
                         chartVoltammogram.ResumeLayout();
@@ -3652,7 +3691,7 @@ namespace Voltammogrammer
                         toolStripTextBoxVertexV.Text = "60";
                         toolStripLabel3.Text = "Sampling Interval [s]:";
                         toolStripTextBoxScanrate.Text = "1";
-                        toolStripLabel4.Text = "Target Q [C]:";
+                        toolStripLabel4.Text = "Target |Q| [C]:";
                         toolStripTextBoxRepeat.Text = "0";
                         break;
 
@@ -3662,7 +3701,7 @@ namespace Voltammogrammer
                         toolStripTextBoxVertexV.Text = "60";
                         toolStripLabel3.Text = "Sampling Interval [s]:";
                         toolStripTextBoxScanrate.Text = "1";
-                        toolStripLabel4.Text = "Target Q [C]:";
+                        toolStripLabel4.Text = "Target |Q| [C]:";
                         toolStripTextBoxRepeat.Text = "0";
                         break;
 
@@ -5345,7 +5384,7 @@ namespace Voltammogrammer
                 {
                     _countRepeat = value;
                 }
-                else { MessageBox.Show(this, "The target Q [C] should be >= 0."); e.Cancel = true; return; }
+                else { MessageBox.Show(this, "The target |Q| [C] should be >= 0."); e.Cancel = true; return; }
             }
         }
 
