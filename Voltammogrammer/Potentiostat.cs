@@ -3354,8 +3354,8 @@ namespace Voltammogrammer
 
                     case methodMeasurement.BulkElectrolysis:
                         if (double.TryParse(toolStripTextBoxInitialV.Text, out _millivoltInitial)
-                            && (_millivoltInitial <= 5000)
-                            && (_millivoltInitial >= -5000))
+                            && (_millivoltInitial <= 12000)
+                            && (_millivoltInitial >= -12000))
                         {
                             _millivoltInitial -= POTENTIAL_OFFSET_AWG;
                             _millivoltInitial /= POTENTIAL_SLOPE_AWG;
