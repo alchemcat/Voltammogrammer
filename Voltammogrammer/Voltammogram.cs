@@ -77,6 +77,7 @@ namespace Voltammogrammer
             Potential_in_mV = 4,
             Current_in_nA = 5,
             ImZ_in_ohm = 6,
+            C2_in_MS_plot = 7,
         }
         typeAxisY _selectedAxisY = typeAxisY.Current_in_uA;
         double[] _scaleAxisY = { 1000, 1, 1, 0.001, 1, 1000000, 1 };
@@ -507,9 +508,9 @@ namespace Voltammogrammer
                                         }
                                         else if(idxReZ != -1 && idxImZ != -1)
                                         {
-                                            if (Double.TryParse(cc[idxReZ].Value, out ReZ) && Double.TryParse(cc[idxImZ].Value, out ImZ) && Double.TryParse(cc[idxFreq].Value, out freq))
+                                            if (Double.TryParse(cc[idxReZ].Value, out ReZ) && Double.TryParse(cc[idxImZ].Value, out ImZ) && Double.TryParse(cc[idxFreq].Value, out freq) && Double.TryParse(cc[idxPotential].Value, out potential))
                                             {
-                                                AddDataToCurrentSeries(series, !_mode_coulomb_counting, 0, typeAxisX.Potential_in_mV, 0, typeAxisY.Current_in_uA, 0, ReZ, ImZ, freq);
+                                                AddDataToCurrentSeries(series, !_mode_coulomb_counting, potential, typeAxisX.Potential_in_mV, 0, typeAxisY.Current_in_uA, 0, ReZ, ImZ, freq);
                                             }
                                         }
                                         else
@@ -1139,6 +1140,10 @@ namespace Voltammogrammer
                                 y = ImZ;
                                 break;
 
+                            case typeAxisY.C2_in_MS_plot:
+                                y = Math.Pow(ImZ * freq * 2 * Math.PI, 2) * 1e-6;
+                                break;
+
                             default:
                                 break;
                         }
@@ -1679,6 +1684,8 @@ namespace Voltammogrammer
         private void chartVoltammogram_CursorPositionChanged(object sender, System.Windows.Forms.DataVisualization.Charting.CursorEventArgs e)
         {
             string X, Y1, XY;
+            string format_volt = "0", format_current = "0";
+            string unit_x = "", unit_y= "";
 
             switch(_selectedAxisY)
             {
@@ -1694,8 +1701,6 @@ namespace Voltammogrammer
                 case typeAxisY.Current_in_nA:
                 case typeAxisY.Current_in_uA:
                 case typeAxisY.Potential_in_mV:
-                    string format_volt = "0", format_current = "0";
-                    string unit_x = "", unit_y= "";
                     switch(_selectedAxisX)
                     {
                         case typeAxisX.Potential_in_mV: unit_x = "mV"; format_volt = "0.0"; break;
@@ -1746,6 +1751,19 @@ namespace Voltammogrammer
                         }
                     }
                     XY = "(" + x.ToString() + " ohm" + ", " + y.ToString() + " ohm, " + f1.ToString("0.0") + " Hz)";
+                    toolStripStatusCursor.Text = XY;
+                    break;
+
+                case typeAxisY.C2_in_MS_plot:
+                    switch (_selectedAxisX)
+                    {
+                        case typeAxisX.Potential_in_mV: unit_x = "mV"; format_volt = "0.0"; break;
+                        case typeAxisX.Potential_in_V: unit_x = "V"; format_volt = "0.0000"; break;
+                    }
+                    unit_y = "mF^-2";
+                    X = e.ChartArea.CursorX.Position.ToString(format_volt);
+                    Y1 = e.ChartArea.CursorY.Position.ToString("0.00");
+                    XY = "(" + X + " " + unit_x + ", " + Y1 + " " + unit_y + ")";
                     toolStripStatusCursor.Text = XY;
                     break;
 
@@ -2133,6 +2151,11 @@ namespace Voltammogrammer
                     _selectedAxisY = typeAxisY.ImZ_in_ohm;
                     chartVoltammogram.ChartAreas[0].AxisY.Title = "Im[Z] / ohm";
                     break;
+                case 7:
+                    _selectedAxisY = typeAxisY.C2_in_MS_plot;
+                    chartVoltammogram.ChartAreas[0].AxisY.Title = "(Im[Z] * 2πf)^2 / mF^(-2)";
+                    break;
+
                 default:
                     break;
             }
@@ -2169,6 +2192,10 @@ namespace Voltammogrammer
 
                         case typeAxisY.ImZ_in_ohm:
                             itr.YValues[0] = itr.YValues[IM_Z];
+                            break;
+
+                        case typeAxisY.C2_in_MS_plot:
+                            itr.YValues[0] = Math.Pow(itr.YValues[IM_Z] * itr.YValues[FREQ] * 2 * Math.PI, 2) * 1e-6;
                             break;
 
                         default:
@@ -2891,7 +2918,15 @@ namespace Voltammogrammer
                 }
                 else
                 {
-                    ((ToolStripComboBox)sender).Text = "1.0";
+                    //if(((ToolStripComboBox)sender).Text.ToLower() == "ms")
+                    //{
+                    //    int idx = toolStripComboSeriesScaleY.Items.Add("ms");
+                    //    toolStripComboSeriesScaleY.SelectedIndex = idx;
+                    //}
+                    //else
+                    //{ 
+                        ((ToolStripComboBox)sender).Text = "1.0";
+                    //}
                 }
 
                 e.Handled = true;
@@ -2905,10 +2940,33 @@ namespace Voltammogrammer
 
             if (idxRefP == -1) return;
 
-            double original = Double.Parse(((XMLDataHolder)chartVoltammogram.Series[idx].Tag).GetDatum("scaleY", "1.0"));
+            string original_str = (((XMLDataHolder)chartVoltammogram.Series[idx].Tag).GetDatum("scaleY", "1.0"));
             double originalShift = Double.Parse(((XMLDataHolder)chartVoltammogram.Series[idx].Tag).GetDatum("shiftY", "0"));
-            double set = (double)toolStripComboSeriesScaleY.Items[idxRefP];
-            if (original == set) return;
+            string set_str = (string)toolStripComboSeriesScaleY.Items[idxRefP];
+            if (original_str == set_str) return;
+
+            double original = 1.0, set = 1.0;
+            switch (_selectedAxisY)
+            {
+                case typeAxisY.Current_in_mA:
+                case typeAxisY.Current_in_uA:
+                case typeAxisY.Current_in_nA:
+                case typeAxisY.Coulomb_in_mC:
+                    {
+                        if (!Double.TryParse(original_str, out original))
+                        {
+                            original = 1.0;
+                        }
+                        if (!Double.TryParse(set_str, out set))
+                        {
+                            set = 1.0;
+                        }
+                    }
+                    break;
+
+                default:
+                    break;
+            }
 
             switch (_selectedAxisY)
             {
@@ -2955,6 +3013,8 @@ namespace Voltammogrammer
 
                 case typeAxisY.Coulomb_in_mC:
                     {
+                        // TO DO: 乗算対応
+
                         System.Windows.Forms.DataVisualization.Charting.DataPointCollection dpc = chartVoltammogram.Series[idx].Points;
                         foreach (System.Windows.Forms.DataVisualization.Charting.DataPoint itr in dpc)
                         {
@@ -2963,6 +3023,17 @@ namespace Voltammogrammer
 
                     }
                     break;
+
+                //case typeAxisY.ImZ_in_ohm:
+                //    {
+                //        System.Windows.Forms.DataVisualization.Charting.DataPointCollection dpc = chartVoltammogram.Series[idx].Points;
+                //        foreach (System.Windows.Forms.DataVisualization.Charting.DataPoint itr in dpc)
+                //        {
+                //            itr.YValues[0] = Math.Pow(itr.YValues[IM_Z] * itr.YValues[FREQ], -2);
+                //        }
+
+                //    }
+                //    break;
 
                 default:
                     break;

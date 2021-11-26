@@ -52,11 +52,6 @@
             this.chartVoltammogram = new System.Windows.Forms.DataVisualization.Charting.Chart();
             this.contextMenuStrip1 = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.contextMenuItemUndoZoom = new System.Windows.Forms.ToolStripMenuItem();
-            this.toolStrip3 = new System.Windows.Forms.ToolStrip();
-            this.toolStripLabel2 = new System.Windows.Forms.ToolStripLabel();
-            this.toolStripComboBoxAxisY = new System.Windows.Forms.ToolStripComboBox();
-            this.toolStripComboBoxAxisX = new System.Windows.Forms.ToolStripComboBox();
-            this.toolStripComboBoxRef = new System.Windows.Forms.ToolStripComboBox();
             this.toolStrip2 = new System.Windows.Forms.ToolStrip();
             this.toolStripButtonNewWindow = new System.Windows.Forms.ToolStripButton();
             this.toolStripButtonLoad = new System.Windows.Forms.ToolStripSplitButton();
@@ -80,6 +75,11 @@
             this.toolStripSeparator2 = new System.Windows.Forms.ToolStripSeparator();
             this.toolStripDropDownButton1 = new System.Windows.Forms.ToolStripDropDownButton();
             this.toolStripMenuItem1 = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStrip3 = new System.Windows.Forms.ToolStrip();
+            this.toolStripLabel2 = new System.Windows.Forms.ToolStripLabel();
+            this.toolStripComboBoxAxisY = new System.Windows.Forms.ToolStripComboBox();
+            this.toolStripComboBoxAxisX = new System.Windows.Forms.ToolStripComboBox();
+            this.toolStripComboBoxRef = new System.Windows.Forms.ToolStripComboBox();
             this.openFileDialog1 = new System.Windows.Forms.OpenFileDialog();
             this.saveFileDialog1 = new System.Windows.Forms.SaveFileDialog();
             this.toolStripContainer1.BottomToolStripPanel.SuspendLayout();
@@ -90,23 +90,23 @@
             this.statusStrip1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.chartVoltammogram)).BeginInit();
             this.contextMenuStrip1.SuspendLayout();
-            this.toolStrip3.SuspendLayout();
             this.toolStrip2.SuspendLayout();
+            this.toolStrip3.SuspendLayout();
             this.SuspendLayout();
-            //
+            // 
             // toolStripContainer1
-            //
-            //
+            // 
+            // 
             // toolStripContainer1.BottomToolStripPanel
-            //
+            // 
             this.toolStripContainer1.BottomToolStripPanel.Controls.Add(this.toolStrip1);
             this.toolStripContainer1.BottomToolStripPanel.Controls.Add(this.statusStrip1);
-            //
+            // 
             // toolStripContainer1.ContentPanel
-            //
+            // 
             this.toolStripContainer1.ContentPanel.Controls.Add(this.chartVoltammogram);
             this.toolStripContainer1.ContentPanel.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
-            this.toolStripContainer1.ContentPanel.Size = new System.Drawing.Size(1245, 362);
+            this.toolStripContainer1.ContentPanel.Size = new System.Drawing.Size(1245, 382);
             this.toolStripContainer1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.toolStripContainer1.Location = new System.Drawing.Point(0, 0);
             this.toolStripContainer1.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
@@ -114,14 +114,14 @@
             this.toolStripContainer1.Size = new System.Drawing.Size(1245, 470);
             this.toolStripContainer1.TabIndex = 4;
             this.toolStripContainer1.Text = "toolStripContainer1";
-            //
+            // 
             // toolStripContainer1.TopToolStripPanel
-            //
-            this.toolStripContainer1.TopToolStripPanel.Controls.Add(this.toolStrip2);
+            // 
             this.toolStripContainer1.TopToolStripPanel.Controls.Add(this.toolStrip3);
-            //
+            this.toolStripContainer1.TopToolStripPanel.Controls.Add(this.toolStrip2);
+            // 
             // toolStrip1
-            //
+            // 
             this.toolStrip1.Dock = System.Windows.Forms.DockStyle.None;
             this.toolStrip1.ImageScalingSize = new System.Drawing.Size(20, 20);
             this.toolStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
@@ -140,119 +140,119 @@
             this.toolStripComboSeriesScaleY});
             this.toolStrip1.Location = new System.Drawing.Point(8, 0);
             this.toolStrip1.Name = "toolStrip1";
-            this.toolStrip1.Size = new System.Drawing.Size(1103, 28);
+            this.toolStrip1.Size = new System.Drawing.Size(1104, 31);
             this.toolStrip1.TabIndex = 3;
             this.toolStrip1.Text = "toolStrip1";
-            //
+            // 
             // toolStripLabel3
-            //
+            // 
             this.toolStripLabel3.Name = "toolStripLabel3";
-            this.toolStripLabel3.Size = new System.Drawing.Size(38, 25);
+            this.toolStripLabel3.Size = new System.Drawing.Size(38, 28);
             this.toolStripLabel3.Text = "Plot:";
-            //
+            // 
             // toolStripComboBoxSeries
-            //
+            // 
             this.toolStripComboBoxSeries.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.toolStripComboBoxSeries.DropDownWidth = 400;
             this.toolStripComboBoxSeries.MaxDropDownItems = 100;
             this.toolStripComboBoxSeries.Name = "toolStripComboBoxSeries";
-            this.toolStripComboBoxSeries.Size = new System.Drawing.Size(121, 28);
+            this.toolStripComboBoxSeries.Size = new System.Drawing.Size(121, 31);
             this.toolStripComboBoxSeries.SelectedIndexChanged += new System.EventHandler(this.toolStripComboBoxSeries_SelectedIndexChanged);
-            //
+            // 
             // toolStripSeparator3
-            //
+            // 
             this.toolStripSeparator3.Name = "toolStripSeparator3";
-            this.toolStripSeparator3.Size = new System.Drawing.Size(6, 28);
-            //
+            this.toolStripSeparator3.Size = new System.Drawing.Size(6, 31);
+            // 
             // toolStripComboBoxSeriesColor
-            //
+            // 
             this.toolStripComboBoxSeriesColor.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.toolStripComboBoxSeriesColor.Name = "toolStripComboBoxSeriesColor";
-            this.toolStripComboBoxSeriesColor.Size = new System.Drawing.Size(121, 28);
+            this.toolStripComboBoxSeriesColor.Size = new System.Drawing.Size(121, 31);
             this.toolStripComboBoxSeriesColor.SelectedIndexChanged += new System.EventHandler(this.toolStripComboBoxSeriesColor_SelectedIndexChanged);
-            //
+            // 
             // toolStripComboBoxSeriesLineStyle
-            //
+            // 
             this.toolStripComboBoxSeriesLineStyle.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.toolStripComboBoxSeriesLineStyle.Name = "toolStripComboBoxSeriesLineStyle";
-            this.toolStripComboBoxSeriesLineStyle.Size = new System.Drawing.Size(121, 28);
+            this.toolStripComboBoxSeriesLineStyle.Size = new System.Drawing.Size(121, 31);
             this.toolStripComboBoxSeriesLineStyle.SelectedIndexChanged += new System.EventHandler(this.toolStripComboBoxSeriesLineStyle_SelectedIndexChanged);
-            //
+            // 
             // toolStripComboBoxSeriesLineWidth
-            //
+            // 
             this.toolStripComboBoxSeriesLineWidth.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.toolStripComboBoxSeriesLineWidth.Name = "toolStripComboBoxSeriesLineWidth";
-            this.toolStripComboBoxSeriesLineWidth.Size = new System.Drawing.Size(121, 28);
+            this.toolStripComboBoxSeriesLineWidth.Size = new System.Drawing.Size(121, 31);
             this.toolStripComboBoxSeriesLineWidth.SelectedIndexChanged += new System.EventHandler(this.toolStripComboBoxSeriesLineWidth_SelectedIndexChanged);
-            //
+            // 
             // toolStripSeparator4
-            //
+            // 
             this.toolStripSeparator4.Name = "toolStripSeparator4";
-            this.toolStripSeparator4.Size = new System.Drawing.Size(6, 28);
-            //
+            this.toolStripSeparator4.Size = new System.Drawing.Size(6, 31);
+            // 
             // toolStripLabel1
-            //
+            // 
             this.toolStripLabel1.Name = "toolStripLabel1";
-            this.toolStripLabel1.Size = new System.Drawing.Size(95, 25);
+            this.toolStripLabel1.Size = new System.Drawing.Size(95, 28);
             this.toolStripLabel1.Text = "Fc(+/0) [mV]:";
-            //
+            // 
             // toolStripComboBoxSeriesRefPotential
-            //
+            // 
             this.toolStripComboBoxSeriesRefPotential.Name = "toolStripComboBoxSeriesRefPotential";
-            this.toolStripComboBoxSeriesRefPotential.Size = new System.Drawing.Size(121, 28);
+            this.toolStripComboBoxSeriesRefPotential.Size = new System.Drawing.Size(121, 31);
             this.toolStripComboBoxSeriesRefPotential.SelectedIndexChanged += new System.EventHandler(this.toolStripComboBoxSeriesRefPotential_SelectedIndexChanged);
             this.toolStripComboBoxSeriesRefPotential.TextUpdate += new System.EventHandler(this.toolStripComboBoxSeriesRefPotential_TextUpdate);
             this.toolStripComboBoxSeriesRefPotential.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.toolStripComboBoxSeriesRefPotential_KeyPress);
             this.toolStripComboBoxSeriesRefPotential.Validating += new System.ComponentModel.CancelEventHandler(this.toolStripComboBoxSeriesRefPotential_Validating);
             this.toolStripComboBoxSeriesRefPotential.TextChanged += new System.EventHandler(this.toolStripComboBoxSeriesRefPotential_TextChanged);
-            //
+            // 
             // toolStripLabel4
-            //
+            // 
             this.toolStripLabel4.Name = "toolStripLabel4";
-            this.toolStripLabel4.Size = new System.Drawing.Size(58, 25);
+            this.toolStripLabel4.Size = new System.Drawing.Size(58, 28);
             this.toolStripLabel4.Text = "+I [uA]:";
-            //
+            // 
             // toolStripComboSeriesShiftY
-            //
+            // 
             this.toolStripComboSeriesShiftY.Name = "toolStripComboSeriesShiftY";
-            this.toolStripComboSeriesShiftY.Size = new System.Drawing.Size(121, 28);
+            this.toolStripComboSeriesShiftY.Size = new System.Drawing.Size(121, 31);
             this.toolStripComboSeriesShiftY.SelectedIndexChanged += new System.EventHandler(this.toolStripComboSeriesShiftY_SelectedIndexChanged);
             this.toolStripComboSeriesShiftY.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.toolStripComboSeriesShiftY_KeyPress);
-            //
+            // 
             // toolStripLabel5
-            //
+            // 
             this.toolStripLabel5.Name = "toolStripLabel5";
-            this.toolStripLabel5.Size = new System.Drawing.Size(27, 25);
+            this.toolStripLabel5.Size = new System.Drawing.Size(27, 28);
             this.toolStripLabel5.Text = "x I:";
-            //
+            // 
             // toolStripComboSeriesScaleY
-            //
+            // 
             this.toolStripComboSeriesScaleY.Name = "toolStripComboSeriesScaleY";
-            this.toolStripComboSeriesScaleY.Size = new System.Drawing.Size(121, 28);
+            this.toolStripComboSeriesScaleY.Size = new System.Drawing.Size(121, 31);
             this.toolStripComboSeriesScaleY.SelectedIndexChanged += new System.EventHandler(this.toolStripComboSeriesScaleY_SelectedIndexChanged);
             this.toolStripComboSeriesScaleY.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.toolStripComboSeriesScaleY_KeyPress);
-            //
+            // 
             // statusStrip1
-            //
+            // 
             this.statusStrip1.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
             this.statusStrip1.Dock = System.Windows.Forms.DockStyle.None;
             this.statusStrip1.ImageScalingSize = new System.Drawing.Size(20, 20);
             this.statusStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.toolStripStatusCursor});
             this.statusStrip1.LayoutStyle = System.Windows.Forms.ToolStripLayoutStyle.HorizontalStackWithOverflow;
-            this.statusStrip1.Location = new System.Drawing.Point(0, 28);
+            this.statusStrip1.Location = new System.Drawing.Point(0, 31);
             this.statusStrip1.Name = "statusStrip1";
-            this.statusStrip1.Size = new System.Drawing.Size(1245, 25);
+            this.statusStrip1.Size = new System.Drawing.Size(1245, 26);
             this.statusStrip1.TabIndex = 0;
-            //
+            // 
             // toolStripStatusCursor
-            //
+            // 
             this.toolStripStatusCursor.Name = "toolStripStatusCursor";
             this.toolStripStatusCursor.Size = new System.Drawing.Size(83, 20);
             this.toolStripStatusCursor.Text = "(...mV, ...uA)";
-            //
+            // 
             // chartVoltammogram
-            //
+            // 
             this.chartVoltammogram.AllowDrop = true;
             chartArea1.AxisX.Enabled = System.Windows.Forms.DataVisualization.Charting.AxisEnabled.True;
             chartArea1.AxisX.IntervalType = System.Windows.Forms.DataVisualization.Charting.DateTimeIntervalType.Number;
@@ -297,8 +297,8 @@
             chartArea1.AxisY.IsStartedFromZero = false;
             chartArea1.AxisY.LabelAutoFitMaxFontSize = 15;
             chartArea1.AxisY.LabelAutoFitMinFontSize = 9;
-            chartArea1.AxisY.LabelAutoFitStyle = ((System.Windows.Forms.DataVisualization.Charting.LabelAutoFitStyles)((((System.Windows.Forms.DataVisualization.Charting.LabelAutoFitStyles.IncreaseFont | System.Windows.Forms.DataVisualization.Charting.LabelAutoFitStyles.DecreaseFont)
-            | System.Windows.Forms.DataVisualization.Charting.LabelAutoFitStyles.LabelsAngleStep30)
+            chartArea1.AxisY.LabelAutoFitStyle = ((System.Windows.Forms.DataVisualization.Charting.LabelAutoFitStyles)((((System.Windows.Forms.DataVisualization.Charting.LabelAutoFitStyles.IncreaseFont | System.Windows.Forms.DataVisualization.Charting.LabelAutoFitStyles.DecreaseFont) 
+            | System.Windows.Forms.DataVisualization.Charting.LabelAutoFitStyles.LabelsAngleStep30) 
             | System.Windows.Forms.DataVisualization.Charting.LabelAutoFitStyles.WordWrap)));
             chartArea1.AxisY.LabelStyle.Font = new System.Drawing.Font("Arial", 12F);
             chartArea1.AxisY.LabelStyle.Interval = 20D;
@@ -352,7 +352,7 @@
             this.chartVoltammogram.Location = new System.Drawing.Point(0, 0);
             this.chartVoltammogram.Margin = new System.Windows.Forms.Padding(0);
             this.chartVoltammogram.Name = "chartVoltammogram";
-            this.chartVoltammogram.Size = new System.Drawing.Size(1245, 362);
+            this.chartVoltammogram.Size = new System.Drawing.Size(1245, 382);
             this.chartVoltammogram.SuppressExceptions = true;
             this.chartVoltammogram.TabIndex = 3;
             this.chartVoltammogram.Text = "chart1";
@@ -362,87 +362,24 @@
             this.chartVoltammogram.DragDrop += new System.Windows.Forms.DragEventHandler(this.chartVoltammogram_DragDrop);
             this.chartVoltammogram.DragEnter += new System.Windows.Forms.DragEventHandler(this.chartVoltammogram_DragEnter);
             this.chartVoltammogram.DoubleClick += new System.EventHandler(this.chartVoltammogram_DoubleClick);
-            //
+            // 
             // contextMenuStrip1
-            //
+            // 
             this.contextMenuStrip1.ImageScalingSize = new System.Drawing.Size(20, 20);
             this.contextMenuStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.contextMenuItemUndoZoom});
             this.contextMenuStrip1.Name = "contextMenuStrip1";
             this.contextMenuStrip1.Size = new System.Drawing.Size(159, 28);
-            //
+            // 
             // contextMenuItemUndoZoom
-            //
+            // 
             this.contextMenuItemUndoZoom.Name = "contextMenuItemUndoZoom";
             this.contextMenuItemUndoZoom.Size = new System.Drawing.Size(158, 24);
             this.contextMenuItemUndoZoom.Text = "Undo Zoom";
             this.contextMenuItemUndoZoom.Click += new System.EventHandler(this.contextMenuItemUndoZoom_Click);
-            //
-            // toolStrip3
-            //
-            this.toolStrip3.Dock = System.Windows.Forms.DockStyle.None;
-            this.toolStrip3.ImageScalingSize = new System.Drawing.Size(20, 20);
-            this.toolStrip3.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.toolStripLabel2,
-            this.toolStripComboBoxAxisY,
-            this.toolStripComboBoxAxisX,
-            this.toolStripComboBoxRef});
-            this.toolStrip3.Location = new System.Drawing.Point(3, 0);
-            this.toolStrip3.Name = "toolStrip3";
-            this.toolStrip3.Size = new System.Drawing.Size(452, 28);
-            this.toolStrip3.TabIndex = 5;
-            //
-            // toolStripLabel2
-            //
-            this.toolStripLabel2.Name = "toolStripLabel2";
-            this.toolStripLabel2.Size = new System.Drawing.Size(43, 25);
-            this.toolStripLabel2.Text = "Axes:";
-            //
-            // toolStripComboBoxAxisY
-            //
-            this.toolStripComboBoxAxisY.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            this.toolStripComboBoxAxisY.DropDownWidth = 120;
-            this.toolStripComboBoxAxisY.Items.AddRange(new object[] {
-            "Current / μA",
-            "Current / mA",
-            "Coulomb / mC",
-            "Coulomb / C",
-            "Potential / mV",
-            "Current / nA",
-            "Im[Z] / ohm"});
-            this.toolStripComboBoxAxisY.Name = "toolStripComboBoxAxisY";
-            this.toolStripComboBoxAxisY.Size = new System.Drawing.Size(130, 28);
-            this.toolStripComboBoxAxisY.SelectedIndexChanged += new System.EventHandler(this.toolStripComboBoxAxisY_SelectedIndexChanged);
-            //
-            // toolStripComboBoxAxisX
-            //
-            this.toolStripComboBoxAxisX.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            this.toolStripComboBoxAxisX.DropDownWidth = 120;
-            this.toolStripComboBoxAxisX.Items.AddRange(new object[] {
-            "Potential / mV",
-            "Potential / V",
-            "Time / s",
-            "Time / h",
-            "Re[Z] / ohm"});
-            this.toolStripComboBoxAxisX.Name = "toolStripComboBoxAxisX";
-            this.toolStripComboBoxAxisX.Size = new System.Drawing.Size(130, 28);
-            this.toolStripComboBoxAxisX.SelectedIndexChanged += new System.EventHandler(this.toolStripComboBoxAxisX_SelectedIndexChanged);
-            //
-            // toolStripComboBoxRef
-            //
-            this.toolStripComboBoxRef.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            this.toolStripComboBoxRef.Items.AddRange(new object[] {
-            "",
-            "vs Fc(+/0)",
-            "vs Ag/AgCl",
-            "vs SCE",
-            "vs Ag(+/0)"});
-            this.toolStripComboBoxRef.Name = "toolStripComboBoxRef";
-            this.toolStripComboBoxRef.Size = new System.Drawing.Size(90, 28);
-            this.toolStripComboBoxRef.SelectedIndexChanged += new System.EventHandler(this.toolStripComboBoxRef_SelectedIndexChanged);
-            //
+            // 
             // toolStrip2
-            //
+            // 
             this.toolStrip2.Dock = System.Windows.Forms.DockStyle.None;
             this.toolStrip2.ImageScalingSize = new System.Drawing.Size(20, 20);
             this.toolStrip2.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
@@ -454,23 +391,23 @@
             this.toolStripDropDownButtonShow,
             this.toolStripSeparator2,
             this.toolStripDropDownButton1});
-            this.toolStrip2.Location = new System.Drawing.Point(3, 28);
+            this.toolStrip2.Location = new System.Drawing.Point(4, 0);
             this.toolStrip2.Name = "toolStrip2";
-            this.toolStrip2.Size = new System.Drawing.Size(486, 27);
+            this.toolStrip2.Size = new System.Drawing.Size(487, 31);
             this.toolStrip2.TabIndex = 4;
-            //
+            // 
             // toolStripButtonNewWindow
-            //
+            // 
             this.toolStripButtonNewWindow.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
             this.toolStripButtonNewWindow.Image = ((System.Drawing.Image)(resources.GetObject("toolStripButtonNewWindow.Image")));
             this.toolStripButtonNewWindow.ImageTransparentColor = System.Drawing.Color.Magenta;
             this.toolStripButtonNewWindow.Name = "toolStripButtonNewWindow";
-            this.toolStripButtonNewWindow.Size = new System.Drawing.Size(43, 24);
+            this.toolStripButtonNewWindow.Size = new System.Drawing.Size(43, 28);
             this.toolStripButtonNewWindow.Text = "New";
             this.toolStripButtonNewWindow.Click += new System.EventHandler(this.toolStripButtonNewWindow_Click);
-            //
+            // 
             // toolStripButtonLoad
-            //
+            // 
             this.toolStripButtonLoad.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
             this.toolStripButtonLoad.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.toolStripMenuItemLoadAsVoltammogram,
@@ -478,27 +415,27 @@
             this.toolStripButtonLoad.Image = ((System.Drawing.Image)(resources.GetObject("toolStripButtonLoad.Image")));
             this.toolStripButtonLoad.ImageTransparentColor = System.Drawing.Color.Magenta;
             this.toolStripButtonLoad.Name = "toolStripButtonLoad";
-            this.toolStripButtonLoad.Size = new System.Drawing.Size(61, 24);
+            this.toolStripButtonLoad.Size = new System.Drawing.Size(61, 28);
             this.toolStripButtonLoad.Text = "Load";
             this.toolStripButtonLoad.ButtonClick += new System.EventHandler(this.toolStripMenuItemLoadAsVoltammogram_Click);
-            //
+            // 
             // toolStripMenuItemLoadAsVoltammogram
-            //
+            // 
             this.toolStripMenuItemLoadAsVoltammogram.Name = "toolStripMenuItemLoadAsVoltammogram";
-            this.toolStripMenuItemLoadAsVoltammogram.Size = new System.Drawing.Size(239, 26);
+            this.toolStripMenuItemLoadAsVoltammogram.Size = new System.Drawing.Size(247, 26);
             this.toolStripMenuItemLoadAsVoltammogram.Text = "As Voltammogram";
             this.toolStripMenuItemLoadAsVoltammogram.Click += new System.EventHandler(this.toolStripMenuItemLoadAsVoltammogram_Click);
-            //
+            // 
             // toolStripMenuItemAsChronoamperogram
-            //
+            // 
             this.toolStripMenuItemAsChronoamperogram.Enabled = false;
             this.toolStripMenuItemAsChronoamperogram.Name = "toolStripMenuItemAsChronoamperogram";
-            this.toolStripMenuItemAsChronoamperogram.Size = new System.Drawing.Size(239, 26);
+            this.toolStripMenuItemAsChronoamperogram.Size = new System.Drawing.Size(247, 26);
             this.toolStripMenuItemAsChronoamperogram.Text = "As Chronoamperogram";
             this.toolStripMenuItemAsChronoamperogram.Click += new System.EventHandler(this.toolStripMenuItemAsChronoamperogram_Click);
-            //
+            // 
             // toolStripButtonSave
-            //
+            // 
             this.toolStripButtonSave.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
             this.toolStripButtonSave.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.toolStripMenuItemExportCSV,
@@ -506,26 +443,26 @@
             this.toolStripButtonSave.Image = ((System.Drawing.Image)(resources.GetObject("toolStripButtonSave.Image")));
             this.toolStripButtonSave.ImageTransparentColor = System.Drawing.Color.Magenta;
             this.toolStripButtonSave.Name = "toolStripButtonSave";
-            this.toolStripButtonSave.Size = new System.Drawing.Size(79, 24);
+            this.toolStripButtonSave.Size = new System.Drawing.Size(79, 28);
             this.toolStripButtonSave.Text = "Save As";
             this.toolStripButtonSave.ButtonClick += new System.EventHandler(this.toolStripButtonSave_Click);
-            //
+            // 
             // toolStripMenuItemExportCSV
-            //
+            // 
             this.toolStripMenuItemExportCSV.Name = "toolStripMenuItemExportCSV";
-            this.toolStripMenuItemExportCSV.Size = new System.Drawing.Size(386, 26);
+            this.toolStripMenuItemExportCSV.Size = new System.Drawing.Size(393, 26);
             this.toolStripMenuItemExportCSV.Text = "Export all data as a CSV file";
             this.toolStripMenuItemExportCSV.Click += new System.EventHandler(this.toolStripMenuItemExportCSV_Click);
-            //
+            // 
             // toolStripMenuItemExportSinglePlot
-            //
+            // 
             this.toolStripMenuItemExportSinglePlot.Name = "toolStripMenuItemExportSinglePlot";
-            this.toolStripMenuItemExportSinglePlot.Size = new System.Drawing.Size(386, 26);
+            this.toolStripMenuItemExportSinglePlot.Size = new System.Drawing.Size(393, 26);
             this.toolStripMenuItemExportSinglePlot.Text = "Export the selected plot as an EC-Lab Text file";
             this.toolStripMenuItemExportSinglePlot.Click += new System.EventHandler(this.toolStripMenuItemExportSinglePlot_Click);
-            //
+            // 
             // toolStripDropDownButton2
-            //
+            // 
             this.toolStripDropDownButton2.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
             this.toolStripDropDownButton2.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.toolStripMenuItem2,
@@ -533,43 +470,43 @@
             this.toolStripDropDownButton2.Image = ((System.Drawing.Image)(resources.GetObject("toolStripDropDownButton2.Image")));
             this.toolStripDropDownButton2.ImageTransparentColor = System.Drawing.Color.Magenta;
             this.toolStripDropDownButton2.Name = "toolStripDropDownButton2";
-            this.toolStripDropDownButton2.Size = new System.Drawing.Size(67, 24);
+            this.toolStripDropDownButton2.Size = new System.Drawing.Size(67, 28);
             this.toolStripDropDownButton2.Text = "Delete";
             this.toolStripDropDownButton2.Click += new System.EventHandler(this.toolStripDropDownButton2_Click);
-            //
+            // 
             // toolStripMenuItem2
-            //
+            // 
             this.toolStripMenuItem2.Name = "toolStripMenuItem2";
-            this.toolStripMenuItem2.Size = new System.Drawing.Size(112, 26);
+            this.toolStripMenuItem2.Size = new System.Drawing.Size(120, 26);
             this.toolStripMenuItem2.Text = "(All)";
             this.toolStripMenuItem2.Click += new System.EventHandler(this.toolStripMenuItem2_Click);
-            //
+            // 
             // toolStripSeparator1
-            //
+            // 
             this.toolStripSeparator1.Name = "toolStripSeparator1";
-            this.toolStripSeparator1.Size = new System.Drawing.Size(109, 6);
-            //
+            this.toolStripSeparator1.Size = new System.Drawing.Size(117, 6);
+            // 
             // toolStripDropDownButtonCopy
-            //
+            // 
             this.toolStripDropDownButtonCopy.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
             this.toolStripDropDownButtonCopy.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.toolStripMenuItem3});
             this.toolStripDropDownButtonCopy.Image = ((System.Drawing.Image)(resources.GetObject("toolStripDropDownButtonCopy.Image")));
             this.toolStripDropDownButtonCopy.ImageTransparentColor = System.Drawing.Color.Magenta;
             this.toolStripDropDownButtonCopy.Name = "toolStripDropDownButtonCopy";
-            this.toolStripDropDownButtonCopy.Size = new System.Drawing.Size(62, 24);
+            this.toolStripDropDownButtonCopy.Size = new System.Drawing.Size(62, 28);
             this.toolStripDropDownButtonCopy.Text = "Copy";
             this.toolStripDropDownButtonCopy.ButtonClick += new System.EventHandler(this.toolStripDropDownButtonCopy_ButtonClick);
-            //
+            // 
             // toolStripMenuItem3
-            //
+            // 
             this.toolStripMenuItem3.Name = "toolStripMenuItem3";
-            this.toolStripMenuItem3.Size = new System.Drawing.Size(235, 26);
+            this.toolStripMenuItem3.Size = new System.Drawing.Size(242, 26);
             this.toolStripMenuItem3.Text = "Metafile (to clipboard)";
             this.toolStripMenuItem3.Click += new System.EventHandler(this.toolStripDropDownButtonCopy_ButtonClick);
-            //
+            // 
             // toolStripDropDownButtonShow
-            //
+            // 
             this.toolStripDropDownButtonShow.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
             this.toolStripDropDownButtonShow.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.toolStripMenuItemSetXRange,
@@ -581,77 +518,141 @@
             this.toolStripDropDownButtonShow.Image = ((System.Drawing.Image)(resources.GetObject("toolStripDropDownButtonShow.Image")));
             this.toolStripDropDownButtonShow.ImageTransparentColor = System.Drawing.Color.Magenta;
             this.toolStripDropDownButtonShow.Name = "toolStripDropDownButtonShow";
-            this.toolStripDropDownButtonShow.Size = new System.Drawing.Size(59, 24);
+            this.toolStripDropDownButtonShow.Size = new System.Drawing.Size(59, 28);
             this.toolStripDropDownButtonShow.Text = "Show";
-            //
+            // 
             // toolStripMenuItemSetXRange
-            //
+            // 
             this.toolStripMenuItemSetXRange.Name = "toolStripMenuItemSetXRange";
-            this.toolStripMenuItemSetXRange.Size = new System.Drawing.Size(405, 26);
+            this.toolStripMenuItemSetXRange.Size = new System.Drawing.Size(413, 26);
             this.toolStripMenuItemSetXRange.Text = "Set the X- and Y-axes range of voltammograms...";
             this.toolStripMenuItemSetXRange.Click += new System.EventHandler(this.toolStripMenuItemSetXRange_Click);
-            //
+            // 
             // toolStripMenuItemFont
-            //
+            // 
             this.toolStripMenuItemFont.Name = "toolStripMenuItemFont";
-            this.toolStripMenuItemFont.Size = new System.Drawing.Size(405, 26);
+            this.toolStripMenuItemFont.Size = new System.Drawing.Size(413, 26);
             this.toolStripMenuItemFont.Text = "Set appearances used in the main plot...";
             this.toolStripMenuItemFont.Click += new System.EventHandler(this.toolStripMenuItemFont_Click);
-            //
+            // 
             // toolStripSeparator5
-            //
+            // 
             this.toolStripSeparator5.Name = "toolStripSeparator5";
-            this.toolStripSeparator5.Size = new System.Drawing.Size(402, 6);
-            //
+            this.toolStripSeparator5.Size = new System.Drawing.Size(410, 6);
+            // 
             // toolStripMenuItemShowInformation
-            //
+            // 
             this.toolStripMenuItemShowInformation.Name = "toolStripMenuItemShowInformation";
-            this.toolStripMenuItemShowInformation.Size = new System.Drawing.Size(405, 26);
+            this.toolStripMenuItemShowInformation.Size = new System.Drawing.Size(413, 26);
             this.toolStripMenuItemShowInformation.Text = "Show Information about the selected plot... ";
             this.toolStripMenuItemShowInformation.Click += new System.EventHandler(this.toolStripMenuItemShowInformation_Click);
-            //
+            // 
             // toolStripSeparator6
-            //
+            // 
             this.toolStripSeparator6.Name = "toolStripSeparator6";
-            this.toolStripSeparator6.Size = new System.Drawing.Size(402, 6);
-            //
+            this.toolStripSeparator6.Size = new System.Drawing.Size(410, 6);
+            // 
             // toolStripMenuItemUndoZoom
-            //
+            // 
             this.toolStripMenuItemUndoZoom.Name = "toolStripMenuItemUndoZoom";
-            this.toolStripMenuItemUndoZoom.Size = new System.Drawing.Size(405, 26);
+            this.toolStripMenuItemUndoZoom.Size = new System.Drawing.Size(413, 26);
             this.toolStripMenuItemUndoZoom.Text = "Undo zoom";
             this.toolStripMenuItemUndoZoom.Click += new System.EventHandler(this.toolStripMenuItemUndoZoom_Click);
-            //
+            // 
             // toolStripSeparator2
-            //
+            // 
             this.toolStripSeparator2.Name = "toolStripSeparator2";
-            this.toolStripSeparator2.Size = new System.Drawing.Size(6, 27);
-            //
+            this.toolStripSeparator2.Size = new System.Drawing.Size(6, 31);
+            // 
             // toolStripDropDownButton1
-            //
+            // 
             this.toolStripDropDownButton1.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
             this.toolStripDropDownButton1.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.toolStripMenuItem1});
             this.toolStripDropDownButton1.Image = ((System.Drawing.Image)(resources.GetObject("toolStripDropDownButton1.Image")));
             this.toolStripDropDownButton1.ImageTransparentColor = System.Drawing.Color.Magenta;
             this.toolStripDropDownButton1.Name = "toolStripDropDownButton1";
-            this.toolStripDropDownButton1.Size = new System.Drawing.Size(97, 24);
+            this.toolStripDropDownButton1.Size = new System.Drawing.Size(97, 28);
             this.toolStripDropDownButton1.Text = "Calculation";
-            //
+            // 
             // toolStripMenuItem1
-            //
+            // 
             this.toolStripMenuItem1.Name = "toolStripMenuItem1";
-            this.toolStripMenuItem1.Size = new System.Drawing.Size(223, 26);
+            this.toolStripMenuItem1.Size = new System.Drawing.Size(231, 26);
             this.toolStripMenuItem1.Text = "Half wave potential...";
             this.toolStripMenuItem1.Click += new System.EventHandler(this.toolStripMenuItem1_Click);
-            //
+            // 
+            // toolStrip3
+            // 
+            this.toolStrip3.Dock = System.Windows.Forms.DockStyle.None;
+            this.toolStrip3.ImageScalingSize = new System.Drawing.Size(20, 20);
+            this.toolStrip3.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.toolStripLabel2,
+            this.toolStripComboBoxAxisY,
+            this.toolStripComboBoxAxisX,
+            this.toolStripComboBoxRef});
+            this.toolStrip3.Location = new System.Drawing.Point(491, 0);
+            this.toolStrip3.Name = "toolStrip3";
+            this.toolStrip3.Size = new System.Drawing.Size(451, 31);
+            this.toolStrip3.TabIndex = 5;
+            // 
+            // toolStripLabel2
+            // 
+            this.toolStripLabel2.Name = "toolStripLabel2";
+            this.toolStripLabel2.Size = new System.Drawing.Size(43, 28);
+            this.toolStripLabel2.Text = "Axes:";
+            // 
+            // toolStripComboBoxAxisY
+            // 
+            this.toolStripComboBoxAxisY.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.toolStripComboBoxAxisY.DropDownWidth = 180;
+            this.toolStripComboBoxAxisY.Items.AddRange(new object[] {
+            "Current / μA",
+            "Current / mA",
+            "Coulomb / mC",
+            "Coulomb / C",
+            "Potential / mV",
+            "Current / nA",
+            "Im[Z] / ohm",
+            "(Im[Z] * 2πf)^2 / mF^(-2)"});
+            this.toolStripComboBoxAxisY.Name = "toolStripComboBoxAxisY";
+            this.toolStripComboBoxAxisY.Size = new System.Drawing.Size(130, 31);
+            this.toolStripComboBoxAxisY.SelectedIndexChanged += new System.EventHandler(this.toolStripComboBoxAxisY_SelectedIndexChanged);
+            // 
+            // toolStripComboBoxAxisX
+            // 
+            this.toolStripComboBoxAxisX.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.toolStripComboBoxAxisX.DropDownWidth = 120;
+            this.toolStripComboBoxAxisX.Items.AddRange(new object[] {
+            "Potential / mV",
+            "Potential / V",
+            "Time / s",
+            "Time / h",
+            "Re[Z] / ohm"});
+            this.toolStripComboBoxAxisX.Name = "toolStripComboBoxAxisX";
+            this.toolStripComboBoxAxisX.Size = new System.Drawing.Size(130, 31);
+            this.toolStripComboBoxAxisX.SelectedIndexChanged += new System.EventHandler(this.toolStripComboBoxAxisX_SelectedIndexChanged);
+            // 
+            // toolStripComboBoxRef
+            // 
+            this.toolStripComboBoxRef.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.toolStripComboBoxRef.Items.AddRange(new object[] {
+            "",
+            "vs Fc(+/0)",
+            "vs Ag/AgCl",
+            "vs SCE",
+            "vs Ag(+/0)"});
+            this.toolStripComboBoxRef.Name = "toolStripComboBoxRef";
+            this.toolStripComboBoxRef.Size = new System.Drawing.Size(90, 31);
+            this.toolStripComboBoxRef.SelectedIndexChanged += new System.EventHandler(this.toolStripComboBoxRef_SelectedIndexChanged);
+            // 
             // openFileDialog1
-            //
+            // 
             this.openFileDialog1.FileName = "openFileDialog1";
             this.openFileDialog1.Multiselect = true;
-            //
+            // 
             // formVoltammogram
-            //
+            // 
             this.AllowDrop = true;
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 15F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
@@ -678,10 +679,10 @@
             this.statusStrip1.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.chartVoltammogram)).EndInit();
             this.contextMenuStrip1.ResumeLayout(false);
-            this.toolStrip3.ResumeLayout(false);
-            this.toolStrip3.PerformLayout();
             this.toolStrip2.ResumeLayout(false);
             this.toolStrip2.PerformLayout();
+            this.toolStrip3.ResumeLayout(false);
+            this.toolStrip3.PerformLayout();
             this.ResumeLayout(false);
 
         }
