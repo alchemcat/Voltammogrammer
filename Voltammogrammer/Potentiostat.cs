@@ -1781,7 +1781,7 @@ namespace Voltammogrammer
 
                 int direction = (_hertzFinal > _hertzInitial) ? 1 : -1;
 
-                for (int i = 0; i <= (direction * Math.Floor(Math.Log10(_hertzFinal/_hertzInitial) * _countStep) + 1); i++) // 50 = 100kHzまで, 53 = 200kHzまで
+                for (int i = 0; i <= (Math.Floor(Math.Log10(_hertzFinal/_hertzInitial) * _countStep) + 1); i++) // 50 = 100kHzまで, 53 = 200kHzまで
                 {
                     double freq = Math.Pow(10, (Math.Log10(_hertzInitial) + direction * (double)i / _countStep));
 
@@ -2023,10 +2023,10 @@ namespace Voltammogrammer
                     FDwfAnalogImpedanceStatusInput(_handle, 0, out double gain0, out double radian0);
                     FDwfAnalogImpedanceStatusInput(_handle, 1, out double gain1, out double radian1);
 
-                    _recordingSeries[CHANNEL_VIRTUAL_FREQ][i] = _hertzInitial;
+                    _recordingSeries[CHANNEL_VIRTUAL_FREQ][i] = _millivoltScanrate;
                     _recordingSeries[CHANNEL_VIRTUAL_ATTN][i] = gain0;
 
-                    Console.WriteLine("Freq {0}, {1}, {2}, {3}, {4}", _hertzInitial, resi, reac, impe, potential);
+                    Console.WriteLine("Freq {0}, {1}, {2}, {3}, {4}", _millivoltScanrate, resi, reac, impe, potential);
 
                     backgroundWorkerCV.ReportProgress(i);
 
@@ -2861,8 +2861,6 @@ namespace Voltammogrammer
             toolStripTextBoxInitialV.Enabled = true;
             toolStripTextBoxVertexV.Enabled = true;
             toolStripTextBoxScanrate.Enabled = true;
-            toolStripTextBoxFinalV.Enabled = true;
-            toolStripTextBoxScanrate2.Enabled = true;
             toolStripTextBoxRepeat.Enabled = true;
 
             if (!DEBUG_VOLTAMMOGRAM) timerCurrentEandI.Enabled = true;
@@ -3305,14 +3303,14 @@ namespace Voltammogrammer
                         else { MessageBox.Show(this, "The value of Amplitude [mV] is invalid."); return; }
 
                         if (double.TryParse(toolStripTextBoxScanrate.Text, out _hertzInitial)
-                            && (_hertzInitial <= 10000000)
+                            && (_hertzInitial <= 100000)
                             && (_hertzInitial >= 0.001))
                         {
                         }
                         else { MessageBox.Show(this, "The value of Initial Scanning Frequency [Hz] is invalid."); return; }
 
                         if (double.TryParse(toolStripTextBoxScanrate2.Text, out _hertzFinal)
-                            && (_hertzFinal <= 10000000)
+                            && (_hertzFinal <= 100000)
                             && (_hertzFinal >= 0.001))
                         {
                         }
@@ -3356,15 +3354,15 @@ namespace Voltammogrammer
                         else { MessageBox.Show(this, "The value of Amplitude [mV] is invalid."); return; }
 
                         if (double.TryParse(toolStripTextBoxScanrate.Text, out _hertzInitial)
-                            && (_hertzInitial <= 1000000)
+                            && (_hertzInitial <= 100000)
                             && (_hertzInitial >= 0.001))
                         {
                         }
                         else { MessageBox.Show(this, "The value of Frequency [Hz] is invalid."); return; }
 
                         if (double.TryParse(toolStripTextBoxRepeat.Text, out _millivoltStep)
-                            && (_millivoltStep <= 100)
-                            && (_millivoltStep >= 0.1))
+                            && (_millivoltStep <= 100000)
+                            && (_millivoltStep >= 0.001))
                         {
                         }
                         else { MessageBox.Show(this, "The value of Step [mV] is invalid."); return; }
@@ -3721,8 +3719,6 @@ namespace Voltammogrammer
                         {
                             toolStripTextBoxVertexV.Enabled = false;
                             toolStripTextBoxScanrate.Enabled = false;
-                            toolStripTextBoxFinalV.Enabled = false;
-                            toolStripTextBoxScanrate2.Enabled = false;
                             toolStripTextBoxRepeat.Enabled = false;
                         }
 
@@ -3748,8 +3744,6 @@ namespace Voltammogrammer
                     {
                         toolStripTextBoxVertexV.Enabled = false;
                         toolStripTextBoxScanrate.Enabled = false;
-                        toolStripTextBoxFinalV.Enabled = false;
-                        toolStripTextBoxScanrate2.Enabled = false;
                         toolStripTextBoxRepeat.Enabled = false;
                     }
 

@@ -10,7 +10,7 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("")]
 [assembly: AssemblyProduct("Voltammogrammer")]
-[assembly: AssemblyCopyright("Copyright(C)2021 Yasuo Matsubara")]
+[assembly: AssemblyCopyright("Copyright(C)2021-2022 Yasuo Matsubara")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 
@@ -32,5 +32,5 @@ using System.Runtime.InteropServices;
 // すべての値を指定するか、次を使用してビルド番号とリビジョン番号を既定に設定できます
 // 既定値にすることができます:
 // [assembly: AssemblyVersion("1.0.0")]
-[assembly: AssemblyVersion("1.0.8.1314")]
-[assembly: AssemblyFileVersion("1.0.0.1314")]
+[assembly: AssemblyVersion("1.1.0.1316")]
+[assembly: AssemblyFileVersion("1.0.0.1316")]
