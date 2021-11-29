@@ -121,6 +121,8 @@
             this.toolStripTextBoxVertexV = new System.Windows.Forms.ToolStripTextBox();
             this.toolStripLabel3 = new System.Windows.Forms.ToolStripLabel();
             this.toolStripTextBoxScanrate = new System.Windows.Forms.ToolStripTextBox();
+            this.toolStripLabel7 = new System.Windows.Forms.ToolStripLabel();
+            this.toolStripTextBoxScanrate2 = new System.Windows.Forms.ToolStripTextBox();
             this.toolStripLabel4 = new System.Windows.Forms.ToolStripLabel();
             this.toolStripTextBoxRepeat = new System.Windows.Forms.ToolStripTextBox();
             this.timerCurrentEandI = new System.Windows.Forms.Timer(this.components);
@@ -723,7 +725,7 @@
             // 
             this.toolStripContainer1.ContentPanel.Controls.Add(this.chartVoltammogram);
             this.toolStripContainer1.ContentPanel.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
-            this.toolStripContainer1.ContentPanel.Size = new System.Drawing.Size(1349, 331);
+            this.toolStripContainer1.ContentPanel.Size = new System.Drawing.Size(1349, 337);
             this.toolStripContainer1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.toolStripContainer1.LeftToolStripPanelVisible = false;
             this.toolStripContainer1.Location = new System.Drawing.Point(0, 0);
@@ -847,7 +849,7 @@
             this.chartVoltammogram.Series.Add(series5);
             this.chartVoltammogram.Series.Add(series6);
             this.chartVoltammogram.Series.Add(series7);
-            this.chartVoltammogram.Size = new System.Drawing.Size(1349, 331);
+            this.chartVoltammogram.Size = new System.Drawing.Size(1349, 337);
             this.chartVoltammogram.TabIndex = 1;
             this.chartVoltammogram.Text = "chart1";
             this.chartVoltammogram.CursorPositionChanged += new System.EventHandler<System.Windows.Forms.DataVisualization.Charting.CursorEventArgs>(this.chartVoltammogram_CursorPositionChanged);
@@ -885,13 +887,15 @@
             this.toolStripTextBoxVertexV,
             this.toolStripLabel3,
             this.toolStripTextBoxScanrate,
+            this.toolStripLabel7,
+            this.toolStripTextBoxScanrate2,
             this.toolStripLabel4,
             this.toolStripTextBoxRepeat});
             this.toolStrip2.LayoutStyle = System.Windows.Forms.ToolStripLayoutStyle.HorizontalStackWithOverflow;
             this.toolStrip2.Location = new System.Drawing.Point(4, 28);
             this.toolStrip2.Name = "toolStrip2";
             this.toolStrip2.RenderMode = System.Windows.Forms.ToolStripRenderMode.Professional;
-            this.toolStrip2.Size = new System.Drawing.Size(934, 28);
+            this.toolStrip2.Size = new System.Drawing.Size(1121, 28);
             this.toolStrip2.TabIndex = 3;
             // 
             // toolStripLabel1
@@ -960,6 +964,20 @@
             this.toolStripTextBoxScanrate.Size = new System.Drawing.Size(70, 28);
             this.toolStripTextBoxScanrate.Text = "100";
             this.toolStripTextBoxScanrate.Validating += new System.ComponentModel.CancelEventHandler(this.toolStripTextBoxScanrate_Validating);
+            // 
+            // toolStripLabel7
+            // 
+            this.toolStripLabel7.Name = "toolStripLabel7";
+            this.toolStripLabel7.Size = new System.Drawing.Size(85, 25);
+            this.toolStripLabel7.Text = "Scan rate 2:";
+            this.toolStripLabel7.Visible = false;
+            // 
+            // toolStripTextBoxScanrate2
+            // 
+            this.toolStripTextBoxScanrate2.Font = new System.Drawing.Font("Yu Gothic UI", 9F);
+            this.toolStripTextBoxScanrate2.Name = "toolStripTextBoxScanrate2";
+            this.toolStripTextBoxScanrate2.Size = new System.Drawing.Size(100, 28);
+            this.toolStripTextBoxScanrate2.Visible = false;
             // 
             // toolStripLabel4
             // 
@@ -1098,6 +1116,8 @@
         private System.Windows.Forms.ToolStripMenuItem toolStripMenuPotentioStat;
         private System.Windows.Forms.ToolStripLabel toolStripLabel6;
         private System.Windows.Forms.ToolStripTextBox toolStripTextBoxFinalV;
+        private System.Windows.Forms.ToolStripLabel toolStripLabel7;
+        private System.Windows.Forms.ToolStripTextBox toolStripTextBoxScanrate2;
     }
 }
 

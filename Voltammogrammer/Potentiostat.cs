@@ -140,6 +140,10 @@ namespace Voltammogrammer
         double _countRepeat;
         double _millivoltScanrate;
         double _millivoltAmplitude;
+        double _millivoltStep;
+        double _countStep;
+        double _hertzInitial;
+        double _hertzFinal;
         uint _rpmRDE = 0;
         double _voltAnalogInChannelRange_Current = 0.0;
         bool _is_warned_about_potential_limit = false;
@@ -1767,7 +1771,7 @@ namespace Voltammogrammer
                 FDwfAnalogImpedanceReferenceSet(_handle, 1000000.0 / (double)_selectedCurrentFactor);
                 //FDwfAnalogImpedanceReferenceSet(_handle, 1000.0);
                 //FDwfAnalogImpedanceFrequencySet(_handle, 1.0);
-                FDwfAnalogImpedanceAmplitudeSet(_handle, (double)_millivoltVertex / 1000);
+                FDwfAnalogImpedanceAmplitudeSet(_handle, (double)_millivoltAmplitude / 1000);
                 FDwfAnalogImpedanceOffsetSet(_handle, (double)_millivoltInitial / 1000);
                 FDwfAnalogImpedanceCompReset(_handle);
                 FDwfAnalogImpedancePeriodSet(_handle, 64); // もともとは１６
@@ -1775,9 +1779,11 @@ namespace Voltammogrammer
 
                 SetCircuit(open: false);
 
-                for (int i = 0; i <= (60 - Math.Log10(_millivoltScanrate) * 10 + 1); i++) // 50 = 100kHzまで, 53 = 200kHzまで
+                int direction = (_hertzFinal > _hertzInitial) ? 1 : -1;
+
+                for (int i = 0; i <= (direction * Math.Floor(Math.Log10(_hertzFinal/_hertzInitial) * _countStep) + 1); i++) // 50 = 100kHzまで, 53 = 200kHzまで
                 {
-                    double freq = Math.Pow(10, ((double)i / 10 + Math.Log10(_millivoltScanrate)));
+                    double freq = Math.Pow(10, (Math.Log10(_hertzInitial) + direction * (double)i / _countStep));
 
                     //Console.WriteLine("Freq [Hz]:" + freq);
                     FDwfAnalogImpedanceFrequencySet(_handle, freq);
@@ -1934,7 +1940,7 @@ namespace Voltammogrammer
                 //FDwfAnalogImpedanceReferenceSet(_handle, 1000.0);
                 //FDwfAnalogImpedanceFrequencySet(_handle, 1.0);
                 FDwfAnalogImpedanceAmplitudeSet(_handle, (double)_millivoltAmplitude / 1000);
-                FDwfAnalogImpedanceOffsetSet(_handle, (double)_millivoltInitial / 1000); // TODO: とりあえず初期電位は0.0 vs Refまたは OCP vs Refとする
+                FDwfAnalogImpedanceOffsetSet(_handle, (double)_millivoltInitial / 1000); 
                 FDwfAnalogImpedanceCompReset(_handle);
                 FDwfAnalogImpedancePeriodSet(_handle, 1024);
                 //FDwfAnalogImpedanceConfigure(_handle, 1);
@@ -1942,48 +1948,18 @@ namespace Voltammogrammer
                 SetCircuit(open: false);
 
                 //
-                // 電位を変化させてインピーダンスを測定する(周波数は固定) とりあえず、0 -> _millivoltInitial (vs Ref or OCP)の範囲で。
+                // 電位を変化させてインピーダンスを測定する(周波数は固定) 
                 //
 
-
-
-
-
-
-
-
-
-
-
-
                 int direction = (_millivoltVertex > (_millivoltInitial - ocp)) ? 1 : -1;
-
-                //typeWaveForm waveform = typeWaveForm.none;
                 double millivoltHeight = Math.Abs(_millivoltVertex - (_millivoltInitial - ocp));
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-                for (int i = 0; i <= (Math.Floor(millivoltHeight / _countRepeat) + 1); i++) 
+                for (int i = 0; i <= (Math.Floor(millivoltHeight / _millivoltStep) + 1); i++) 
                 {
-                    //double freq = Math.Pow(10, ((double)i / 10 + Math.Log10(_millivoltScanrate)));
-                    double potential = _millivoltInitial + direction * (_countRepeat * i);
+                    double potential = _millivoltInitial + direction * (_millivoltStep * i);
 
                     FDwfAnalogImpedanceOffsetSet(_handle, (double)potential / 1000);
-                    //Console.WriteLine("Freq [Hz]:" + freq);
-                    FDwfAnalogImpedanceFrequencySet(_handle, _millivoltScanrate);// 周波数は固定
+                    FDwfAnalogImpedanceFrequencySet(_handle, _hertzInitial);// 周波数は固定
 
                     switch (_selectedMethod)
                     {
@@ -2047,10 +2023,10 @@ namespace Voltammogrammer
                     FDwfAnalogImpedanceStatusInput(_handle, 0, out double gain0, out double radian0);
                     FDwfAnalogImpedanceStatusInput(_handle, 1, out double gain1, out double radian1);
 
-                    _recordingSeries[CHANNEL_VIRTUAL_FREQ][i] = _millivoltScanrate;
+                    _recordingSeries[CHANNEL_VIRTUAL_FREQ][i] = _hertzInitial;
                     _recordingSeries[CHANNEL_VIRTUAL_ATTN][i] = gain0;
 
-                    Console.WriteLine("Freq {0}, {1}, {2}, {3}, {4}", _millivoltScanrate, resi, reac, impe, potential);
+                    Console.WriteLine("Freq {0}, {1}, {2}, {3}, {4}", _hertzInitial, resi, reac, impe, potential);
 
                     backgroundWorkerCV.ReportProgress(i);
 
@@ -2885,6 +2861,8 @@ namespace Voltammogrammer
             toolStripTextBoxInitialV.Enabled = true;
             toolStripTextBoxVertexV.Enabled = true;
             toolStripTextBoxScanrate.Enabled = true;
+            toolStripTextBoxFinalV.Enabled = true;
+            toolStripTextBoxScanrate2.Enabled = true;
             toolStripTextBoxRepeat.Enabled = true;
 
             if (!DEBUG_VOLTAMMOGRAM) timerCurrentEandI.Enabled = true;
@@ -3315,23 +3293,37 @@ namespace Voltammogrammer
                             _millivoltInitial -= POTENTIAL_OFFSET_AWG;
                             _millivoltInitial /= POTENTIAL_SLOPE_AWG;
                         }
-                        else { MessageBox.Show(this, "The value of potential [mV] is invalid."); return; }
+                        else { MessageBox.Show(this, "The value of Potential [mV] is invalid."); return; }
 
-                        if (double.TryParse(toolStripTextBoxVertexV.Text, out _millivoltVertex)
-                            && (_millivoltVertex <= 500)
-                            && (_millivoltVertex >= 1))
+                        if (double.TryParse(toolStripTextBoxVertexV.Text, out _millivoltAmplitude)
+                            && (_millivoltAmplitude <= 500)
+                            && (_millivoltAmplitude >= 1))
                         {
                             //_millivoltVertex -= POTENTIAL_OFFSET_AWG;
                             _millivoltVertex /= POTENTIAL_SLOPE_AWG;
                         }
                         else { MessageBox.Show(this, "The value of Amplitude [mV] is invalid."); return; }
 
-                        if (double.TryParse(toolStripTextBoxScanrate.Text, out _millivoltScanrate)
-                            && (_millivoltScanrate <= 100000)
-                            && (_millivoltScanrate >= 0.001))
+                        if (double.TryParse(toolStripTextBoxScanrate.Text, out _hertzInitial)
+                            && (_hertzInitial <= 10000000)
+                            && (_hertzInitial >= 0.001))
                         {
                         }
                         else { MessageBox.Show(this, "The value of Initial Scanning Frequency [Hz] is invalid."); return; }
+
+                        if (double.TryParse(toolStripTextBoxScanrate2.Text, out _hertzFinal)
+                            && (_hertzFinal <= 10000000)
+                            && (_hertzFinal >= 0.001))
+                        {
+                        }
+                        else { MessageBox.Show(this, "The value of Final Scanning Frequency [Hz] is invalid."); return; }
+
+                        if (double.TryParse(toolStripTextBoxRepeat.Text, out _countStep)
+                            && (_countStep <= 1000)
+                            && (_countStep >= 1))
+                        {
+                        }
+                        else { MessageBox.Show(this, "The value of Steps is invalid."); return; }
 
                         break;
 
@@ -3363,19 +3355,19 @@ namespace Voltammogrammer
                         }
                         else { MessageBox.Show(this, "The value of Amplitude [mV] is invalid."); return; }
 
-                        if (double.TryParse(toolStripTextBoxScanrate.Text, out _millivoltScanrate)
-                            && (_millivoltScanrate <= 100000)
-                            && (_millivoltScanrate >= 0.001))
+                        if (double.TryParse(toolStripTextBoxScanrate.Text, out _hertzInitial)
+                            && (_hertzInitial <= 1000000)
+                            && (_hertzInitial >= 0.001))
                         {
                         }
-                        else { MessageBox.Show(this, "The value of Initial Scanning Frequency [Hz] is invalid."); return; }
+                        else { MessageBox.Show(this, "The value of Frequency [Hz] is invalid."); return; }
 
-                        if (double.TryParse(toolStripTextBoxRepeat.Text, out _countRepeat)
-                            && (_countRepeat <= 100000)
-                            && (_countRepeat >= 0.001))
+                        if (double.TryParse(toolStripTextBoxRepeat.Text, out _millivoltStep)
+                            && (_millivoltStep <= 100)
+                            && (_millivoltStep >= 0.1))
                         {
                         }
-                        else { MessageBox.Show(this, "The value of Final Scanning Frequency [Hz] is invalid."); return; }
+                        else { MessageBox.Show(this, "The value of Step [mV] is invalid."); return; }
 
                         break;
 
@@ -3729,6 +3721,8 @@ namespace Voltammogrammer
                         {
                             toolStripTextBoxVertexV.Enabled = false;
                             toolStripTextBoxScanrate.Enabled = false;
+                            toolStripTextBoxFinalV.Enabled = false;
+                            toolStripTextBoxScanrate2.Enabled = false;
                             toolStripTextBoxRepeat.Enabled = false;
                         }
 
@@ -3754,6 +3748,8 @@ namespace Voltammogrammer
                     {
                         toolStripTextBoxVertexV.Enabled = false;
                         toolStripTextBoxScanrate.Enabled = false;
+                        toolStripTextBoxFinalV.Enabled = false;
+                        toolStripTextBoxScanrate2.Enabled = false;
                         toolStripTextBoxRepeat.Enabled = false;
                     }
 
@@ -3866,6 +3862,8 @@ namespace Voltammogrammer
             toolStripLabel1.ToolTipText = ""; toolStripLabel1.AutoToolTip = true;
             toolStripLabel6.Visible = false;
             toolStripTextBoxFinalV.Visible = false;
+            toolStripLabel7.Visible = false;
+            toolStripTextBoxScanrate2.Visible = false;
 
             if (_selectedMode == modeMeasurement.voltammetry || _selectedMode == modeMeasurement.galvanometry)
             {
@@ -3977,10 +3975,12 @@ namespace Voltammogrammer
                             toolStripLabel1.Text = "Potential [" + unit1 + "]:";
                             toolStripLabel2.Text = "Amplitude [" + unit1 + "]:";
                             toolStripTextBoxVertexV.Text = "100";
-                            toolStripLabel3.Text = "Scanning Frequency from [" + unit2 + "]:";
+                            toolStripLabel3.Text = "Scanning Frequency [" + unit2 + "] from:";
                             toolStripTextBoxScanrate.Text = "1";
-                            toolStripLabel4.Text = "to [Hz]:";
-                            toolStripTextBoxRepeat.Text = "1000000";
+                            toolStripLabel7.Text = "to:";  toolStripLabel7.Visible = true;
+                            toolStripTextBoxScanrate2.Text = "1000000"; toolStripTextBoxScanrate2.Visible = true;
+                            toolStripLabel4.Text = "Steps/dec.:";
+                            toolStripTextBoxRepeat.Text = "10";
                             toolStripLabel5.Text = "Reference Register:";
 
                             toolStripComboBoxRange.SelectedIndex = 2;
@@ -3991,7 +3991,7 @@ namespace Voltammogrammer
                             toolStripLabel1.Text = "Initial [" + unit1 + "]:";
                             toolStripTextBoxInitialV.Text = "0";
                             toolStripLabel6.Text = "Final [mV]:"; toolStripLabel6.Visible = true;
-                            toolStripTextBoxInitialV.Text = "-1000"; toolStripTextBoxFinalV.Visible = true;                          
+                            toolStripTextBoxFinalV.Text = "-1000"; toolStripTextBoxFinalV.Visible = true;                          
                             toolStripLabel2.Text = "Amplitude [" + unit1 + "]:";
                             toolStripTextBoxVertexV.Text = "10";
                             toolStripLabel3.Text = "Frequency [" + unit2 + "]:";
