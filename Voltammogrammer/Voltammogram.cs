@@ -68,6 +68,9 @@ namespace Voltammogrammer
 
         string _filename_saved = "(not saved yet)";
 
+        // 
+        // AddDataToCurrentSeriesにおいてAddXY時のパラメータを増やす時には、YValuesPerPointも増やす必要がある
+        //
         public enum typeAxisY : int
         {
             Current_in_uA = 0,
@@ -78,6 +81,7 @@ namespace Voltammogrammer
             Current_in_nA = 5,
             ImZ_in_ohm = 6,
             C2_in_MS_plot = 7,
+            Z_in_ohm = 8,
         }
         typeAxisY _selectedAxisY = typeAxisY.Current_in_uA;
         double[] _scaleAxisY = { 1000, 1, 1, 0.001, 1, 1000000, 1 };
@@ -89,7 +93,8 @@ namespace Voltammogrammer
             Time_in_sec = 2,
             Time_in_hour = 3,
             ReZ_in_ohm = 4,
-            NEED_TO_RENEW = 5,
+            Freq = 5,
+            NEED_TO_RENEW = 6,
         }
         typeAxisX _selectedAxisX = typeAxisX.Potential_in_mV;
         double[] _scaleAxisX = { 1000, 1, 1, 0.0002777778, 1 };
@@ -1014,6 +1019,8 @@ namespace Voltammogrammer
             chartVoltammogram.Series[_currentIndex].BorderDashStyle = System.Windows.Forms.DataVisualization.Charting.ChartDashStyle.Solid;
             chartVoltammogram.Series[_currentIndex].BorderWidth = 1;
             chartVoltammogram.Series[_currentIndex].YValuesPerPoint = 5+3;
+            chartVoltammogram.Series[_currentIndex].XAxisType = System.Windows.Forms.DataVisualization.Charting.AxisType.Primary;
+            chartVoltammogram.Series[_currentIndex].YAxisType = System.Windows.Forms.DataVisualization.Charting.AxisType.Primary;
             XMLDataHolder dh = new XMLDataHolder();
             dh.SetDatum("reference", "0");
             dh.SetDatumAttribute("reference", "unit", "mV");
@@ -1068,7 +1075,7 @@ namespace Voltammogrammer
                 if (true || !_mode_coulomb_counting)
                 {
                     potential = x_value / _scaleAxisX[(int)scaleX] * _scaleAxisX[(int)typeAxisX.Potential_in_mV];
-                    current = y_value / _scaleAxisX[(int)scaleY] * _scaleAxisY[(int)typeAxisY.Current_in_uA];
+                    current = y_value / _scaleAxisY[(int)scaleY] * _scaleAxisY[(int)typeAxisY.Current_in_uA];
                     //System.Windows.Forms.DataVisualization.Charting.DataPoint p = chartVoltammogram.Series[_currentIndex].Points.LastOrDefault();
 
                     Invoke((Action)delegate ()
@@ -1077,11 +1084,11 @@ namespace Voltammogrammer
 
                         if (p != null)
                         {
-                            coulomb = p.YValues[COULOMB] + (y_value / _scaleAxisX[(int)scaleY] * _scaleAxisY[(int)typeAxisY.Current_in_mA]) * (time - p.YValues[TIME]);
+                            coulomb = p.YValues[COULOMB] + (y_value / _scaleAxisY[(int)scaleY] * _scaleAxisY[(int)typeAxisY.Current_in_mA]) * (time - p.YValues[TIME]);
                         }
                         else
                         {
-                            coulomb = 0 + (y_value / _scaleAxisX[(int)scaleY] * _scaleAxisY[(int)typeAxisY.Current_in_mA]) * (time - 0);
+                            coulomb = 0 + (y_value / _scaleAxisY[(int)scaleY] * _scaleAxisY[(int)typeAxisY.Current_in_mA]) * (time - 0);
                         }
 
                         switch (_selectedAxisX)
@@ -1105,6 +1112,23 @@ namespace Voltammogrammer
                             case typeAxisX.ReZ_in_ohm:
                                 x = ReZ;
                                 break;
+
+                            case typeAxisX.Freq:
+                                x = freq;
+                                break;
+
+                                /*
+                                 * 軸パラメータの追加の仕方 (HOWTO-01)
+                                 * 
+                                 * 
+                            case typeAxisX.Freq:
+                                x = freq;
+                                break;
+                                 * 
+                                 * 
+                                 * 
+                                 * 
+                                 */
 
                             default:
                                 break;
@@ -1144,9 +1168,14 @@ namespace Voltammogrammer
                                 y = Math.Pow(ImZ * freq * 2 * Math.PI, 2) * 1e-6;
                                 break;
 
+                            case typeAxisY.Z_in_ohm:
+                                y = 0.5 * Math.Log10(Math.Pow(ReZ, 2) + Math.Pow(ImZ, 2));
+                                break;
+
                             default:
                                 break;
                         }
+                        //Console.WriteLine($"|Z| = {y}, {Math.Sqrt(Math.Pow(ReZ, 2) + Math.Pow(ImZ, 2))}");
 
                         //chartVoltammogram.Series[_currentIndex].Points.AddXY(
                         series.Points.AddXY(
@@ -1886,94 +1915,199 @@ namespace Voltammogrammer
         {
             if (length == 0) return Double.NaN;
 
-            double order = Math.Truncate(Math.Log10(Math.Abs(length)));
-            double interval = Math.Pow(10, order - 1);
-            double interval_f = Math.Log10(length) % 1; //if (interval_f < 0) interval_f = 1 - interval_f;
-            double m = (interval_f < 0.1) ? 2.5 : ((interval_f < 0.4) ? 5 : ((interval_f < 0.7) ? 10 : 20));
-            //Console.WriteLine($"plot X interval (interval_f), fine-interval: {interval} ({interval_f}), {m}");
-
-            chartVoltammogram.ChartAreas[0].AxisX.Interval = 0;// interval * m;
-            chartVoltammogram.ChartAreas[0].AxisX2.Interval = 0;// interval * m;
-            chartVoltammogram.ChartAreas[0].AxisX.MajorTickMark.Interval = interval * m;
-            chartVoltammogram.ChartAreas[0].AxisX2.MajorTickMark.Interval = interval * m;
-            chartVoltammogram.ChartAreas[0].AxisX.MinorTickMark.Interval = interval * m / 5;
-            chartVoltammogram.ChartAreas[0].AxisX2.MinorTickMark.Interval = interval * m / 5;
-            chartVoltammogram.ChartAreas[0].AxisX.LabelStyle.Interval = interval * m;
-            chartVoltammogram.ChartAreas[0].AxisX2.LabelStyle.Interval = interval * m;
-            chartVoltammogram.ChartAreas[0].CursorX.Interval = interval / 1000;
-
-            chartVoltammogram.ChartAreas[0].AxisX.LabelStyle.Format = "0" + ((order < 1)? ("." + new String('0',  (int)(Math.Abs(order-2)))) : "");
-
-            chartVoltammogram.ChartAreas[0].AxisX.Minimum = _currentMinX;
-            chartVoltammogram.ChartAreas[0].AxisX2.Minimum = _currentMinX;
-            chartVoltammogram.ChartAreas[0].AxisX.Maximum = _currentMaxX;
-            chartVoltammogram.ChartAreas[0].AxisX2.Maximum = _currentMaxX;
-
-            if (p < 0)
+            switch (_selectedAxisX)
             {
-                chartVoltammogram.ChartAreas[0].AxisX.LabelStyle.IntervalOffset = Math.Abs((p % (interval * m)));
-                chartVoltammogram.ChartAreas[0].AxisX.MajorTickMark.IntervalOffset = Math.Abs(p % (interval * m));
-                chartVoltammogram.ChartAreas[0].AxisX.MinorTickMark.IntervalOffset = Math.Abs(p % (interval * m / 5));
-                chartVoltammogram.ChartAreas[0].AxisX2.MajorTickMark.IntervalOffset = Math.Abs(p % (interval * m));
-                chartVoltammogram.ChartAreas[0].AxisX2.MinorTickMark.IntervalOffset = Math.Abs(p % (interval * m / 5));
+                case typeAxisX.Potential_in_mV:
+                case typeAxisX.Potential_in_V:
+                case typeAxisX.Time_in_sec:
+                case typeAxisX.Time_in_hour:
+                case typeAxisX.ReZ_in_ohm:
+                    chartVoltammogram.ChartAreas[0].AxisX.IsLogarithmic = false;
+                    chartVoltammogram.ChartAreas[0].AxisX2.Enabled = System.Windows.Forms.DataVisualization.Charting.AxisEnabled.True;
+                    break;
+
+                case typeAxisX.Freq:
+                    chartVoltammogram.ChartAreas[0].AxisX.IsLogarithmic = true;
+                    chartVoltammogram.ChartAreas[0].AxisX2.Enabled = System.Windows.Forms.DataVisualization.Charting.AxisEnabled.False;
+                    break;
+
+                default:
+                    break;
+            }
+
+            if (_selectedAxisX != typeAxisX.Freq)
+            {
+                double order = Math.Truncate(Math.Log10(Math.Abs(length)));
+                double interval = Math.Pow(10, order - 1);
+                double interval_f = Math.Log10(length) % 1; //if (interval_f < 0) interval_f = 1 - interval_f;
+                double m = (interval_f < 0.1) ? 2.5 : ((interval_f < 0.4) ? 5 : ((interval_f < 0.7) ? 10 : 20));
+                //Console.WriteLine($"plot X interval (interval_f), fine-interval: {interval} ({interval_f}), {m}");
+
+                chartVoltammogram.ChartAreas[0].AxisX.Interval = 0;// interval * m;
+                chartVoltammogram.ChartAreas[0].AxisX2.Interval = 0;// interval * m;
+                chartVoltammogram.ChartAreas[0].AxisX.MajorTickMark.Interval = interval * m;
+                chartVoltammogram.ChartAreas[0].AxisX2.MajorTickMark.Interval = interval * m;
+                chartVoltammogram.ChartAreas[0].AxisX.MinorTickMark.Interval = interval * m / 5;
+                chartVoltammogram.ChartAreas[0].AxisX2.MinorTickMark.Interval = interval * m / 5;
+                chartVoltammogram.ChartAreas[0].AxisX.LabelStyle.Interval = interval * m;
+                chartVoltammogram.ChartAreas[0].AxisX2.LabelStyle.Interval = interval * m;
+                chartVoltammogram.ChartAreas[0].CursorX.Interval = interval / 1000;
+
+                chartVoltammogram.ChartAreas[0].AxisX.LabelStyle.Format = "0" + ((order < 1)? ("." + new String('0',  (int)(Math.Abs(order-2)))) : "");
+
+                chartVoltammogram.ChartAreas[0].AxisX.Minimum = _currentMinX;
+                chartVoltammogram.ChartAreas[0].AxisX2.Minimum = _currentMinX;
+                chartVoltammogram.ChartAreas[0].AxisX.Maximum = _currentMaxX;
+                chartVoltammogram.ChartAreas[0].AxisX2.Maximum = _currentMaxX;
+
+                if (p < 0)
+                {
+                    chartVoltammogram.ChartAreas[0].AxisX.LabelStyle.IntervalOffset = Math.Abs((p % (interval * m)));
+                    chartVoltammogram.ChartAreas[0].AxisX.MajorTickMark.IntervalOffset = Math.Abs(p % (interval * m));
+                    chartVoltammogram.ChartAreas[0].AxisX.MinorTickMark.IntervalOffset = Math.Abs(p % (interval * m / 5));
+                    chartVoltammogram.ChartAreas[0].AxisX2.MajorTickMark.IntervalOffset = Math.Abs(p % (interval * m));
+                    chartVoltammogram.ChartAreas[0].AxisX2.MinorTickMark.IntervalOffset = Math.Abs(p % (interval * m / 5));
+                }
+                else
+                {
+                    chartVoltammogram.ChartAreas[0].AxisX.LabelStyle.IntervalOffset = (interval * m) - Math.Abs((p % (interval * m)));
+                    chartVoltammogram.ChartAreas[0].AxisX.MajorTickMark.IntervalOffset = (interval * m) - Math.Abs((p % (interval * m)));
+                    chartVoltammogram.ChartAreas[0].AxisX.MinorTickMark.IntervalOffset = (interval * m / 5) - Math.Abs((p % (interval * m / 5)));
+                    chartVoltammogram.ChartAreas[0].AxisX2.MajorTickMark.IntervalOffset = (interval * m) - Math.Abs((p % (interval * m)));
+                    chartVoltammogram.ChartAreas[0].AxisX2.MinorTickMark.IntervalOffset = (interval * m / 5) - Math.Abs((p % (interval * m / 5)));
+                }
+
+                return (interval * m);
             }
             else
             {
-                chartVoltammogram.ChartAreas[0].AxisX.LabelStyle.IntervalOffset = (interval * m) - Math.Abs((p % (interval * m)));
-                chartVoltammogram.ChartAreas[0].AxisX.MajorTickMark.IntervalOffset = (interval * m) - Math.Abs((p % (interval * m)));
-                chartVoltammogram.ChartAreas[0].AxisX.MinorTickMark.IntervalOffset = (interval * m / 5) - Math.Abs((p % (interval * m / 5)));
-                chartVoltammogram.ChartAreas[0].AxisX2.MajorTickMark.IntervalOffset = (interval * m) - Math.Abs((p % (interval * m)));
-                chartVoltammogram.ChartAreas[0].AxisX2.MinorTickMark.IntervalOffset = (interval * m / 5) - Math.Abs((p % (interval * m / 5)));
+                double order2 = Math.Floor(Math.Log10(_currentMinX));
+                double min2 = Math.Pow(10, order2);
+
+                if (Double.IsNaN(chartVoltammogram.ChartAreas[0].AxisX.Minimum))
+                {
+                    chartVoltammogram.ChartAreas[0].AxisX.Minimum = min2;
+                }
+                else
+                {
+                    if (chartVoltammogram.ChartAreas[0].AxisX.Minimum > (min2)) chartVoltammogram.ChartAreas[0].AxisX.Minimum = min2;
+                }
+
+                double order = Math.Ceiling(Math.Log10(_currentMaxX));
+                double max = Math.Pow(10, order);
+
+                if (Double.IsNaN(chartVoltammogram.ChartAreas[0].AxisX.Maximum))
+                {
+                    chartVoltammogram.ChartAreas[0].AxisX.Maximum = max;
+                }
+                else
+                {
+                    if (chartVoltammogram.ChartAreas[0].AxisX.Maximum < (max)) chartVoltammogram.ChartAreas[0].AxisX.Maximum = max;
+                }
+
+                chartVoltammogram.ChartAreas[0].AxisX.MajorTickMark.Interval = 1;
+                chartVoltammogram.ChartAreas[0].AxisX.MajorTickMark.IntervalOffset = 0;
+                chartVoltammogram.ChartAreas[0].AxisX.MinorTickMark.Interval = 1;
+                chartVoltammogram.ChartAreas[0].AxisX.MinorTickMark.IntervalOffset = 0;
+                chartVoltammogram.ChartAreas[0].AxisX.LabelStyle.Interval = 1;
+                chartVoltammogram.ChartAreas[0].AxisX.LabelStyle.IntervalOffset = 0;
+
+                //chartVoltammogram.ChartAreas[0].AxisX.Minimum = Double.NaN;
+
+                return 1;
             }
 
-            return (interval * m);
         }
 
         private double RescaleTicksY(double length, double p)
         {
             if (length == 0) return Double.NaN;
 
-            double order = Math.Truncate(Math.Log10(Math.Abs(length)));
-            double interval = Math.Pow(10, order - 1);
-            double interval_f = Math.Log10(length) % 1;
-            double m = (interval_f < 0.1) ? 2 : ((interval_f < 0.4) ? 5 : ((interval_f < 0.7) ? 10 : 20));
-            //Console.WriteLine($"plot Y interval, fine-interval: {interval}, {m}");
+            //switch (_selectedAxisY)
+            //{
+            //    case typeAxisY.Current_in_nA:
+            //    case typeAxisY.Current_in_uA:
+            //    case typeAxisY.Current_in_mA:
+            //    case typeAxisY.Coulomb_in_mC:
+            //    case typeAxisY.Coulomb_in_C:
+            //    case typeAxisY.Potential_in_mV:
+            //    case typeAxisY.ImZ_in_ohm:
+            //    case typeAxisY.C2_in_MS_plot:
+            //        chartVoltammogram.ChartAreas[0].AxisY.IsLogarithmic = false;
+            //        chartVoltammogram.ChartAreas[0].AxisY2.Enabled = System.Windows.Forms.DataVisualization.Charting.AxisEnabled.True;
+            //        break;
 
-            chartVoltammogram.ChartAreas[0].AxisY.Interval = 0;// interval * m;
-            chartVoltammogram.ChartAreas[0].AxisY2.Interval = 0;// interval * m;
-            chartVoltammogram.ChartAreas[0].AxisY.MajorTickMark.Interval = interval * m;
-            chartVoltammogram.ChartAreas[0].AxisY2.MajorTickMark.Interval = interval * m;
-            chartVoltammogram.ChartAreas[0].AxisY.MinorTickMark.Interval = interval * m / 2;
-            chartVoltammogram.ChartAreas[0].AxisY2.MinorTickMark.Interval = interval * m / 2;
-            chartVoltammogram.ChartAreas[0].AxisY.LabelStyle.Interval = interval * m;
-            chartVoltammogram.ChartAreas[0].AxisY2.LabelStyle.Interval = interval * m;
-            chartVoltammogram.ChartAreas[0].CursorY.Interval = interval / 1000;
+            //    case typeAxisY.Z_in_ohm:
+            //        chartVoltammogram.ChartAreas[0].AxisY.IsLogarithmic = true; // Y軸データが複数だと、対数軸が機能しない様子。
+            //        chartVoltammogram.ChartAreas[0].AxisY2.Enabled = System.Windows.Forms.DataVisualization.Charting.AxisEnabled.False;
+            //        break;
 
-            chartVoltammogram.ChartAreas[0].AxisY.LabelStyle.Format = "0" + ((order < 1) ? ("." + new String('0', (int)(Math.Abs(order - 2)))) : "");
+            //    default:
+            //        break;
+            //}
 
-            chartVoltammogram.ChartAreas[0].AxisY.Minimum = _currentMinY;
-            chartVoltammogram.ChartAreas[0].AxisY2.Minimum = _currentMinY;
-            chartVoltammogram.ChartAreas[0].AxisY.Maximum = _currentMaxY;
-            chartVoltammogram.ChartAreas[0].AxisY2.Maximum = _currentMaxY;
-
-            if (p < 0)
+            if (_selectedAxisY != typeAxisY.Z_in_ohm)
             {
-                chartVoltammogram.ChartAreas[0].AxisY.LabelStyle.IntervalOffset = Math.Abs((p % (interval * m)));
-                chartVoltammogram.ChartAreas[0].AxisY.MajorTickMark.IntervalOffset = Math.Abs(p % (interval * m));
-                chartVoltammogram.ChartAreas[0].AxisY.MinorTickMark.IntervalOffset = Math.Abs(p % (interval * m / 2));
-                chartVoltammogram.ChartAreas[0].AxisY2.MajorTickMark.IntervalOffset = Math.Abs(p % (interval * m));
-                chartVoltammogram.ChartAreas[0].AxisY2.MinorTickMark.IntervalOffset = Math.Abs(p % (interval * m / 2));
+                double order = Math.Truncate(Math.Log10(Math.Abs(length)));
+                double interval = Math.Pow(10, order - 1);
+                double interval_f = Math.Log10(length) % 1;
+                double m = (interval_f < 0.1) ? 2 : ((interval_f < 0.4) ? 5 : ((interval_f < 0.7) ? 10 : 20));
+                //Console.WriteLine($"plot Y interval, fine-interval: {interval}, {m}");
+
+                chartVoltammogram.ChartAreas[0].AxisY.Interval = 0;// interval * m;
+                chartVoltammogram.ChartAreas[0].AxisY2.Interval = 0;// interval * m;
+                chartVoltammogram.ChartAreas[0].AxisY.MajorTickMark.Interval = interval * m;
+                chartVoltammogram.ChartAreas[0].AxisY2.MajorTickMark.Interval = interval * m;
+                chartVoltammogram.ChartAreas[0].AxisY.MinorTickMark.Interval = interval * m / 2;
+                chartVoltammogram.ChartAreas[0].AxisY2.MinorTickMark.Interval = interval * m / 2;
+                chartVoltammogram.ChartAreas[0].AxisY.LabelStyle.Interval = interval * m;
+                chartVoltammogram.ChartAreas[0].AxisY2.LabelStyle.Interval = interval * m;
+                chartVoltammogram.ChartAreas[0].CursorY.Interval = interval / 1000;
+
+                chartVoltammogram.ChartAreas[0].AxisY.LabelStyle.Format = "0" + ((order < 1) ? ("." + new String('0', (int)(Math.Abs(order - 2)))) : "");
+
+                chartVoltammogram.ChartAreas[0].AxisY.Minimum = _currentMinY;
+                chartVoltammogram.ChartAreas[0].AxisY2.Minimum = _currentMinY;
+                chartVoltammogram.ChartAreas[0].AxisY.Maximum = _currentMaxY;
+                chartVoltammogram.ChartAreas[0].AxisY2.Maximum = _currentMaxY;
+
+                if (p < 0)
+                {
+                    chartVoltammogram.ChartAreas[0].AxisY.LabelStyle.IntervalOffset = Math.Abs((p % (interval * m)));
+                    chartVoltammogram.ChartAreas[0].AxisY.MajorTickMark.IntervalOffset = Math.Abs(p % (interval * m));
+                    chartVoltammogram.ChartAreas[0].AxisY.MinorTickMark.IntervalOffset = Math.Abs(p % (interval * m / 2));
+                    chartVoltammogram.ChartAreas[0].AxisY2.MajorTickMark.IntervalOffset = Math.Abs(p % (interval * m));
+                    chartVoltammogram.ChartAreas[0].AxisY2.MinorTickMark.IntervalOffset = Math.Abs(p % (interval * m / 2));
+                }
+                else
+                {
+                    chartVoltammogram.ChartAreas[0].AxisY.LabelStyle.IntervalOffset = (interval * m) - Math.Abs((p % (interval * m)));
+                    chartVoltammogram.ChartAreas[0].AxisY.MajorTickMark.IntervalOffset = (interval * m) - Math.Abs((p % (interval * m)));
+                    chartVoltammogram.ChartAreas[0].AxisY.MinorTickMark.IntervalOffset = (interval * m / 2) - Math.Abs((p % (interval * m / 2)));
+                    chartVoltammogram.ChartAreas[0].AxisY2.MajorTickMark.IntervalOffset = (interval * m) - Math.Abs((p % (interval * m)));
+                    chartVoltammogram.ChartAreas[0].AxisY2.MinorTickMark.IntervalOffset = (interval * m / 2) - Math.Abs((p % (interval * m / 2)));
+                }
+
+                return (interval * m);
             }
             else
             {
-                chartVoltammogram.ChartAreas[0].AxisY.LabelStyle.IntervalOffset = (interval * m) - Math.Abs((p % (interval * m)));
-                chartVoltammogram.ChartAreas[0].AxisY.MajorTickMark.IntervalOffset = (interval * m) - Math.Abs((p % (interval * m)));
-                chartVoltammogram.ChartAreas[0].AxisY.MinorTickMark.IntervalOffset = (interval * m / 2) - Math.Abs((p % (interval * m / 2)));
-                chartVoltammogram.ChartAreas[0].AxisY2.MajorTickMark.IntervalOffset = (interval * m) - Math.Abs((p % (interval * m)));
-                chartVoltammogram.ChartAreas[0].AxisY2.MinorTickMark.IntervalOffset = (interval * m / 2) - Math.Abs((p % (interval * m / 2)));
-            }
+                double min = Math.Floor(_currentMinY); 
+                chartVoltammogram.ChartAreas[0].AxisY.Minimum = min;
+                double max = Math.Ceiling(_currentMaxY);
+                chartVoltammogram.ChartAreas[0].AxisY.Maximum = max;
 
-            return (interval * m);
+                chartVoltammogram.ChartAreas[0].AxisY.MajorTickMark.Interval = 1;
+                chartVoltammogram.ChartAreas[0].AxisY.MajorTickMark.IntervalOffset = 0;
+                //chartVoltammogram.ChartAreas[0].AxisY.MajorTickMark.Size = 3F;
+                chartVoltammogram.ChartAreas[0].AxisY.MinorTickMark.Interval = 0.1;
+                chartVoltammogram.ChartAreas[0].AxisY.MinorTickMark.IntervalOffset = 0;
+                chartVoltammogram.ChartAreas[0].AxisY.MinorTickMark.Size = 0.33F;
+                chartVoltammogram.ChartAreas[0].AxisY.LabelStyle.Interval = 1;
+                chartVoltammogram.ChartAreas[0].AxisY.LabelStyle.IntervalOffset = 0;
+
+                return 1;
+            }
         }
 
         public void SetAxisRangeX(bool auto, double from, double to)
@@ -2055,12 +2189,69 @@ namespace Voltammogrammer
                     //chartVoltammogram.ChartAreas[0].AxisX.LabelStyle.Format = "0";
                     break;
 
+                case 5:
+                    _selectedAxisX = typeAxisX.Freq;
+                    chartVoltammogram.ChartAreas[0].AxisX.Title = "Frequency / Hz";
+                    //chartVoltammogram.ChartAreas[0].AxisX.LabelStyle.Format = "0";
+                    break;
+
+                /* 
+                 * 軸パラメータの増やし方 (HOWTO-01)
+                 * 
+                 * 1. toolStripComboBoxAxisX.Itemsに追加する
+                 * 
+                 * 2. 以下を追加 (本関数内にもう2箇所ある)
+                 * 
+                 * case X:
+                 *     _selectedAxisX = typeAxisX.Freq;
+                 *     chartVoltammogram.ChartAreas[0].AxisX.Title = "Frequency * s";
+                 *     break;  
+                 *     
+                 * 3. マウスカーソルによる値の表示機能にも修正を追加する
+                 * 
+                 * 4. AddDataToCurrentSeriesにも修正を追加 
+                 *    (RescaleTicksXとの兼ね合いで、どこでIsLogarithmic = trueするのか、mixmaxをどう決めるのかは要調整 (TODO))
+                 * 
+                 */
+
                 default:
                     break;
             }
 
             if (prev == _selectedAxisX && !force) return;
-            if (_series.Count() == 0) return;
+            if (_series.Count() == 0)
+            {
+                return;
+            }
+
+            //
+            // X軸が対数軸なら、解除する必要がある
+            //
+
+            switch (_selectedAxisX)
+            {
+                case typeAxisX.Potential_in_mV:
+                case typeAxisX.Potential_in_V:
+                case typeAxisX.Time_in_sec:
+                case typeAxisX.Time_in_hour:
+                case typeAxisX.ReZ_in_ohm:
+                    chartVoltammogram.ChartAreas[0].AxisX.IsLogarithmic = false;
+                    break;
+
+                case typeAxisX.Freq:
+                    break;
+
+                /* 
+                 * 軸パラメータの増やし方 (HOWTO-01)
+                 * 
+                 * case typeAxisX.X:
+                 *     break;     
+                 * 
+                 */
+
+                default:
+                    break;
+            }
 
             _currentMinX = Double.NaN;
             _currentMaxX = Double.NaN;
@@ -2088,6 +2279,19 @@ namespace Voltammogrammer
                             itr.XValue = itr.YValues[RE_Z];
                             break;
 
+                        case typeAxisX.Freq:
+                            itr.XValue = (itr.YValues[FREQ] > 0)? itr.YValues[FREQ] : 1;
+                            break;
+
+                        /* 
+                         * 軸パラメータの増やし方 (HOWTO-01)
+                         * 
+                         * case typeAxisX.X:
+                         *     itr.XValue = itr.YValues[FREQ];
+                         *     break;     
+                         * 
+                         */
+
                         default:
                             break;
                     }
@@ -2107,15 +2311,39 @@ namespace Voltammogrammer
 
             if (double.IsNaN(_currentMinX) || double.IsNaN(_currentMaxX)) return;
 
-            //   1. 最小値と最大値の更新 (ここでは値のリセットはしない)
-            double length = Math.Abs(_currentMaxX - _currentMinX);
-            double ext = length * 0.10;
-            _currentMinX -= ext;
-            _currentMaxX += ext;
+            switch (_selectedAxisX)
+            {
+                case typeAxisX.Potential_in_mV:
+                case typeAxisX.Potential_in_V:
+                case typeAxisX.Time_in_sec:
+                case typeAxisX.Time_in_hour:
+                case typeAxisX.ReZ_in_ohm:
+                    //   1. 最小値と最大値の更新 (ここでは値のリセットはしない)
+                    double length = Math.Abs(_currentMaxX - _currentMinX);
+                    double ext = length * 0.10;
+                    _currentMinX -= ext;
+                    _currentMaxX += ext;
 
-            //   2. 最小値と最大値に基づく目盛り間隔の更新
-            length = Math.Abs(_currentMaxX - _currentMinX);
-            RescaleTicksX(length, _currentMinX);
+                    //   2. 最小値と最大値に基づく目盛り間隔の更新
+                    length = Math.Abs(_currentMaxX - _currentMinX);
+                    RescaleTicksX(length, _currentMinX);
+                    break;
+
+                case typeAxisX.Freq:
+                    RescaleTicksX(Math.Abs(_currentMaxX - _currentMinX), _currentMinX);
+                    break;
+
+                /* 
+                 * 軸パラメータの増やし方 (HOWTO-01)
+                 * 
+                 * case typeAxisX.X:
+                 *     break;     
+                 * 
+                 */
+
+                default:
+                    break;
+            }
         }
 
         private void ChangeAxisY(bool force)
@@ -2155,6 +2383,10 @@ namespace Voltammogrammer
                     _selectedAxisY = typeAxisY.C2_in_MS_plot;
                     chartVoltammogram.ChartAreas[0].AxisY.Title = "(Im[Z] * 2πf)^2 / mF^(-2)";
                     break;
+                case 8:
+                    _selectedAxisY = typeAxisY.Z_in_ohm;
+                    chartVoltammogram.ChartAreas[0].AxisY.Title = "log(|Z| / ohm)";
+                    break;
 
                 default:
                     break;
@@ -2162,6 +2394,8 @@ namespace Voltammogrammer
 
             if (prev == _selectedAxisY && !force) return;
             if (_series.Count() == 0) return;
+
+            chartVoltammogram.SuspendLayout();
 
             _currentMinY = Double.NaN;
             _currentMaxY = Double.NaN;
@@ -2198,6 +2432,10 @@ namespace Voltammogrammer
                             itr.YValues[0] = Math.Pow(itr.YValues[IM_Z] * itr.YValues[FREQ] * 2 * Math.PI, 2) * 1e-6;
                             break;
 
+                        case typeAxisY.Z_in_ohm:
+                            itr.YValues[0] = 0.5 * Math.Log10((Math.Pow(itr.YValues[RE_Z],2) + Math.Pow(itr.YValues[IM_Z], 2)));
+                            break;
+
                         default:
                             break;
                     }
@@ -2215,20 +2453,43 @@ namespace Voltammogrammer
 
             if (double.IsNaN(_currentMinY) || double.IsNaN(_currentMaxY)) return;
 
-            //   1. 最小値と最大値の更新 (ここでは値のリセットはしない)
-            double length = Math.Abs(_currentMaxY - _currentMinY);
-            double ext = length * 0.10;
-            _currentMinY -= ext;
-            _currentMaxY += ext;
+            //switch (_selectedAxisY)
+            //{
+            //    case typeAxisY.Current_in_nA:
+            //    case typeAxisY.Current_in_uA:
+            //    case typeAxisY.Current_in_mA:
+            //    case typeAxisY.Coulomb_in_mC:
+            //    case typeAxisY.Coulomb_in_C:
+            //    case typeAxisY.Potential_in_mV:
+            //    case typeAxisY.ImZ_in_ohm:
+            //    case typeAxisY.C2_in_MS_plot:
 
-            chartVoltammogram.ChartAreas[0].RecalculateAxesScale();
-            //chartVoltammogram.ResetAutoValues();
-            //chartVoltammogram.PerformLayout();
-            //chartVoltammogram.Update();
+                    //   1. 最小値と最大値の更新 (ここでは値のリセットはしない)
+                    double length = Math.Abs(_currentMaxY - _currentMinY);
+                    double ext = length * 0.10;
+                    _currentMinY -= ext;
+                    _currentMaxY += ext;
 
-            //   2. 最小値と最大値に基づく目盛り間隔の更新
-            length = Math.Abs(_currentMaxY - _currentMinY);
-            RescaleTicksY(length, _currentMinY);
+                    chartVoltammogram.ChartAreas[0].RecalculateAxesScale();
+                    //chartVoltammogram.ResetAutoValues();
+
+                    //   2. 最小値と最大値に基づく目盛り間隔の更新
+                    length = Math.Abs(_currentMaxY - _currentMinY);
+                    RescaleTicksY(length, _currentMinY);
+
+            //        break;
+
+            //    case typeAxisY.Z_in_ohm:
+            //        RescaleTicksY(Math.Abs(_currentMaxY - _currentMinY), _currentMinY);
+            //        break;
+
+            //    default:
+            //        break;
+            //}
+
+            chartVoltammogram.ResumeLayout();
+            chartVoltammogram.PerformLayout();
+            chartVoltammogram.Update();
         }
 
         public void SetFont(double title, double label)

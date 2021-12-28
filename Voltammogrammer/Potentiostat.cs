@@ -137,6 +137,7 @@ namespace Voltammogrammer
 
         double _millivoltInitial, _millivoltInitial_raw;
         double _millivoltVertex;
+        double _millivoltLimit;
         double _countRepeat;
         double _millivoltScanrate;
         double _millivoltAmplitude;
@@ -901,7 +902,7 @@ namespace Voltammogrammer
                     }
                     if(cSamples == 0)
                     {
-                        Console.WriteLine($"Initial time after stsTrig: {sts}, {_clockingStopwatch.ElapsedMilliseconds}");
+                        Console.WriteLine($"Initial time after stsTrig: {_clockingStopwatch.ElapsedMilliseconds} ms, (sts code: {sts})");
                     }
 
                     FDwfAnalogInStatusRecord(_handle, out cAvailable, out cLost, out cCorrupted);
@@ -992,8 +993,16 @@ namespace Voltammogrammer
                     }
                     else
                     {
-                        Console.WriteLine("cAvailable: " + cAvailable.ToString() + ", cSamples: " + cSamples.ToString() + ", cLost: " + cLost.ToString());
-                        continue;
+                        Console.WriteLine($"cAvailable: {cAvailable}, cSamples: {cSamples} (maxSamples: {Math.Floor((secCAing + secRecording) * _herzAcquisition)}), cLost: {cLost}, sts code: {sts}");
+
+                        if(cSamples > 0 && (sts == stsDone))
+                        {
+                            break;
+                        }
+                        else
+                        {
+                            continue;
+                        }
                     }
 
                     //if (backgroundWorkerCV.CancellationPending)
@@ -1012,6 +1021,8 @@ namespace Voltammogrammer
                 //Thread.Sleep(1);
                 Thread.Yield();
             }
+
+            Console.WriteLine($"final sts code: {sts}, cSamples: {cSamples} (maxSamples: {Math.Floor((secCAing + secRecording) * _herzAcquisition)})");
 
             if (backgroundWorkerCV.CancellationPending)
             {
@@ -1669,7 +1680,6 @@ namespace Voltammogrammer
                         _recordingSeries[0][i] = t2;// nextMeasurementTiming;
 
 
-
                         //SampleSingleValue((CHANNEL_POTENTIAL-1), out double valueCh1);
                         //SampleSingleValue((CHANNEL_CURRENT-1), out double valueCh2);
                         //_recordingSeries[0][i] = t2;// nextMeasurementTiming;
@@ -1679,6 +1689,24 @@ namespace Voltammogrammer
                         //_recordingSeries[CHANNEL_CURRENT][i] = valueCh2;// * 1000.0;
 
                         backgroundWorkerCV.ReportProgress(i);
+
+                        //
+                        // 時々、S電極の電位を確認して、_millivoltLimitを超えていたら、_millivoltInitialを調節する
+                        //
+                        if (_selectedMethod == methodMeasurement.ConstantCurrent)
+                        {
+                            if (i > 0 && (i % 10) == 0)
+                            {
+                                if(_millivoltLimit > 0 && Math.Abs(_recordingSeries[CHANNEL_POTENTIAL][i] * 1000) > _millivoltLimit)
+                                {
+                                    // S電極の電位が_millivoltLimitを超えているので、倍率0.9で絶対値を低減させる
+                                    _millivoltInitial *= 0.9;
+                                    _millivoltInitial_raw *= 0.9;
+                                    SetDCVoltageCH1(_millivoltInitial * 1000.0);
+                                    Console.WriteLine($"Current for G/S was attenuated. (now: {_millivoltInitial_raw} uA)");
+                                }
+                            }
+                        }
                     }
 
                     if (backgroundWorkerCV.CancellationPending)
@@ -1774,14 +1802,14 @@ namespace Voltammogrammer
                 FDwfAnalogImpedanceAmplitudeSet(_handle, (double)_millivoltAmplitude / 1000);
                 FDwfAnalogImpedanceOffsetSet(_handle, (double)_millivoltInitial / 1000);
                 FDwfAnalogImpedanceCompReset(_handle);
-                FDwfAnalogImpedancePeriodSet(_handle, 64); // もともとは１６
+                FDwfAnalogImpedancePeriodSet(_handle, (int)_countRepeat); // もともとは１６
                 //FDwfAnalogImpedanceConfigure(_handle, 1);
 
                 SetCircuit(open: false);
 
                 int direction = (_hertzFinal > _hertzInitial) ? 1 : -1;
 
-                for (int i = 0; i <= (Math.Floor(Math.Log10(_hertzFinal/_hertzInitial) * _countStep) + 1); i++) // 50 = 100kHzまで, 53 = 200kHzまで
+                for (int i = 0; i <= (Math.Floor(direction * Math.Log10(_hertzFinal/_hertzInitial) * _countStep) + 1); i++) // 50 = 100kHzまで, 53 = 200kHzまで
                 {
                     double freq = Math.Pow(10, (Math.Log10(_hertzInitial) + direction * (double)i / _countStep));
 
@@ -1874,7 +1902,7 @@ namespace Voltammogrammer
                     _recordingSeries[CHANNEL_VIRTUAL_FREQ][i] = freq;
                     _recordingSeries[CHANNEL_VIRTUAL_ATTN][i] = gain0;
 
-                    Console.WriteLine("Freq {0}, {1}, {2}, {3}", freq, resi, reac, impe);
+                    Console.WriteLine("Freq {0}, {1} (after corr.), {2}, {3}", freq, _recordingSeries[CHANNEL_VIRTUAL_REAL_Z][i], reac, impe);
 
                     backgroundWorkerCV.ReportProgress(i);
 
@@ -1942,7 +1970,7 @@ namespace Voltammogrammer
                 FDwfAnalogImpedanceAmplitudeSet(_handle, (double)_millivoltAmplitude / 1000);
                 FDwfAnalogImpedanceOffsetSet(_handle, (double)_millivoltInitial / 1000); 
                 FDwfAnalogImpedanceCompReset(_handle);
-                FDwfAnalogImpedancePeriodSet(_handle, 1024);
+                FDwfAnalogImpedancePeriodSet(_handle, (int)_countRepeat); // 1024
                 //FDwfAnalogImpedanceConfigure(_handle, 1);
 
                 SetCircuit(open: false);
@@ -2656,7 +2684,7 @@ namespace Voltammogrammer
                                 double polarity = -1;
                                 p *= polarity / POTENTIAL_SLOPE_OSC / POTENTIAL_SLOPE_AWG;
                                 c_raw *= polarity / POTENTIAL_SLOPE_OSC / POTENTIAL_SLOPE_AWG;
-                                c = _millivoltInitial_raw;
+                                c = _millivoltInitial_raw; // _millivoltInitialはカレントフォロアの設定に応じた値となっている
                             }
                             else
                             {
@@ -2738,14 +2766,14 @@ namespace Voltammogrammer
                         double interval_f = Math.Log10(Math.Abs(_recordingSeries[CHANNEL_VIRTUAL_REAL_Z][_itrRecording])) % 1;
 
 
-                        double m = Math.Ceiling(Math.Pow(10, interval_f));
-                        //double m = (interval_f < 0.1) ? 2 : ((interval_f < 0.4) ? 5 : ((interval_f < 0.7) ? 10 : 20));
+                        //double m = Math.Ceiling(Math.Pow(10, interval_f));
+                        double m = (interval_f < 0.35) ? 2.5 : ((interval_f < 0.7) ? 5 : 10);
 
                         //double min = Math.Pow(10, 1+Math.Floor(Math.Log10(Math.Abs(_recordingSeries[CHANNEL_VIRTUAL_REAL_Z][_itrRecording]))));
                         double min = Math.Pow(10, order) * m;
                         //Console.WriteLine("{0}, {1}, {2}, {3}", order, interval_f, m, min);
 
-                        double order2 = Math.Truncate(Math.Log10(Math.Abs(_recordingSeries[CHANNEL_VIRTUAL_FREQ][_itrRecording])));
+                        double order2 = Math.Floor(Math.Log10((_recordingSeries[CHANNEL_VIRTUAL_FREQ][_itrRecording])));
                         double min2 = Math.Pow(10, order2);
 
                         if (_itrRecording >= 1)
@@ -2768,6 +2796,12 @@ namespace Voltammogrammer
                                 if (chartVoltammogram.ChartAreas[0].AxisX2.Minimum >= (min2)) chartVoltammogram.ChartAreas[0].AxisX2.Minimum = min2;
                             }
                         }
+                        else if (_itrRecording == 0)
+                        {
+                            chartVoltammogram.ChartAreas[0].AxisX.Maximum = +1 * min;
+                            chartVoltammogram.ChartAreas[0].AxisX2.Minimum = min2;
+                        }
+
                         chartVoltammogram.ResumeLayout();
                         chartVoltammogram.Update();
                     }
@@ -3276,6 +3310,11 @@ namespace Voltammogrammer
                         }
                         else { MessageBox.Show(this, "The target Q [C] (as an absolute value) must be >= 0."); toolStripTextBoxRepeat.Text = "0"; return; }
 
+                        if (double.TryParse(toolStripTextBoxStep.Text, out _millivoltLimit)
+                            && (_millivoltLimit >= 0.0))
+                        {
+                        }
+                        else { MessageBox.Show(this, "The potential limit, E [mV] for S electrode (as an absolute value) must be >= 0."); toolStripTextBoxRepeat.Text = "0"; return; }
 
                         FDwfAnalogInChannelOffsetSet(_handle, (CHANNEL_POTENTIAL - 1), 0.0);
 
@@ -3303,20 +3342,27 @@ namespace Voltammogrammer
                         else { MessageBox.Show(this, "The value of Amplitude [mV] is invalid."); return; }
 
                         if (double.TryParse(toolStripTextBoxScanrate.Text, out _hertzInitial)
-                            && (_hertzInitial <= 100000)
-                            && (_hertzInitial >= 0.001))
+                            && (_hertzInitial <= 10000000)
+                            && (_hertzInitial >= 0.0001))
                         {
                         }
                         else { MessageBox.Show(this, "The value of Initial Scanning Frequency [Hz] is invalid."); return; }
 
                         if (double.TryParse(toolStripTextBoxScanrate2.Text, out _hertzFinal)
-                            && (_hertzFinal <= 100000)
-                            && (_hertzFinal >= 0.001))
+                            && (_hertzFinal <= 10000000)
+                            && (_hertzFinal >= 0.0001))
                         {
                         }
                         else { MessageBox.Show(this, "The value of Final Scanning Frequency [Hz] is invalid."); return; }
 
-                        if (double.TryParse(toolStripTextBoxRepeat.Text, out _countStep)
+                        if (double.TryParse(toolStripTextBoxRepeat.Text, out _countRepeat)
+                            && (_countRepeat <= 4096)
+                            && (_countRepeat >= 1))
+                        {
+                        }
+                        else { MessageBox.Show(this, "The value of Accumulation Time is invalid."); return; }
+
+                        if (double.TryParse(toolStripTextBoxStep.Text, out _countStep)
                             && (_countStep <= 1000)
                             && (_countStep >= 1))
                         {
@@ -3360,7 +3406,14 @@ namespace Voltammogrammer
                         }
                         else { MessageBox.Show(this, "The value of Frequency [Hz] is invalid."); return; }
 
-                        if (double.TryParse(toolStripTextBoxRepeat.Text, out _millivoltStep)
+                        if (double.TryParse(toolStripTextBoxRepeat.Text, out _countRepeat)
+                            && (_countRepeat <= 4096)
+                            && (_countRepeat >= 1))
+                        {
+                        }
+                        else { MessageBox.Show(this, "The value of Accumulation Time is invalid."); return; }
+
+                        if (double.TryParse(toolStripTextBoxStep.Text, out _millivoltStep)
                             && (_millivoltStep <= 100000)
                             && (_millivoltStep >= 0.001))
                         {
@@ -3834,7 +3887,7 @@ namespace Voltammogrammer
                         //chartVoltammogram.ChartAreas[0].AxisX2.Maximum = 1000000;
                         chartVoltammogram.ChartAreas[0].AxisX2.IsLogarithmic = true;
                         chartVoltammogram.ChartAreas[0].AxisX2.Enabled = System.Windows.Forms.DataVisualization.Charting.AxisEnabled.True;
-                        chartVoltammogram.ChartAreas[0].AxisY2.Title = "log(|Z| / ohm)";
+                        chartVoltammogram.ChartAreas[0].AxisY2.Title = "|Z| / ohm";
                         chartVoltammogram.ChartAreas[0].AxisY2.IsLogarithmic = true;
                         chartVoltammogram.ChartAreas[0].AxisY2.MinorTickMark.Enabled = true;
                         chartVoltammogram.ChartAreas[0].AxisY2.MinorTickMark.LineColor = System.Drawing.Color.Red;
@@ -3854,10 +3907,13 @@ namespace Voltammogrammer
             //_selectedMode_previous = _selectedMode;
 
             toolStripLabel1.ToolTipText = ""; toolStripLabel1.AutoToolTip = true;
+            toolStripLabel1.Visible = true; toolStripTextBoxInitialV.Visible = true; toolStripComboBoxReferenceForInitialPotential.Visible = true;
             toolStripLabel6.Visible = false;
             toolStripTextBoxFinalV.Visible = false;
             toolStripLabel7.Visible = false;
             toolStripTextBoxScanrate2.Visible = false;
+            toolStripLabel8.Visible = false;
+            toolStripTextBoxStep.Visible = false;
 
             if (_selectedMode == modeMeasurement.voltammetry || _selectedMode == modeMeasurement.galvanometry)
             {
@@ -3903,6 +3959,8 @@ namespace Voltammogrammer
                         toolStripTextBoxScanrate.Text = "1";
                         toolStripLabel4.Text = "Target |Q| [C]:";
                         toolStripTextBoxRepeat.Text = "0";
+                        toolStripLabel8.Text = "Limit of |E| for S [mV]:"; toolStripLabel8.Visible = true;
+                        toolStripTextBoxStep.Text = "0"; toolStripTextBoxStep.Visible = true;
                         break;
 
                     case methodMeasurement.LSV:
@@ -3938,7 +3996,8 @@ namespace Voltammogrammer
                         break;
 
                     case methodMeasurement.OCP:
-                        toolStripLabel1.Text = "N/A:";
+                        //toolStripLabel1.Text = "N/A:"; 
+                        toolStripLabel1.Visible = false; toolStripTextBoxInitialV.Visible = false; toolStripComboBoxReferenceForInitialPotential.Visible = false;
                         toolStripLabel2.Text = "Time [min]:";
                         toolStripTextBoxVertexV.Text = "60";
                         toolStripLabel3.Text = "Sampling Interval [s]:";
@@ -3973,8 +4032,10 @@ namespace Voltammogrammer
                             toolStripTextBoxScanrate.Text = "1";
                             toolStripLabel7.Text = "to:";  toolStripLabel7.Visible = true;
                             toolStripTextBoxScanrate2.Text = "1000000"; toolStripTextBoxScanrate2.Visible = true;
-                            toolStripLabel4.Text = "Steps/dec.:";
-                            toolStripTextBoxRepeat.Text = "10";
+                            toolStripLabel4.Text = "Accumulation:";
+                            toolStripTextBoxRepeat.Text = "64";
+                            toolStripLabel8.Text = "Steps/dec.:"; toolStripLabel8.Visible = true;
+                            toolStripTextBoxStep.Text = "10"; toolStripTextBoxStep.Visible = true;
                             toolStripLabel5.Text = "Reference Register:";
 
                             toolStripComboBoxRange.SelectedIndex = 2;
@@ -3990,8 +4051,10 @@ namespace Voltammogrammer
                             toolStripTextBoxVertexV.Text = "10";
                             toolStripLabel3.Text = "Frequency [" + unit2 + "]:";
                             toolStripTextBoxScanrate.Text = "1000";
-                            toolStripLabel4.Text = "Step [mV]:";
-                            toolStripTextBoxRepeat.Text = "10";
+                            toolStripLabel4.Text = "Accumulation:";
+                            toolStripTextBoxRepeat.Text = "64";
+                            toolStripLabel8.Text = "Step [mV]:"; toolStripLabel8.Visible = true;
+                            toolStripTextBoxStep.Text = "10"; toolStripTextBoxStep.Visible = true;                          
                             toolStripLabel5.Text = "Reference Register:";
 
                             toolStripComboBoxRange.SelectedIndex = 1;

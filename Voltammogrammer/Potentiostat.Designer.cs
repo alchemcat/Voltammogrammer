@@ -91,6 +91,8 @@
             this.toolStripMenuShortComp = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator10 = new System.Windows.Forms.ToolStripSeparator();
             this.toolStripMenuClearComp = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStripSeparator13 = new System.Windows.Forms.ToolStripSeparator();
+            this.toolStripMenuSignalInspector = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator9 = new System.Windows.Forms.ToolStripSeparator();
             this.toolStripMenuItemCalibrate = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripButtonScan = new System.Windows.Forms.ToolStripButton();
@@ -123,6 +125,8 @@
             this.toolStripTextBoxScanrate = new System.Windows.Forms.ToolStripTextBox();
             this.toolStripLabel7 = new System.Windows.Forms.ToolStripLabel();
             this.toolStripTextBoxScanrate2 = new System.Windows.Forms.ToolStripTextBox();
+            this.toolStripLabel8 = new System.Windows.Forms.ToolStripLabel();
+            this.toolStripTextBoxStep = new System.Windows.Forms.ToolStripTextBox();
             this.toolStripLabel4 = new System.Windows.Forms.ToolStripLabel();
             this.toolStripTextBoxRepeat = new System.Windows.Forms.ToolStripTextBox();
             this.timerCurrentEandI = new System.Windows.Forms.Timer(this.components);
@@ -556,7 +560,9 @@
             this.toolStripMenuOpenComp,
             this.toolStripMenuShortComp,
             this.toolStripSeparator10,
-            this.toolStripMenuClearComp});
+            this.toolStripMenuClearComp,
+            this.toolStripSeparator13,
+            this.toolStripMenuSignalInspector});
             this.toolStripMenuEIS.Name = "toolStripMenuEIS";
             this.toolStripMenuEIS.Size = new System.Drawing.Size(333, 26);
             this.toolStripMenuEIS.Tag = "2";
@@ -566,26 +572,37 @@
             // toolStripMenuOpenComp
             // 
             this.toolStripMenuOpenComp.Name = "toolStripMenuOpenComp";
-            this.toolStripMenuOpenComp.Size = new System.Drawing.Size(172, 26);
+            this.toolStripMenuOpenComp.Size = new System.Drawing.Size(206, 26);
             this.toolStripMenuOpenComp.Text = "Open Comp";
             // 
             // toolStripMenuShortComp
             // 
             this.toolStripMenuShortComp.Name = "toolStripMenuShortComp";
-            this.toolStripMenuShortComp.Size = new System.Drawing.Size(172, 26);
+            this.toolStripMenuShortComp.Size = new System.Drawing.Size(206, 26);
             this.toolStripMenuShortComp.Text = "Short Comp";
             // 
             // toolStripSeparator10
             // 
             this.toolStripSeparator10.Name = "toolStripSeparator10";
-            this.toolStripSeparator10.Size = new System.Drawing.Size(169, 6);
+            this.toolStripSeparator10.Size = new System.Drawing.Size(203, 6);
             // 
             // toolStripMenuClearComp
             // 
             this.toolStripMenuClearComp.Name = "toolStripMenuClearComp";
-            this.toolStripMenuClearComp.Size = new System.Drawing.Size(172, 26);
+            this.toolStripMenuClearComp.Size = new System.Drawing.Size(206, 26);
             this.toolStripMenuClearComp.Text = "Clear Comp";
             this.toolStripMenuClearComp.Click += new System.EventHandler(this.toolStripMenuClearComp_Click);
+            // 
+            // toolStripSeparator13
+            // 
+            this.toolStripSeparator13.Name = "toolStripSeparator13";
+            this.toolStripSeparator13.Size = new System.Drawing.Size(203, 6);
+            // 
+            // toolStripMenuSignalInspector
+            // 
+            this.toolStripMenuSignalInspector.Name = "toolStripMenuSignalInspector";
+            this.toolStripMenuSignalInspector.Size = new System.Drawing.Size(206, 26);
+            this.toolStripMenuSignalInspector.Text = "Signal inspector...";
             // 
             // toolStripSeparator9
             // 
@@ -757,7 +774,7 @@
             chartArea1.AxisX2.IsLogarithmic = true;
             chartArea1.AxisX2.IsStartedFromZero = false;
             chartArea1.AxisX2.MajorGrid.Enabled = false;
-            chartArea1.AxisX2.MajorTickMark.Interval = 0D;
+            chartArea1.AxisX2.MajorTickMark.Interval = 1D;
             chartArea1.AxisX2.MajorTickMark.Size = 3F;
             chartArea1.AxisX2.Maximum = 1000000D;
             chartArea1.AxisX2.Minimum = 1D;
@@ -889,13 +906,15 @@
             this.toolStripTextBoxScanrate,
             this.toolStripLabel7,
             this.toolStripTextBoxScanrate2,
+            this.toolStripLabel8,
+            this.toolStripTextBoxStep,
             this.toolStripLabel4,
             this.toolStripTextBoxRepeat});
             this.toolStrip2.LayoutStyle = System.Windows.Forms.ToolStripLayoutStyle.HorizontalStackWithOverflow;
             this.toolStrip2.Location = new System.Drawing.Point(4, 28);
             this.toolStrip2.Name = "toolStrip2";
             this.toolStrip2.RenderMode = System.Windows.Forms.ToolStripRenderMode.Professional;
-            this.toolStrip2.Size = new System.Drawing.Size(1121, 28);
+            this.toolStrip2.Size = new System.Drawing.Size(1205, 28);
             this.toolStrip2.TabIndex = 3;
             // 
             // toolStripLabel1
@@ -976,8 +995,21 @@
             // 
             this.toolStripTextBoxScanrate2.Font = new System.Drawing.Font("Yu Gothic UI", 9F);
             this.toolStripTextBoxScanrate2.Name = "toolStripTextBoxScanrate2";
-            this.toolStripTextBoxScanrate2.Size = new System.Drawing.Size(100, 28);
+            this.toolStripTextBoxScanrate2.Size = new System.Drawing.Size(70, 28);
             this.toolStripTextBoxScanrate2.Visible = false;
+            // 
+            // toolStripLabel8
+            // 
+            this.toolStripLabel8.Name = "toolStripLabel8";
+            this.toolStripLabel8.Size = new System.Drawing.Size(42, 25);
+            this.toolStripLabel8.Text = "Step:";
+            // 
+            // toolStripTextBoxStep
+            // 
+            this.toolStripTextBoxStep.Font = new System.Drawing.Font("Yu Gothic UI", 9F);
+            this.toolStripTextBoxStep.Name = "toolStripTextBoxStep";
+            this.toolStripTextBoxStep.Size = new System.Drawing.Size(70, 28);
+            this.toolStripTextBoxStep.Text = "64";
             // 
             // toolStripLabel4
             // 
@@ -1118,6 +1150,10 @@
         private System.Windows.Forms.ToolStripTextBox toolStripTextBoxFinalV;
         private System.Windows.Forms.ToolStripLabel toolStripLabel7;
         private System.Windows.Forms.ToolStripTextBox toolStripTextBoxScanrate2;
+        private System.Windows.Forms.ToolStripLabel toolStripLabel8;
+        private System.Windows.Forms.ToolStripTextBox toolStripTextBoxStep;
+        private System.Windows.Forms.ToolStripSeparator toolStripSeparator13;
+        private System.Windows.Forms.ToolStripMenuItem toolStripMenuSignalInspector;
     }
 }
 
