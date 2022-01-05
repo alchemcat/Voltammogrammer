@@ -566,7 +566,7 @@
             this.toolStripMenuEIS.Name = "toolStripMenuEIS";
             this.toolStripMenuEIS.Size = new System.Drawing.Size(333, 26);
             this.toolStripMenuEIS.Tag = "2";
-            this.toolStripMenuEIS.Text = "EIS mode";
+            this.toolStripMenuEIS.Text = "EIS mode (potentiostatic)";
             this.toolStripMenuEIS.Click += new System.EventHandler(this.toolStripMenuEIS_Click);
             // 
             // toolStripMenuOpenComp
@@ -914,7 +914,7 @@
             this.toolStrip2.Location = new System.Drawing.Point(4, 28);
             this.toolStrip2.Name = "toolStrip2";
             this.toolStrip2.RenderMode = System.Windows.Forms.ToolStripRenderMode.Professional;
-            this.toolStrip2.Size = new System.Drawing.Size(1205, 28);
+            this.toolStrip2.Size = new System.Drawing.Size(861, 28);
             this.toolStrip2.TabIndex = 3;
             // 
             // toolStripLabel1
