@@ -53,9 +53,9 @@
             this.label16 = new System.Windows.Forms.Label();
             this.label17 = new System.Windows.Forms.Label();
             this.toolStrip1 = new System.Windows.Forms.ToolStrip();
-            this.toolStripButton1 = new System.Windows.Forms.ToolStripButton();
+            this.toolStripButtonLoad = new System.Windows.Forms.ToolStripButton();
             this.toolStripSeparator1 = new System.Windows.Forms.ToolStripSeparator();
-            this.toolStripButton2 = new System.Windows.Forms.ToolStripButton();
+            this.toolStripButtonSave = new System.Windows.Forms.ToolStripButton();
             this.toolStripLabel1 = new System.Windows.Forms.ToolStripLabel();
             this.toolStripTextBoxID = new System.Windows.Forms.ToolStripTextBox();
             this.toolStripLabel2 = new System.Windows.Forms.ToolStripLabel();
@@ -76,45 +76,48 @@
             this.label30 = new System.Windows.Forms.Label();
             this.buttonSave = new System.Windows.Forms.Button();
             this.buttonReset = new System.Windows.Forms.Button();
+            this.openFileDialog1 = new System.Windows.Forms.OpenFileDialog();
+            this.saveFileDialog1 = new System.Windows.Forms.SaveFileDialog();
+            this.buttonConfigureResistors = new System.Windows.Forms.Button();
             this.toolStrip1.SuspendLayout();
             this.SuspendLayout();
-            //
+            // 
             // label1
-            //
+            // 
             this.label1.AutoSize = true;
             this.label1.Location = new System.Drawing.Point(46, 216);
             this.label1.Name = "label1";
             this.label1.Size = new System.Drawing.Size(332, 15);
             this.label1.TabIndex = 0;
             this.label1.Text = "3. Set the potential (of WE vs. RE) read from DMM:";
-            //
+            // 
             // textBoxPotential1
-            //
+            // 
             this.textBoxPotential1.Location = new System.Drawing.Point(384, 213);
             this.textBoxPotential1.Name = "textBoxPotential1";
             this.textBoxPotential1.Size = new System.Drawing.Size(60, 22);
             this.textBoxPotential1.TabIndex = 2;
             this.textBoxPotential1.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
-            //
+            // 
             // label2
-            //
+            // 
             this.label2.AutoSize = true;
             this.label2.Location = new System.Drawing.Point(46, 300);
             this.label2.Name = "label2";
             this.label2.Size = new System.Drawing.Size(313, 15);
             this.label2.TabIndex = 2;
             this.label2.Text = "6. Set the current read from Voltammogrammer:";
-            //
+            // 
             // textBoxCurrent
-            //
+            // 
             this.textBoxCurrent.Location = new System.Drawing.Point(384, 297);
             this.textBoxCurrent.Name = "textBoxCurrent";
             this.textBoxCurrent.Size = new System.Drawing.Size(60, 22);
             this.textBoxCurrent.TabIndex = 5;
             this.textBoxCurrent.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
-            //
+            // 
             // buttonApply
-            //
+            // 
             this.buttonApply.Location = new System.Drawing.Point(543, 567);
             this.buttonApply.Name = "buttonApply";
             this.buttonApply.Size = new System.Drawing.Size(103, 28);
@@ -122,53 +125,53 @@
             this.buttonApply.Text = "Apply";
             this.buttonApply.UseVisualStyleBackColor = true;
             this.buttonApply.Click += new System.EventHandler(this.buttonApply_Click);
-            //
+            // 
             // label3
-            //
+            // 
             this.label3.AutoSize = true;
             this.label3.Location = new System.Drawing.Point(450, 216);
             this.label3.Name = "label3";
             this.label3.Size = new System.Drawing.Size(30, 15);
             this.label3.TabIndex = 5;
             this.label3.Text = "mV.";
-            //
+            // 
             // label4
-            //
+            // 
             this.label4.AutoSize = true;
             this.label4.Location = new System.Drawing.Point(450, 300);
             this.label4.Name = "label4";
             this.label4.Size = new System.Drawing.Size(27, 15);
             this.label4.TabIndex = 6;
             this.label4.Text = "uA.";
-            //
+            // 
             // label5
-            //
+            // 
             this.label5.AutoSize = true;
             this.label5.Location = new System.Drawing.Point(450, 271);
             this.label5.Name = "label5";
             this.label5.Size = new System.Drawing.Size(212, 15);
             this.label5.TabIndex = 9;
             this.label5.Text = "mV and from Voltammogrammer:";
-            //
+            // 
             // textBoxPotentialOsc1
-            //
+            // 
             this.textBoxPotentialOsc1.Location = new System.Drawing.Point(384, 268);
             this.textBoxPotentialOsc1.Name = "textBoxPotentialOsc1";
             this.textBoxPotentialOsc1.Size = new System.Drawing.Size(60, 22);
             this.textBoxPotentialOsc1.TabIndex = 3;
             this.textBoxPotentialOsc1.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
-            //
+            // 
             // label6
-            //
+            // 
             this.label6.AutoSize = true;
             this.label6.Location = new System.Drawing.Point(46, 272);
             this.label6.Name = "label6";
             this.label6.Size = new System.Drawing.Size(332, 15);
             this.label6.TabIndex = 7;
             this.label6.Text = "5. Set the potential (of WE vs. RE) read from DMM:";
-            //
+            // 
             // label7
-            //
+            // 
             this.label7.AutoSize = true;
             this.label7.Font = new System.Drawing.Font("MS UI Gothic", 9F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(128)));
             this.label7.Location = new System.Drawing.Point(12, 46);
@@ -176,45 +179,45 @@
             this.label7.Size = new System.Drawing.Size(400, 15);
             this.label7.TabIndex = 10;
             this.label7.Text = "Calibrate PocketPotentiostat by the procedure below:";
-            //
+            // 
             // label8
-            //
+            // 
             this.label8.AutoSize = true;
             this.label8.Location = new System.Drawing.Point(46, 134);
             this.label8.Name = "label8";
             this.label8.Size = new System.Drawing.Size(516, 15);
             this.label8.TabIndex = 11;
             this.label8.Text = "1. Select the method of \"Bulk Electrolysis\" and a current range of \"+-20 mA\".";
-            //
+            // 
             // label9
-            //
+            // 
             this.label9.AutoSize = true;
             this.label9.Location = new System.Drawing.Point(46, 188);
             this.label9.Name = "label9";
             this.label9.Size = new System.Drawing.Size(352, 15);
             this.label9.TabIndex = 12;
             this.label9.Text = "2. Run the method at the potential of \"0 mV vs. Ref\".";
-            //
+            // 
             // label10
-            //
+            // 
             this.label10.AutoSize = true;
             this.label10.Location = new System.Drawing.Point(46, 244);
             this.label10.Name = "label10";
             this.label10.Size = new System.Drawing.Size(255, 15);
             this.label10.TabIndex = 13;
             this.label10.Text = "4. Click \"Apply\" and rerun the method.";
-            //
+            // 
             // label11
-            //
+            // 
             this.label11.AutoSize = true;
             this.label11.Location = new System.Drawing.Point(46, 328);
             this.label11.Name = "label11";
             this.label11.Size = new System.Drawing.Size(148, 15);
             this.label11.TabIndex = 14;
             this.label11.Text = "7. Click \"Apply\" again.";
-            //
+            // 
             // label12
-            //
+            // 
             this.label12.AutoSize = true;
             this.label12.Location = new System.Drawing.Point(46, 79);
             this.label12.Name = "label12";
@@ -222,43 +225,43 @@
             this.label12.TabIndex = 15;
             this.label12.Text = "0. Configure an external multimeter (DMM) and the potentiostat with an external r" +
     "esistor (1 kohm).\r\n    Set the actual value for the resistor:";
-            //
+            // 
             // label13
-            //
+            // 
             this.label13.AutoSize = true;
             this.label13.Location = new System.Drawing.Point(449, 103);
             this.label13.Name = "label13";
             this.label13.Size = new System.Drawing.Size(37, 15);
             this.label13.TabIndex = 17;
             this.label13.Text = "ohm.";
-            //
+            // 
             // textBoxResistor
-            //
+            // 
             this.textBoxResistor.Location = new System.Drawing.Point(384, 100);
             this.textBoxResistor.Name = "textBoxResistor";
             this.textBoxResistor.Size = new System.Drawing.Size(60, 22);
             this.textBoxResistor.TabIndex = 1;
             this.textBoxResistor.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
-            //
+            // 
             // textBoxPotentialOsc2
-            //
+            // 
             this.textBoxPotentialOsc2.Location = new System.Drawing.Point(668, 269);
             this.textBoxPotentialOsc2.Name = "textBoxPotentialOsc2";
             this.textBoxPotentialOsc2.Size = new System.Drawing.Size(60, 22);
             this.textBoxPotentialOsc2.TabIndex = 4;
             this.textBoxPotentialOsc2.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
-            //
+            // 
             // label15
-            //
+            // 
             this.label15.AutoSize = true;
             this.label15.Location = new System.Drawing.Point(734, 272);
             this.label15.Name = "label15";
             this.label15.Size = new System.Drawing.Size(30, 15);
             this.label15.TabIndex = 21;
             this.label15.Text = "mV.";
-            //
+            // 
             // label14
-            //
+            // 
             this.label14.AutoSize = true;
             this.label14.Font = new System.Drawing.Font("MS UI Gothic", 9F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(128)));
             this.label14.Location = new System.Drawing.Point(25, 162);
@@ -266,9 +269,9 @@
             this.label14.Size = new System.Drawing.Size(78, 15);
             this.label14.TabIndex = 22;
             this.label14.Text = "[ Offset ]";
-            //
+            // 
             // label16
-            //
+            // 
             this.label16.AutoSize = true;
             this.label16.Font = new System.Drawing.Font("MS UI Gothic", 9F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(128)));
             this.label16.Location = new System.Drawing.Point(25, 357);
@@ -276,23 +279,23 @@
             this.label16.Size = new System.Drawing.Size(146, 15);
             this.label16.TabIndex = 24;
             this.label16.Text = "[ Slope (optional) ]";
-            //
+            // 
             // label17
-            //
+            // 
             this.label17.AutoSize = true;
             this.label17.Location = new System.Drawing.Point(46, 388);
             this.label17.Name = "label17";
             this.label17.Size = new System.Drawing.Size(384, 15);
             this.label17.TabIndex = 25;
             this.label17.Text = "8. Run the method at the potential of \"+1000 mV vs. Ref\".";
-            //
+            // 
             // toolStrip1
-            //
+            // 
             this.toolStrip1.ImageScalingSize = new System.Drawing.Size(20, 20);
             this.toolStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.toolStripButton1,
+            this.toolStripButtonLoad,
             this.toolStripSeparator1,
-            this.toolStripButton2,
+            this.toolStripButtonSave,
             this.toolStripLabel1,
             this.toolStripTextBoxID,
             this.toolStripLabel2,
@@ -303,176 +306,180 @@
             this.toolStrip1.Size = new System.Drawing.Size(773, 27);
             this.toolStrip1.TabIndex = 35;
             this.toolStrip1.Text = "toolStrip1";
-            //
-            // toolStripButton1
-            //
-            this.toolStripButton1.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
-            this.toolStripButton1.Image = ((System.Drawing.Image)(resources.GetObject("toolStripButton1.Image")));
-            this.toolStripButton1.ImageTransparentColor = System.Drawing.Color.Magenta;
-            this.toolStripButton1.Name = "toolStripButton1";
-            this.toolStripButton1.Size = new System.Drawing.Size(46, 24);
-            this.toolStripButton1.Text = "Load";
-            //
+            // 
+            // toolStripButtonLoad
+            // 
+            this.toolStripButtonLoad.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
+            this.toolStripButtonLoad.Image = ((System.Drawing.Image)(resources.GetObject("toolStripButtonLoad.Image")));
+            this.toolStripButtonLoad.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.toolStripButtonLoad.Name = "toolStripButtonLoad";
+            this.toolStripButtonLoad.Size = new System.Drawing.Size(46, 24);
+            this.toolStripButtonLoad.Text = "Load";
+            this.toolStripButtonLoad.Click += new System.EventHandler(this.toolStripButtonLoad_Click);
+            // 
             // toolStripSeparator1
-            //
+            // 
             this.toolStripSeparator1.Name = "toolStripSeparator1";
             this.toolStripSeparator1.Size = new System.Drawing.Size(6, 27);
-            //
-            // toolStripButton2
-            //
-            this.toolStripButton2.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
-            this.toolStripButton2.Image = ((System.Drawing.Image)(resources.GetObject("toolStripButton2.Image")));
-            this.toolStripButton2.ImageTransparentColor = System.Drawing.Color.Magenta;
-            this.toolStripButton2.Name = "toolStripButton2";
-            this.toolStripButton2.Size = new System.Drawing.Size(44, 24);
-            this.toolStripButton2.Text = "Save";
-            //
+            // 
+            // toolStripButtonSave
+            // 
+            this.toolStripButtonSave.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
+            this.toolStripButtonSave.Image = ((System.Drawing.Image)(resources.GetObject("toolStripButtonSave.Image")));
+            this.toolStripButtonSave.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.toolStripButtonSave.Name = "toolStripButtonSave";
+            this.toolStripButtonSave.Size = new System.Drawing.Size(44, 24);
+            this.toolStripButtonSave.Text = "Save";
+            this.toolStripButtonSave.Click += new System.EventHandler(this.toolStripButtonSave_Click);
+            // 
             // toolStripLabel1
-            //
+            // 
             this.toolStripLabel1.Name = "toolStripLabel1";
             this.toolStripLabel1.Size = new System.Drawing.Size(161, 24);
             this.toolStripLabel1.Text = "for AnalogDiscovery2 (";
-            //
+            // 
             // toolStripTextBoxID
-            //
+            // 
             this.toolStripTextBoxID.Enabled = false;
+            this.toolStripTextBoxID.Font = new System.Drawing.Font("Yu Gothic UI", 9F);
             this.toolStripTextBoxID.Name = "toolStripTextBoxID";
             this.toolStripTextBoxID.Size = new System.Drawing.Size(150, 27);
-            //
+            // 
             // toolStripLabel2
-            //
+            // 
             this.toolStripLabel2.Name = "toolStripLabel2";
             this.toolStripLabel2.Size = new System.Drawing.Size(179, 24);
             this.toolStripLabel2.Text = ") + P.P. (internal resistance:";
-            //
+            // 
             // toolStripTextBoxInternalResistance
-            //
+            // 
+            this.toolStripTextBoxInternalResistance.Font = new System.Drawing.Font("Yu Gothic UI", 9F);
             this.toolStripTextBoxInternalResistance.Name = "toolStripTextBoxInternalResistance";
             this.toolStripTextBoxInternalResistance.Size = new System.Drawing.Size(40, 27);
             this.toolStripTextBoxInternalResistance.Text = "0.5";
             this.toolStripTextBoxInternalResistance.TextBoxTextAlign = System.Windows.Forms.HorizontalAlignment.Right;
-            //
+            // 
             // toolStripLabel3
-            //
+            // 
             this.toolStripLabel3.Name = "toolStripLabel3";
             this.toolStripLabel3.Size = new System.Drawing.Size(44, 24);
             this.toolStripLabel3.Text = "ohm)";
-            //
+            // 
             // label22
-            //
+            // 
             this.label22.AutoSize = true;
             this.label22.Location = new System.Drawing.Point(38, 445);
             this.label22.Name = "label22";
             this.label22.Size = new System.Drawing.Size(263, 15);
             this.label22.TabIndex = 39;
             this.label22.Text = "10. Click \"Apply\" and rerun the method.";
-            //
+            // 
             // label23
-            //
+            // 
             this.label23.AutoSize = true;
             this.label23.Location = new System.Drawing.Point(450, 418);
             this.label23.Name = "label23";
             this.label23.Size = new System.Drawing.Size(30, 15);
             this.label23.TabIndex = 38;
             this.label23.Text = "mV.";
-            //
+            // 
             // textBoxPotential2
-            //
+            // 
             this.textBoxPotential2.Location = new System.Drawing.Point(384, 415);
             this.textBoxPotential2.Name = "textBoxPotential2";
             this.textBoxPotential2.Size = new System.Drawing.Size(60, 22);
             this.textBoxPotential2.TabIndex = 6;
             this.textBoxPotential2.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
-            //
+            // 
             // label24
-            //
+            // 
             this.label24.AutoSize = true;
             this.label24.Location = new System.Drawing.Point(46, 418);
             this.label24.Name = "label24";
             this.label24.Size = new System.Drawing.Size(332, 15);
             this.label24.TabIndex = 36;
             this.label24.Text = "9. Set the potential (of WE vs. RE) read from DMM:";
-            //
+            // 
             // label25
-            //
+            // 
             this.label25.AutoSize = true;
             this.label25.Location = new System.Drawing.Point(734, 473);
             this.label25.Name = "label25";
             this.label25.Size = new System.Drawing.Size(30, 15);
             this.label25.TabIndex = 48;
             this.label25.Text = "mV.";
-            //
+            // 
             // textBoxPotentialSlopeOsc2
-            //
+            // 
             this.textBoxPotentialSlopeOsc2.Location = new System.Drawing.Point(668, 470);
             this.textBoxPotentialSlopeOsc2.Name = "textBoxPotentialSlopeOsc2";
             this.textBoxPotentialSlopeOsc2.Size = new System.Drawing.Size(60, 22);
             this.textBoxPotentialSlopeOsc2.TabIndex = 8;
             this.textBoxPotentialSlopeOsc2.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
-            //
+            // 
             // label26
-            //
+            // 
             this.label26.AutoSize = true;
             this.label26.Location = new System.Drawing.Point(38, 529);
             this.label26.Name = "label26";
             this.label26.Size = new System.Drawing.Size(172, 15);
             this.label26.TabIndex = 47;
             this.label26.Text = "13. Click \"Save && Close\".";
-            //
+            // 
             // label27
-            //
+            // 
             this.label27.AutoSize = true;
             this.label27.Location = new System.Drawing.Point(450, 472);
             this.label27.Name = "label27";
             this.label27.Size = new System.Drawing.Size(212, 15);
             this.label27.TabIndex = 46;
             this.label27.Text = "mV and from Voltammogrammer:";
-            //
+            // 
             // textBoxPotentialSlopeOsc1
-            //
+            // 
             this.textBoxPotentialSlopeOsc1.Location = new System.Drawing.Point(384, 469);
             this.textBoxPotentialSlopeOsc1.Name = "textBoxPotentialSlopeOsc1";
             this.textBoxPotentialSlopeOsc1.Size = new System.Drawing.Size(60, 22);
             this.textBoxPotentialSlopeOsc1.TabIndex = 7;
             this.textBoxPotentialSlopeOsc1.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
-            //
+            // 
             // label28
-            //
+            // 
             this.label28.AutoSize = true;
             this.label28.Location = new System.Drawing.Point(38, 473);
             this.label28.Name = "label28";
             this.label28.Size = new System.Drawing.Size(340, 15);
             this.label28.TabIndex = 45;
             this.label28.Text = "11. Set the potential (of WE vs. RE) read from DMM:";
-            //
+            // 
             // label29
-            //
+            // 
             this.label29.AutoSize = true;
             this.label29.Location = new System.Drawing.Point(450, 501);
             this.label29.Name = "label29";
             this.label29.Size = new System.Drawing.Size(27, 15);
             this.label29.TabIndex = 44;
             this.label29.Text = "uA.";
-            //
+            // 
             // textBoxCurrentSlope
-            //
+            // 
             this.textBoxCurrentSlope.Location = new System.Drawing.Point(384, 498);
             this.textBoxCurrentSlope.Name = "textBoxCurrentSlope";
             this.textBoxCurrentSlope.Size = new System.Drawing.Size(60, 22);
             this.textBoxCurrentSlope.TabIndex = 9;
             this.textBoxCurrentSlope.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
-            //
+            // 
             // label30
-            //
+            // 
             this.label30.AutoSize = true;
             this.label30.Location = new System.Drawing.Point(38, 501);
             this.label30.Name = "label30";
             this.label30.Size = new System.Drawing.Size(321, 15);
             this.label30.TabIndex = 40;
             this.label30.Text = "12. Set the current read from Voltammogrammer:";
-            //
+            // 
             // buttonSave
-            //
+            // 
             this.buttonSave.Location = new System.Drawing.Point(658, 567);
             this.buttonSave.Name = "buttonSave";
             this.buttonSave.Size = new System.Drawing.Size(103, 28);
@@ -480,9 +487,9 @@
             this.buttonSave.Text = "Save && Close";
             this.buttonSave.UseVisualStyleBackColor = true;
             this.buttonSave.Click += new System.EventHandler(this.buttonSave_Click);
-            //
+            // 
             // buttonReset
-            //
+            // 
             this.buttonReset.Location = new System.Drawing.Point(12, 567);
             this.buttonReset.Name = "buttonReset";
             this.buttonReset.Size = new System.Drawing.Size(103, 28);
@@ -490,12 +497,27 @@
             this.buttonReset.Text = "Reset";
             this.buttonReset.UseVisualStyleBackColor = true;
             this.buttonReset.Click += new System.EventHandler(this.buttonReset_Click);
-            //
+            // 
+            // openFileDialog1
+            // 
+            this.openFileDialog1.FileName = "openFileDialog1";
+            // 
+            // buttonConfigureResistors
+            // 
+            this.buttonConfigureResistors.Location = new System.Drawing.Point(121, 567);
+            this.buttonConfigureResistors.Name = "buttonConfigureResistors";
+            this.buttonConfigureResistors.Size = new System.Drawing.Size(165, 28);
+            this.buttonConfigureResistors.TabIndex = 50;
+            this.buttonConfigureResistors.Text = "Configure resistors...";
+            this.buttonConfigureResistors.UseVisualStyleBackColor = true;
+            this.buttonConfigureResistors.Click += new System.EventHandler(this.buttonConfigureResistors_Click);
+            // 
             // Calibrate_Potentiostat
-            //
+            // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 15F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(773, 607);
+            this.Controls.Add(this.buttonConfigureResistors);
             this.Controls.Add(this.buttonReset);
             this.Controls.Add(this.buttonSave);
             this.Controls.Add(this.label25);
@@ -540,7 +562,7 @@
             this.MinimizeBox = false;
             this.Name = "Calibrate_Potentiostat";
             this.ShowInTaskbar = false;
-            this.Text = "Calibrate_Potentiostat";
+            this.Text = "Calibrate Potentiostat";
             this.TopMost = true;
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.Calibrate_Potentiostat_FormClosing);
             this.Load += new System.EventHandler(this.Calibrate_Potentiostat_Load);
@@ -577,8 +599,8 @@
         private System.Windows.Forms.Label label16;
         private System.Windows.Forms.Label label17;
         private System.Windows.Forms.ToolStrip toolStrip1;
-        private System.Windows.Forms.ToolStripButton toolStripButton1;
-        private System.Windows.Forms.ToolStripButton toolStripButton2;
+        private System.Windows.Forms.ToolStripButton toolStripButtonLoad;
+        private System.Windows.Forms.ToolStripButton toolStripButtonSave;
         private System.Windows.Forms.ToolStripLabel toolStripLabel1;
         private System.Windows.Forms.ToolStripTextBox toolStripTextBoxID;
         private System.Windows.Forms.ToolStripLabel toolStripLabel2;
@@ -600,5 +622,8 @@
         private System.Windows.Forms.ToolStripTextBox toolStripTextBoxInternalResistance;
         private System.Windows.Forms.ToolStripLabel toolStripLabel3;
         private System.Windows.Forms.Button buttonReset;
+        private System.Windows.Forms.OpenFileDialog openFileDialog1;
+        private System.Windows.Forms.SaveFileDialog saveFileDialog1;
+        private System.Windows.Forms.Button buttonConfigureResistors;
     }
 }

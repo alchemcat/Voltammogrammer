@@ -12,7 +12,7 @@ namespace Voltammogrammer.Properties {
     
     
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
-    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.VisualStudio.Editors.SettingsDesigner.SettingsSingleFileGenerator", "15.9.0.0")]
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.VisualStudio.Editors.SettingsDesigner.SettingsSingleFileGenerator", "16.10.0.0")]
     internal sealed partial class Settings : global::System.Configuration.ApplicationSettingsBase {
         
         private static Settings defaultInstance = ((Settings)(global::System.Configuration.ApplicationSettingsBase.Synchronized(new Settings())));
@@ -20,30 +20,6 @@ namespace Voltammogrammer.Properties {
         public static Settings Default {
             get {
                 return defaultInstance;
-            }
-        }
-        
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("0")]
-        public double offset_potential_awg {
-            get {
-                return ((double)(this["offset_potential_awg"]));
-            }
-            set {
-                this["offset_potential_awg"] = value;
-            }
-        }
-        
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("0")]
-        public double offset_current {
-            get {
-                return ((double)(this["offset_current"]));
-            }
-            set {
-                this["offset_current"] = value;
             }
         }
         
@@ -158,12 +134,12 @@ namespace Voltammogrammer.Properties {
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("")]
-        public string configure_register_values {
+        public string configure_resistor_values {
             get {
-                return ((string)(this["configure_register_values"]));
+                return ((string)(this["configure_resistor_values"]));
             }
             set {
-                this["configure_register_values"] = value;
+                this["configure_resistor_values"] = value;
             }
         }
         
@@ -193,97 +169,13 @@ namespace Voltammogrammer.Properties {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("0")]
-        public double offset_potential_osc1 {
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        public string calibration_data {
             get {
-                return ((double)(this["offset_potential_osc1"]));
+                return ((string)(this["calibration_data"]));
             }
             set {
-                this["offset_potential_osc1"] = value;
-            }
-        }
-        
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("0")]
-        public double offset_potential_osc2 {
-            get {
-                return ((double)(this["offset_potential_osc2"]));
-            }
-            set {
-                this["offset_potential_osc2"] = value;
-            }
-        }
-        
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("1000")]
-        public double offset_resistor_ref {
-            get {
-                return ((double)(this["offset_resistor_ref"]));
-            }
-            set {
-                this["offset_resistor_ref"] = value;
-            }
-        }
-        
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("1000")]
-        public double slope_potential_awg {
-            get {
-                return ((double)(this["slope_potential_awg"]));
-            }
-            set {
-                this["slope_potential_awg"] = value;
-            }
-        }
-        
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("1000")]
-        public double slope_current {
-            get {
-                return ((double)(this["slope_current"]));
-            }
-            set {
-                this["slope_current"] = value;
-            }
-        }
-        
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("1000")]
-        public double slope_potential_osc1 {
-            get {
-                return ((double)(this["slope_potential_osc1"]));
-            }
-            set {
-                this["slope_potential_osc1"] = value;
-            }
-        }
-        
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("1000")]
-        public double slope_potential_osc2 {
-            get {
-                return ((double)(this["slope_potential_osc2"]));
-            }
-            set {
-                this["slope_potential_osc2"] = value;
-            }
-        }
-        
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("0.5")]
-        public double internal_resistance {
-            get {
-                return ((double)(this["internal_resistance"]));
-            }
-            set {
-                this["internal_resistance"] = value;
+                this["calibration_data"] = value;
             }
         }
     }
