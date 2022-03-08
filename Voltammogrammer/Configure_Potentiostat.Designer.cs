@@ -36,10 +36,14 @@
             this.tabPage2 = new System.Windows.Forms.TabPage();
             this.comboBoxFilteringMethod = new System.Windows.Forms.ComboBox();
             this.label1 = new System.Windows.Forms.Label();
+            this.tabPage3 = new System.Windows.Forms.TabPage();
+            this.comboBoxSubmodule = new System.Windows.Forms.ComboBox();
+            this.label2 = new System.Windows.Forms.Label();
             ((System.ComponentModel.ISupportInitialize)(this.dataGridView1)).BeginInit();
             this.tabControl1.SuspendLayout();
             this.tabPage1.SuspendLayout();
             this.tabPage2.SuspendLayout();
+            this.tabPage3.SuspendLayout();
             this.SuspendLayout();
             // 
             // buttonApply
@@ -79,6 +83,7 @@
             // 
             this.tabControl1.Controls.Add(this.tabPage1);
             this.tabControl1.Controls.Add(this.tabPage2);
+            this.tabControl1.Controls.Add(this.tabPage3);
             this.tabControl1.Location = new System.Drawing.Point(12, 12);
             this.tabControl1.Name = "tabControl1";
             this.tabControl1.SelectedIndex = 0;
@@ -129,6 +134,39 @@
             this.label1.TabIndex = 0;
             this.label1.Text = "Filtering method:";
             // 
+            // tabPage3
+            // 
+            this.tabPage3.BackColor = System.Drawing.Color.Transparent;
+            this.tabPage3.Controls.Add(this.comboBoxSubmodule);
+            this.tabPage3.Controls.Add(this.label2);
+            this.tabPage3.Location = new System.Drawing.Point(4, 25);
+            this.tabPage3.Name = "tabPage3";
+            this.tabPage3.Size = new System.Drawing.Size(463, 298);
+            this.tabPage3.TabIndex = 0;
+            this.tabPage3.Text = "Submodule";
+            this.tabPage3.UseVisualStyleBackColor = true;
+            // 
+            // comboBoxSubmodule
+            // 
+            this.comboBoxSubmodule.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.comboBoxSubmodule.FormattingEnabled = true;
+            this.comboBoxSubmodule.Items.AddRange(new object[] {
+            "RDE",
+            "Synchronous switching"});
+            this.comboBoxSubmodule.Location = new System.Drawing.Point(178, 23);
+            this.comboBoxSubmodule.Name = "comboBoxSubmodule";
+            this.comboBoxSubmodule.Size = new System.Drawing.Size(213, 23);
+            this.comboBoxSubmodule.TabIndex = 3;
+            // 
+            // label2
+            // 
+            this.label2.AutoSize = true;
+            this.label2.Location = new System.Drawing.Point(22, 26);
+            this.label2.Name = "label2";
+            this.label2.Size = new System.Drawing.Size(150, 15);
+            this.label2.TabIndex = 2;
+            this.label2.Text = "Submodule plugged-in:";
+            // 
             // Configure_Potentiostat
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 15F);
@@ -147,6 +185,8 @@
             this.tabPage1.ResumeLayout(false);
             this.tabPage2.ResumeLayout(false);
             this.tabPage2.PerformLayout();
+            this.tabPage3.ResumeLayout(false);
+            this.tabPage3.PerformLayout();
             this.ResumeLayout(false);
 
         }
@@ -161,5 +201,8 @@
         private System.Windows.Forms.TabPage tabPage2;
         private System.Windows.Forms.ComboBox comboBoxFilteringMethod;
         private System.Windows.Forms.Label label1;
+        private System.Windows.Forms.TabPage tabPage3;
+        private System.Windows.Forms.ComboBox comboBoxSubmodule;
+        private System.Windows.Forms.Label label2;
     }
 }

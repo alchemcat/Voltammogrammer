@@ -45,6 +45,10 @@ namespace Voltammogrammer
 
             int r2 = Properties.Settings.Default.configure_filtering_method;
             comboBoxFilteringMethod.SelectedIndex = (r2);
+
+            int r3 = Properties.Settings.Default.configure_submodule_pluggedin;
+            comboBoxSubmodule.SelectedIndex = (r3);
+
         }
 
         public void InitializeResistors()
@@ -114,6 +118,7 @@ namespace Voltammogrammer
 
             Properties.Settings.Default.configure_resistor_values = sb2.ToString();
             Properties.Settings.Default.configure_filtering_method = comboBoxFilteringMethod.SelectedIndex;
+            Properties.Settings.Default.configure_submodule_pluggedin = comboBoxSubmodule.SelectedIndex;
             Properties.Settings.Default.Save();
 
             // Potentiostat本体の値を更新

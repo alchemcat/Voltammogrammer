@@ -248,12 +248,6 @@
     </BootstrapperPackage>
   </ItemGroup>
   <ItemGroup>
-    <None Include="Resources\StartTime.wmf" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="Resources\StartTime.png" />
-  </ItemGroup>
-  <ItemGroup>
     <None Include="Resources\Run.png" />
   </ItemGroup>
   <ItemGroup>

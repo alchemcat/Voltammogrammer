@@ -178,5 +178,29 @@ namespace Voltammogrammer.Properties {
                 this["calibration_data"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool IsUpgraded {
+            get {
+                return ((bool)(this["IsUpgraded"]));
+            }
+            set {
+                this["IsUpgraded"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("0")]
+        public int configure_submodule_pluggedin {
+            get {
+                return ((int)(this["configure_submodule_pluggedin"]));
+            }
+            set {
+                this["configure_submodule_pluggedin"] = value;
+            }
+        }
     }
 }

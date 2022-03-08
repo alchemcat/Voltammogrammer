@@ -61,7 +61,7 @@ namespace Voltammogrammer
         const bool VERSION_0_9e = true;
         const bool VERSION_0_9k = false;
         const int CHANNEL_POTENTIAL = 1; const int CHANNEL_CURRENT = 2;
-        const double RATIO_POTENTIAL = 1.0; // R2 / R1 (Figure 2 in JCE2012) which determines an amplification factor of potential
+        const double RATIO_POTENTIAL = 1.0; // R2/R1 (Figure 2 in JCE2012) which determines an amplification factor of potential
 #elif VERSION_0_9k
         const string VERSION_string = "0.9k (the simplified version)";
         const bool VERSION_0_5 = false;
@@ -208,6 +208,14 @@ namespace Voltammogrammer
         methodMeasurement _selectedMethod = methodMeasurement.none;
         methodMeasurement _selectedMethod_previous = methodMeasurement.none;
 
+        public enum typeSubModule : int
+        {
+            RDE = 0,
+            Synchronous_switching,
+            Bipotentiostat
+        }
+        typeSubModule _selectedSubModule = typeSubModule.RDE;
+
         /*
          * [測定方法の追加方法]
          * 
@@ -303,6 +311,15 @@ namespace Voltammogrammer
             //else { }
             this.Text = "Voltammogrammer " + System.Reflection.Assembly.GetExecutingAssembly().GetName().Version.ToString() + " for PocketPotentiostat " + VERSION_string;
 
+            // 
+            // Upgrade App.config
+            //
+            if (Properties.Settings.Default.IsUpgraded == false)
+            {
+                Properties.Settings.Default.Upgrade();
+                Properties.Settings.Default.IsUpgraded = true;
+                Properties.Settings.Default.Save();
+            }
 
             //
             // Initialize ComboBox
@@ -376,17 +393,18 @@ namespace Voltammogrammer
             _configure_potentiostat = new Configure_Potentiostat(this);
             //UpdateResistors();
 
+            //
+            // Initialize the filtering method
+            //
+            //_toolstripmenuitemsFilteringMethod = new ToolStripMenuItem[] { toolStripMenuItemFiltering60Hz, toolStripMenuItemFiltering50Hz };
+            //SetFilteringMethod((Properties.Settings.Default.configure_filtering_method));
+
             toolStripComboBoxMethod.ComboBox.DisplayMember = "name";
             toolStripComboBoxMethod.ComboBox.ValueMember = "index";
 
             toolStripComboBoxRange.ComboBox.DisplayMember = "name";
             toolStripComboBoxRange.ComboBox.ValueMember = "index";
 
-            //
-            // Initialize the filtering method
-            //
-            _toolstripmenuitemsFilteringMethod = new ToolStripMenuItem[] { toolStripMenuItemFiltering60Hz, toolStripMenuItemFiltering50Hz };
-            SetFilteringMethod((Properties.Settings.Default.configure_filtering_method));
 
             //
             // Initialize the reference type for the initial potential
@@ -478,6 +496,9 @@ namespace Voltammogrammer
                 // Override with a custom value
                 _tablesRanges[(int)modeMeasurement.eis].Rows[i][0] = tableResistor.Rows[i][3];
             }
+
+            SetSubmodule(Properties.Settings.Default.configure_submodule_pluggedin);
+            SetFilteringMethod(Properties.Settings.Default.configure_filtering_method);
         }
 
         private void SetDCVoltageCH1(double microvoltOffset)
@@ -2905,6 +2926,7 @@ namespace Voltammogrammer
                                 _recordingSeries[0][i] / 1000.00 // [s]
                             );
 
+                            // 所定の電荷量に達したら、CPEを終了する
                             double dt = _recordingSeries[0][i] - ((i > 0) ? _recordingSeries[0][i - 1] : 0); // [ms]
                             _coulombPassingThroughCell += c * (dt / 1000.0) / 1000000.0; // [C]
                             if ((_countRepeat > 0.0) && Math.Abs(_coulombPassingThroughCell) >= _countRepeat)
@@ -3452,7 +3474,7 @@ namespace Voltammogrammer
         {
             if (toolStripButtonRecord.Text == "&Record")
             {
-                double range = 0;
+                double channel_range = 0;
 
                 _millivoltInitial = Double.NaN; _millivoltInitial_raw = Double.NaN;
                 _millivoltVertex = Double.NaN; _millivoltVertex_raw = Double.NaN;
@@ -3785,10 +3807,10 @@ namespace Voltammogrammer
                             _herzAcquisition = _hertzInitial * 1000;
                         }
 
-                        FDwfAnalogInChannelRangeGet(_handle, (CHANNEL_POTENTIAL - 1), out range);
-                        Console.WriteLine("Channel range for potential measurement: {0}", range);
+                        FDwfAnalogInChannelRangeGet(_handle, (CHANNEL_POTENTIAL - 1), out channel_range);
+                        Console.WriteLine("Channel range for potential measurement: {0}", channel_range);
 
-                        if ((Math.Abs(_millivoltVertex - _millivoltInitial) > (2700)) && (range <= 5.6))
+                        if ((Math.Abs(_millivoltVertex - _millivoltInitial) > (2700)) && (channel_range <= 5.6))
                         {
                             if (true)
                             {
@@ -3847,10 +3869,10 @@ namespace Voltammogrammer
                         }
                         else { MessageBox.Show(this, "The value of Scan rate [mV/s] is invalid."); return; }
 
-                        if (Math.Abs(_millivoltVertex - _millivoltInitial) > 5000)
-                        {
-                            MessageBox.Show(this, "The value of Scanning range [mV] is too wide (> 5000 mV)."); return;
-                        }
+                        //if (Math.Abs(_millivoltVertex - _millivoltInitial) > 5000)
+                        //{
+                        //    MessageBox.Show(this, "The value of Scanning range [mV] is too wide (> 5000 mV)."); return;
+                        //}
 
                         if (double.TryParse(toolStripTextBoxRepeat.Text, out _countRepeat)
                             && (_countRepeat <= 100)
@@ -3881,7 +3903,7 @@ namespace Voltammogrammer
                             SetFrequencyOfAcquisition(0);
                             for (int i = (_toolstripmenuitemsFrequencyOfAcquisition.Length-1); i >= 0; i--)
                             {
-                                if( (_millivoltScanrate * 4) >= Double.Parse(_toolstripmenuitemsFrequencyOfAcquisition[i].Tag.ToString()) ) // 100mV/s => 100Hzにしてみる
+                                if( ((_millivoltScanrate / POTENTIAL_SLOPE_OSC) * 4) >= Double.Parse(_toolstripmenuitemsFrequencyOfAcquisition[i].Tag.ToString()) ) // 100mV/s => 100Hzにしてみる
                                 {
                                     SetFrequencyOfAcquisition(i);
                                     break;
@@ -3892,12 +3914,12 @@ namespace Voltammogrammer
                         //double min = 0, max = 0, step = 0;
                         //FDwfAnalogInChannelOffsetInfo(_handle, ref min, ref max, ref step); min/max was -25/+25, step was 16xxx.
 
-                        FDwfAnalogInChannelRangeGet(_handle, (CHANNEL_POTENTIAL - 1), out range);
-                        Console.WriteLine("Channel range for potential measurement: {0}", range);
+                        FDwfAnalogInChannelRangeGet(_handle, (CHANNEL_POTENTIAL - 1), out channel_range);
+                        Console.WriteLine("Channel range for potential measurement: {0}", channel_range);
 
-                        if ((Math.Abs(_millivoltVertex - _millivoltInitial) > (2700)) && (range <= 5.6))
+                        if ((Math.Abs(_millivoltVertex - _millivoltInitial) > (2700)) && (channel_range <= 5.6))
                         {
-                            if (true)
+                            if (Math.Abs(_millivoltVertex - _millivoltInitial) < 5000)
                             {
                                 Console.WriteLine("Need to adjust ChannelOffset...");
                                 // Need to adjust ChannelOffset...
@@ -3905,6 +3927,10 @@ namespace Voltammogrammer
 
                                 FDwfAnalogInChannelOffsetSet(_handle, (CHANNEL_POTENTIAL-1), (center / 1000.0));
                                 FDwfAnalogInChannelRangeSet(_handle, (CHANNEL_POTENTIAL-1), 5.0); // for E measurement
+                            }
+                            else
+                            {
+                                MessageBox.Show(this, "The value of Scanning range [mV] is too wide (> 5000 mV). Try to switch the potential range to +-25V."); return; 
                             }
                         }
                         else
@@ -3979,12 +4005,12 @@ namespace Voltammogrammer
                         }
 
 
-                        FDwfAnalogInChannelRangeGet(_handle, (CHANNEL_POTENTIAL - 1), out range);
-                        Console.WriteLine("Channel range for potential measurement: {0}", range);
+                        FDwfAnalogInChannelRangeGet(_handle, (CHANNEL_POTENTIAL - 1), out channel_range);
+                        Console.WriteLine("Channel range for potential measurement: {0}", channel_range);
 
-                        if ((Math.Abs(_millivoltVertex - _millivoltInitial) > (2700)) && (range <= 5.6))
+                        if ((Math.Abs(_millivoltVertex - _millivoltInitial) > (2700)) && (channel_range <= 5.6))
                         {
-                            if (true)
+                            if (Math.Abs(_millivoltVertex - _millivoltInitial) < 5000)
                             {
                                 Console.WriteLine("Need to adjust ChannelOffset...");
                                 // Need to adjust ChannelOffset...
@@ -3992,6 +4018,10 @@ namespace Voltammogrammer
 
                                 FDwfAnalogInChannelOffsetSet(_handle, (CHANNEL_POTENTIAL - 1), (center / 1000.0));
                                 FDwfAnalogInChannelRangeSet(_handle, (CHANNEL_POTENTIAL - 1), 5.0); // for E measurement
+                            }
+                            else
+                            {
+                                MessageBox.Show(this, "The value of Scanning range [mV] is too wide (> 5000 mV). Try to switch the potential range to +-25V."); return; 
                             }
                         }
                         else
@@ -4035,11 +4065,11 @@ namespace Voltammogrammer
                         else { MessageBox.Show(this, "The target Q [C] (as an absolute value) must be >= 0."); toolStripTextBoxRepeat.Text = "0"; return; }
 
 
-                        FDwfAnalogInChannelRangeGet(_handle, (CHANNEL_POTENTIAL - 1), out range);
+                        FDwfAnalogInChannelRangeGet(_handle, (CHANNEL_POTENTIAL - 1), out channel_range);
 
-                        if ((Math.Abs(_millivoltInitial) > (2700)) && (range <= 5.6))
+                        if ((Math.Abs(_millivoltInitial) > (2700)) && (channel_range <= 5.6))
                         {
-                            if (true)
+                            if (Math.Abs(_millivoltInitial) < 5000)
                             {
                                 Console.WriteLine("Need to adjust ChannelOffset...");
                                 // Need to adjust ChannelOffset...
@@ -4047,6 +4077,10 @@ namespace Voltammogrammer
 
                                 FDwfAnalogInChannelOffsetSet(_handle, (CHANNEL_POTENTIAL - 1), (center / 1000.0));
                                 FDwfAnalogInChannelRangeSet(_handle, (CHANNEL_POTENTIAL - 1), 5.0); // for E measurement
+                            }
+                            else
+                            {
+                                MessageBox.Show(this, "The value of potential [mV] is out of range (> 5000 mV). Try to switch the potential range to +-25V."); return;
                             }
                         }
                         else
@@ -4111,18 +4145,31 @@ namespace Voltammogrammer
                         }
                         else { MessageBox.Show(this, "The value of Duration [s] is invalid."); return; }
 
-                        FDwfAnalogInChannelRangeGet(_handle, (CHANNEL_POTENTIAL - 1), out range);
+                        FDwfAnalogInChannelRangeGet(_handle, (CHANNEL_POTENTIAL - 1), out channel_range);
 
-                        if ((Math.Abs(_millivoltVertex - _millivoltInitial) > (2700)) && (range <= 5.6))
+                        double range = 0;
+                        if (_selectedMethod == methodMeasurement.DPSCA)
                         {
-                            if (true)
+                            range = _millivoltVertex - _millivoltInitial;
+                        } 
+                        else
+                        {
+                            range = _millivoltInitial;
+                        }
+                        if ((Math.Abs(range) > (2700)) && (channel_range <= 5.6))
+                        {
+                            if (Math.Abs(_millivoltInitial) < 5000)
                             {
                                 Console.WriteLine("Need to adjust ChannelOffset...");
                                 // Need to adjust ChannelOffset...
-                                double center = (_millivoltVertex - _millivoltInitial) / 2;
+                                double center = (range) / 2;
 
                                 FDwfAnalogInChannelOffsetSet(_handle, (CHANNEL_POTENTIAL - 1), (center / 1000.0));
                                 FDwfAnalogInChannelRangeSet(_handle, (CHANNEL_POTENTIAL - 1), 5.0); // for E measurement
+                            }
+                            else
+                            {
+                                MessageBox.Show(this, "The value of potential [mV] is out of range (> 5000 mV). Try to switch the potential range to +-25V."); return;
                             }
                         }
                         else
@@ -4675,7 +4722,7 @@ namespace Voltammogrammer
             }
         }
 
-        private void toolStripMenuItemPurge_Click(object sender, EventArgs e)
+        private void toolStripMenuItemSubModuleOption1_Click(object sender, EventArgs e)
         {
             if (DIGITALIO_FROM_ARDUINO)
             {
@@ -4683,7 +4730,7 @@ namespace Voltammogrammer
             }
             else
             {
-                SetPurging(!toolStripMenuItemPurge.Checked);
+                SetPurging(!toolStripMenuItemSubModuleOption1.Checked);
             }
             //toolStripMenuItemPurge.Checked = false;
         }
@@ -4702,16 +4749,6 @@ namespace Voltammogrammer
                     SetRotation(Convert.ToUInt16(rpm));
                 }
             }
-        }
-
-        //private void toolStripMenuItem1_Click(object sender, EventArgs e)
-        //{
-        //    _select_rotation_speeds.Show();
-        //}
-
-        private void toolStripMenuItemConfigureRotationSpeed_Click(object sender, EventArgs e)
-        {
-            _select_rotation_speeds.Show();
         }
 
         private void toolStripMenuItemSaveAvaragedData_Click(object sender, EventArgs e)
@@ -4896,7 +4933,7 @@ namespace Voltammogrammer
 
             Invoke((Action)delegate ()
             {
-                toolStripMenuItemPurge.Checked = on;
+                toolStripMenuItemSubModuleOption1.Checked = on;
             });
         }
 
@@ -5837,20 +5874,47 @@ namespace Voltammogrammer
 
         private void SetFilteringMethod(int index)
         {
-            for (int i = 0; i < _toolstripmenuitemsFilteringMethod.Length; i++)
+            ToolStripItemCollection items = toolStripMenuItemSaveAvaragedData.DropDownItems;
+
+            for (int i = 0; i < items.Count; i++)
             {
                 if (i == index)
                 {
-                    _toolstripmenuitemsFilteringMethod[i].Checked = true;
-                    _target_filtering_frequency = double.Parse(_toolstripmenuitemsFilteringMethod[i].Tag.ToString());
+                    ((ToolStripMenuItem)items[i]).Checked = true;
+                    _target_filtering_frequency = double.Parse(((ToolStripMenuItem)items[i]).Tag.ToString());
                 }
                 else
                 {
-                    _toolstripmenuitemsFilteringMethod[i].Checked = false;
+                    ((ToolStripMenuItem)items[i]).Checked = false;
                 }
             }
 
             Console.WriteLine("FilteringMethod: {0} Hz", _target_filtering_frequency);
+        }
+
+        private void SetSubmodule(int idx)
+        {
+            ToolStripItemCollection items = toolStripMenuItemSubModule.DropDownItems;
+
+            for (int i = 0; i < items.Count; i++)
+            {
+                if (i == idx)
+                {
+                    ((ToolStripMenuItem)items[i]).Checked = true;
+                    _selectedSubModule = (typeSubModule)i;
+                }
+                else
+                {
+                    ((ToolStripMenuItem)items[i]).Checked = false;
+                }
+            }
+
+            // TODO: _selectedSubModuleに合わせて、メニュー項目を動的に変更する
+            // TODO: メニューのイベントハンドラ内：_selectedSubModuleに合わせて、処理内容を変更するようにする
+            // TODO: backgroundWorkerCV_DoWork 内：_selectedSubModuleに合わせて、処理内容を変更するようにする (SetPurging＋SetRotation)
+            // TODO: DoVoltammetry 内：_selectedSubModuleに合わせて、処理内容を変更するようにする
+
+            Console.WriteLine("Submodule selected: {0}, {1}", _selectedSubModule, items[idx].Text);
         }
 
         private void SetMode(modeMeasurement mode)
@@ -5923,9 +5987,11 @@ namespace Voltammogrammer
             //Console.WriteLine("FilteringMethod: {0} Hz", _target_filtering_frequency);
         }
 
+
         //
         // Miscellaneous event handlers
         //
+
 
         private void toolStripMenuItem_Click(object sender, EventArgs e)
         {
@@ -6071,11 +6137,6 @@ namespace Voltammogrammer
             _recordingSeries[CHANNEL_VIRTUAL_SHORT_RS][0] = Double.NaN;
         }
 
-        //private void toolStripButtonConnect_DropDownItemClicked(object sender, ToolStripItemClickedEventArgs e)
-        //{
-
-        //}
-
         private void toolStripButtonConnect_DropDownItemClicked(object sender, EventArgs e)
         {
             int idx = toolStripComboBoxSerialPort.SelectedIndex;
@@ -6119,10 +6180,24 @@ namespace Voltammogrammer
                     && (value <= 60)
                     && (value >= 1))
                 {
-                    _millivoltScanrate = value;
+                    _secInterval = value;
+                    MessageBox.Show(this, $"The value of Sampling Interval [s] is now: {_secInterval}");
                 }
                 else { MessageBox.Show(this, "The value of Sampling Interval [s] is invalid."); e.Cancel = true; return; }
             }
+        }
+
+        private void toolStripMenuItemRDECustom_Click(object sender, EventArgs e)
+        {
+            _select_rotation_speeds.Show();
+        }
+
+        private void toolStripMenuItemSubModule_DropDownItemClicked(object sender, ToolStripItemClickedEventArgs e)
+        {
+            ToolStripMenuItem item = (ToolStripMenuItem)sender;
+            int idx = item.DropDownItems.IndexOf(e.ClickedItem);
+
+            SetSubmodule(idx);
         }
 
         private void toolStripTextBoxVertexV_Validating(object sender, CancelEventArgs e)
@@ -6132,9 +6207,10 @@ namespace Voltammogrammer
                 if (int.TryParse(toolStripTextBoxVertexV.Text, out int value)
                     && (value >= 1))
                 {
-                    _millivoltVertex = value;
+                    _secDuration = value;
+                    MessageBox.Show(this, $"The value of Duration [min] is now: {_secDuration}");
                 }
-                else { MessageBox.Show(this, "The value of Time [min] is invalid."); e.Cancel = true; return; }
+                else { MessageBox.Show(this, "The value of Duration [min] is invalid."); e.Cancel = true; return; }
             }
         }
 
@@ -6146,6 +6222,7 @@ namespace Voltammogrammer
                     && (value >= 0.0))
                 {
                     _countRepeat = value;
+                    MessageBox.Show(this, $"The target |Q| [C] is now: {_countRepeat}");
                 }
                 else { MessageBox.Show(this, "The target |Q| [C] should be >= 0."); e.Cancel = true; return; }
             }
@@ -6161,51 +6238,11 @@ namespace Voltammogrammer
             _configure_potentiostat.Show();
         }
 
-        //private void toolStripMenuItemFiltering60Hz_Click(object sender, EventArgs e)
-        //{
-
-        //}
-
-        //private void toolStripMenuItemFiltering_Click(object sender, EventArgs e)
-        //{
-        //    ////グループのToolStripMenuItemを配列にしておく
-        //    //ToolStripMenuItem[] groupMenuItems = new ToolStripMenuItem[]
-        //    //{
-        //    //    this.toolStripMenuItemFiltering60Hz,
-        //    //    this.toolStripMenuItemFiltering50Hz,
-        //    //};
-
-        //    ////グループのToolStripMenuItemを列挙する
-        //    //foreach (ToolStripMenuItem item in groupMenuItems)
-        //    //{
-        //    //    if (object.ReferenceEquals(item, sender))
-        //    //    {
-        //    //        //ClickされたToolStripMenuItemならば、Indeterminateにする
-        //    //        item.CheckState = CheckState.Checked;
-        //    //        _target_filtering_frequency = Double.Parse(item.Tag.ToString());
-        //    //    }
-        //    //    else
-        //    //    {
-        //    //        //ClickされたToolStripMenuItemでなければ、Uncheckedにする
-        //    //        item.CheckState = CheckState.Unchecked;
-        //    //    }
-        //    //}
-        //    ToolStripMenuItem item = (ToolStripMenuItem)sender;
-        //    item.
-
-        //    SetFilteringMethod
-        //}
-
         private void toolStripMenuItemSaveAvaragedData_DropDownItemClicked(object sender, ToolStripItemClickedEventArgs e)
         {
             ToolStripMenuItem item = (ToolStripMenuItem)sender;
             SetFilteringMethod(item.DropDownItems.IndexOf(e.ClickedItem));
         }
-
-        //private void toolStripComboBoxReferenceForInitialPotential_Click(object sender, EventArgs e)
-        //{
-
-        //}
 
         private void toolStripComboBoxReferenceForInitialPotential_SelectedIndexChanged(object sender, EventArgs e)
         {
@@ -6215,22 +6252,6 @@ namespace Voltammogrammer
                 Properties.Settings.Default.Save();
             }
         }
-
-        //private void toolStripComboBoxSerialPort_Click(object sender, EventArgs e)
-        //{
-
-        //}
-
-        //private void toolStripComboBoxSerialPort_Click(object sender, EventArgs e)
-        //{
-        //    toolStripComboBoxSerialPort.ComboBox.DataSource = _tableDevice
-        //}
-
-        //private void toolStripComboBoxSerialPort_DropDownClosed(object sender, EventArgs e)
-        //{
-        //    toolStripComboBoxSerialPort.ComboBox.DataSource = _tableDevice;
-
-        //}
 
         private void toolStripMenuItemRange_Click(object sender, EventArgs e)
         {
