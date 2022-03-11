@@ -159,9 +159,14 @@ namespace Voltammogrammer
 
         int[] _rotation_speeds = { 3600 };
 
+        bool _is_switched_on = false;
+        bool _is_using_automatical_switcher = false; 
+        double _secSwitcingInterval = 1.0;
+        bool _is_applying_switching_on_finally = false;
+        
         ToolStripMenuItem[] _toolstripmenuitemsFrequencyOfAcquisition;
         ToolStripMenuItem[] _toolstripmenuitemsRange;
-        ToolStripMenuItem[] _toolstripmenuitemsFilteringMethod;
+        // ToolStripMenuItem[] _toolstripmenuitemsFilteringMethod;
         ToolStripMenuItem[] _toolstripmenuitemsMode;
 
         DataTable[] _tablesMethods = { new DataTable("method_table1"), new DataTable("method_table2"), new DataTable("method_table3") };
@@ -245,6 +250,7 @@ namespace Voltammogrammer
             MeasurementGotStarted = -3,
             MeasuremetWasDone = -4,
             MeasuremetWasCancelled = -5,
+            BackgroundProcessWasDone = -6,
         }
 
         public enum rangeCurrent : long
@@ -258,9 +264,7 @@ namespace Voltammogrammer
             Range2uA = 1, // 1Mohm
             RangeRAW = 999
         }
-        //rangeCurrent _selectedCurrentRange = rangeCurrent.RangeNone;
         rangeCurrent _selectedCurrentRange = rangeCurrent.RangeNone;
-        //rangeCurrent _selectedCurrentFactor = rangeCurrent.RangeNone;
         double _selectedCurrentFactor = Double.NaN;
 
         public enum rangePotential : long
@@ -272,19 +276,11 @@ namespace Voltammogrammer
         }
         rangePotential _selectedPotentialRange = rangePotential.Range5V;
 
-        //enum typeWaveForm : int
-        //{
-        //    none,
-        //    CV_pos,
-        //    CV_neg,
-        //    LSV_pos,
-        //    LSV_neg,
-        //}
-        double _herzAcquisition = 400.0;
+        double _hertzAcquisition = 400.0;
         //double _herzAcquisition_prev;
         int _itrRecording = -1;
-        bool _flag_digitalfilter = true;
-        double _target_filtering_frequency = 60.0;
+        bool _is_using_digitalfilter = true;
+        double _hertzTargetFilteringFrequency = 60.0;
         DigitalFilter_BiQuad _digital_filter_notch = new DigitalFilter_BiQuad();
         DigitalFilter_BiQuad _digital_filter_lowpass = new DigitalFilter_BiQuad();
 
@@ -434,72 +430,9 @@ namespace Voltammogrammer
             //toolStrip1.Top = 0; toolStrip1.Left = 0;
         }
 
-        //private void InitializeResistors()
-        //{
-        //    string r = Properties.Settings.Default.configure_resistor_values;
-        //    if (r == "")
-        //    {
-        //        _tableResistor = new DataTable("resistor_table1");
-
-        //        _tableResistor.Columns.Add("Resistor");
-        //        _tableResistor.Columns.Add("Value [ohm]", typeof(double));
-        //        _tableResistor.Columns.Add("Caption (Current)", typeof(string));
-        //        _tableResistor.Columns.Add("Caption (EIS)", typeof(string));
-        //        _tableResistor.Rows.Add("R1", 10, "+- 200 mA", "10 Ohm");
-        //        _tableResistor.Rows.Add("R2", 100, "+- 20 mA", "100 Ohm");
-        //        _tableResistor.Rows.Add("R3", 1000, "+- 2 mA", "1 kOhm");
-        //        _tableResistor.Rows.Add("R4", 10000, "+- 200 uA", "10 kOhm");
-        //        _tableResistor.Rows.Add("R5", 100000, "+- 20 uA", "100 kOhm");
-        //        _tableResistor.Rows.Add("R6", 1000000, "+- 2 uA", "1 MOhm");
-
-        //        _tableResistor.Rows.Add("R7 (=R4, raw)", 10000, "+- 200 uA (raw)", "10 kOhm"); // For RAW mode
-
-        //        System.Xml.Serialization.XmlSerializer serializer2 = new System.Xml.Serialization.XmlSerializer(typeof(DataTable));
-        //        StringBuilder sb2 = new StringBuilder();
-        //        XmlWriter xw2 = XmlWriter.Create(sb2);
-        //        serializer2.Serialize(xw2, _tableResistor);
-        //        xw2.Close();
-
-        //        Properties.Settings.Default.configure_resistor_values = sb2.ToString();
-        //        Properties.Settings.Default.Save();
-        //    }
-        //    else
-        //    {
-        //        XmlSerializer serializer = new XmlSerializer(typeof(DataTable)); // _tableResistor.GetType()
-        //        StringReader sr = new StringReader(r);
-
-        //        XmlReader xr = XmlReader.Create(sr);
-        //        _tableResistor = (DataTable)serializer.Deserialize(xr);
-        //        xr.Close();
-        //    }
-        //}
-
-        //private void OverrideResistorsWithCustomValues()
-        //{
-        //}
-
-        public void UpdateResistors(DataTable tableResistor)
-        {
-            //InitializeResistors();
-            //OverrideResistorsWithCustomValues();
-
-            for (int i = 0; i < 6; i++)
-            {
-                // Override with a custom value
-                _tablesRanges[(int)modeMeasurement.voltammetry].Rows[i][0] = tableResistor.Rows[i][2];
-            }
-
-            _tablesRanges[(int)modeMeasurement.galvanometry] = _tablesRanges[(int)modeMeasurement.voltammetry];
-
-            for (int i = 0; i < 6; i++)
-            {
-                // Override with a custom value
-                _tablesRanges[(int)modeMeasurement.eis].Rows[i][0] = tableResistor.Rows[i][3];
-            }
-
-            SetSubmodule(Properties.Settings.Default.configure_submodule_pluggedin);
-            SetFilteringMethod(Properties.Settings.Default.configure_filtering_method);
-        }
+        //
+        // Functions for analog I/O pins from AnalogDiscovery 2
+        //
 
         private void SetDCVoltageCH1(double microvoltOffset)
         {
@@ -670,8 +603,8 @@ namespace Voltammogrammer
             //FDwfAnalogInAcquisitionModeSet(_handle, acqmodeRecord);
             //FDwfAnalogInFrequencySet(_handle, (1.0 / secRecording) * 5000); // 取り込み周波数を設定
             //Console.WriteLine($"FDwfAnalogInFrequencySet: {(1.0 / secRecording) * 5000}");
-            FDwfAnalogInFrequencySet(_handle, _herzAcquisition);
-            Console.WriteLine($"FDwfAnalogInFrequencySet: {_herzAcquisition}");
+            FDwfAnalogInFrequencySet(_handle, _hertzAcquisition);
+            Console.WriteLine($"FDwfAnalogInFrequencySet: {_hertzAcquisition}");
             FDwfAnalogInChannelFilterSet(_handle, -1, filterAverage);
             FDwfAnalogInTriggerAutoTimeoutSet(_handle, 0);
             FDwfAnalogInTriggerSourceSet(_handle, trigsrcPC);
@@ -816,7 +749,7 @@ namespace Voltammogrammer
                     {
                         //_recordingSeries[0][cSamples + i] = cSamples + i;
                         //_recordingSeries[0][cSamples + i] = (double)(i) / ((1.0 / secRecording)*5000) * 1000;
-                        _recordingSeries[0][cSamples + i] = (double)(i) / (_herzAcquisition) * 1000;
+                        _recordingSeries[0][cSamples + i] = (double)(i) / (_hertzAcquisition) * 1000;
 
                     }
 
@@ -859,7 +792,7 @@ namespace Voltammogrammer
             //double herzAcquisition = 40.0;
             double secCAing = (fCA) ? 2.0 : 0.0;
             //double secDelta = 0.03;
-            double secDelta = 1 / _target_filtering_frequency * 2; // digital filterによる遅延時間。この分だけ、余分にデータを収集する必要がある。
+            double secDelta = 1 / _hertzTargetFilteringFrequency * 2; // digital filterによる遅延時間。この分だけ、余分にデータを収集する必要がある。
 
             //if (!fCA)
             //{
@@ -869,14 +802,29 @@ namespace Voltammogrammer
             // オシロ側を設定する
             // recording rate for more samples than the device buffer is limited by device communication
             FDwfAnalogInAcquisitionModeSet(_handle, acqmodeRecord); 
-            FDwfAnalogInFrequencySet(_handle, ((double)_herzAcquisition)); // 取り込み周波数を設定
-            Console.WriteLine($"FDwfAnalogInFrequencySet: {_herzAcquisition}");
+            FDwfAnalogInFrequencySet(_handle, ((double)_hertzAcquisition)); // 取り込み周波数を設定
+            Console.WriteLine($"FDwfAnalogInFrequencySet: {_hertzAcquisition}");
             FDwfAnalogInChannelFilterSet(_handle, -1, filterAverage);
             FDwfAnalogInRecordLengthSet(_handle, (secCAing + secRecording + secDelta)); // 取り込みする時間[s]の設定。サンプル数[] / 周波数[s-1]
 
 
             _clockingStopwatch.Restart();
 
+            switch (_selectedSubModule)
+            {
+                case typeSubModule.RDE:
+                    break;
+
+                case typeSubModule.Synchronous_switching:
+                    //
+                    // TODO: Initially On?
+                    // 
+
+                    break;
+
+                default:
+                    break;
+            }
 
             // AWGの準備
             // enable first channel
@@ -912,6 +860,7 @@ namespace Voltammogrammer
             bool fCVing = false;
             long t_previous_acquisition = 0, t_current_acquisition = 0;
             long t_current = 0, t_next = -1, t_cnt = 0; bool print_once = true;
+            int cSwitching = 1;
 
             backgroundWorkerCV.ReportProgress((int)statusMeasurement.MeasurementGotStarted);
 
@@ -923,9 +872,9 @@ namespace Voltammogrammer
             _clockingStopwatch.Restart();
 
             //while (cSamples <= ((secCAing + secRecording + secDelta) * _herzAcquisition))
-            while (cSamples <= (int)Math.Floor((secCAing + secRecording + 0) * _herzAcquisition) - 1)
+            while (cSamples <= (int)Math.Floor((secCAing + secRecording + 0) * _hertzAcquisition) - 1)
             {
-                if ((cSamples >= (secCAing * _herzAcquisition)) && (fCVing == false))
+                if ((cSamples >= (secCAing * _hertzAcquisition)) && (fCVing == false))
                 {
                     Console.WriteLine(_clockingStopwatch.ElapsedMilliseconds);
 
@@ -1000,11 +949,11 @@ namespace Voltammogrammer
                         // AWGに波形設定をすると幾分かの遅れが発生するので、その間は記録しない。
                         // 高速掃引時には、このdeltaが問題となるが、現状では未対処(as of 11/11/2018)。
                         const double delta = 0.20;
-                        if( true || (cSamples < (((secCAing - 0.10) * _herzAcquisition)) || cSamples > ((secCAing + delta) * _herzAcquisition)) )
+                        if( true || (cSamples < (((secCAing - 0.10) * _hertzAcquisition)) || cSamples > ((secCAing + delta) * _hertzAcquisition)) )
                         {
                             for (int i = 0; i < cAvailable; i++)
                             {
-                                _recordingSeries[0][cSamples + i] = t_current_acquisition + i * (1.0 / _herzAcquisition) * 1000;
+                                _recordingSeries[0][cSamples + i] = t_current_acquisition + i * (1.0 / _hertzAcquisition) * 1000;
                             }
 
                             //if (print_once) { Console.WriteLine($"FDwfAnalogInStatusData: {_clockingStopwatch.ElapsedMilliseconds}"); }
@@ -1043,7 +992,7 @@ namespace Voltammogrammer
 
                             for (int i = 0; i < cAvailable; i++)
                             {
-                                _recordingSeries[0][cSamples + i] = t_current_acquisition + i * (1.0 / _herzAcquisition) * 1000;
+                                _recordingSeries[0][cSamples + i] = t_current_acquisition + i * (1.0 / _hertzAcquisition) * 1000;
                                 //Console.WriteLine(_recordingSeries[0][cSamples + i]);
                             }
 
@@ -1054,7 +1003,7 @@ namespace Voltammogrammer
 
                             cSamples += cAvailable;
 
-                            if(cSamples > ((secCAing + delta) * _herzAcquisition))
+                            if(cSamples > ((secCAing + delta) * _hertzAcquisition))
                             {
                                 backgroundWorkerCV.ReportProgress(cSamples);
                             }
@@ -1064,7 +1013,7 @@ namespace Voltammogrammer
                     }
                     else
                     {
-                        Console.WriteLine($"cAvailable: {cAvailable}, cSamples: {cSamples} (maxSamples: {Math.Floor((secCAing + secRecording) * _herzAcquisition)}), cLost: {cLost}, sts code: {sts}");
+                        Console.WriteLine($"cAvailable: {cAvailable}, cSamples: {cSamples} (maxSamples: {Math.Floor((secCAing + secRecording) * _hertzAcquisition)}), cLost: {cLost}, sts code: {sts}");
 
                         if(cSamples > 0 && (sts == stsDone))
                         {
@@ -1088,12 +1037,28 @@ namespace Voltammogrammer
                     t_next = t_current + 10; // ReportProgressは20回に1回だけ実行するようにして、処理速度を稼ぐ
                 }
 
+                switch (_selectedSubModule)
+                {
+                    case typeSubModule.RDE:
+                        break;
+
+                    case typeSubModule.Synchronous_switching:                            
+                        if(_is_using_automatical_switcher && t_current > (secCAing + _secSwitcingInterval * cSwitching) * 1000)
+                        {
+                            SetSwitchOnAsync(!_is_switched_on);
+                            cSwitching++;
+                        }
+                        break;
+
+                    default:
+                        break;
+                }
 
                 //Thread.Sleep(1);
                 Thread.Yield();
             }
 
-            Console.WriteLine($"final sts code: {sts}, cSamples: {cSamples} (maxSamples: {Math.Floor((secCAing + secRecording) * _herzAcquisition)})");
+            Console.WriteLine($"final sts code: {sts}, cSamples: {cSamples} (maxSamples: {Math.Floor((secCAing + secRecording) * _hertzAcquisition)})");
 
             if (backgroundWorkerCV.CancellationPending)
             {
@@ -1103,7 +1068,7 @@ namespace Voltammogrammer
             {
                 // secDeltaの分だけ最後に余分のデータがあるので、幾分か削る必要がある。「-5」はその場しのぎの値。
                 //int cEnd = (int)Math.Floor((secCAing + secRecording + secDelta) * _herzAcquisition) - 5;
-                int cEnd = (int)Math.Floor((secCAing + secRecording + 0) * _herzAcquisition) - 1;
+                int cEnd = (int)Math.Floor((secCAing + secRecording + 0) * _hertzAcquisition) - 1;
                 backgroundWorkerCV.ReportProgress(cEnd);
             }
 
@@ -1118,6 +1083,22 @@ namespace Voltammogrammer
                 FDwfAnalogInConfigure(_handle, Convert.ToInt32(false), Convert.ToInt32(false));
             }
 
+            switch (_selectedSubModule)
+            {
+                case typeSubModule.RDE:
+                    break;
+
+                case typeSubModule.Synchronous_switching:
+                    //
+                    // TODO: Finally On?
+                    // 
+                    if(_is_using_automatical_switcher) SetSwitchOnAsync(_is_applying_switching_on_finally);
+                    break;
+
+                default:
+                    break;
+            }
+
             return;
         }
 
@@ -1127,6 +1108,7 @@ namespace Voltammogrammer
         //
         //
 
+        #region Event Handlers for Form
         //
         // Event Handlers for Form
         //
@@ -1186,6 +1168,67 @@ namespace Voltammogrammer
             //toolStrip1.PerformLayout();
         }
 
+        private void Potentiostat_KeyPress(object sender, KeyPressEventArgs e)
+        {
+            switch (e.KeyChar)
+            {
+                case 'c': //Console.WriteLine("c pressed...");
+
+                    if (chartVoltammogram.ChartAreas[0].CursorX.LineDashStyle == System.Windows.Forms.DataVisualization.Charting.ChartDashStyle.NotSet)
+                    {
+                        chartVoltammogram.ChartAreas[0].CursorX.LineDashStyle = System.Windows.Forms.DataVisualization.Charting.ChartDashStyle.Dot;
+                        chartVoltammogram.ChartAreas[0].CursorY.LineDashStyle = System.Windows.Forms.DataVisualization.Charting.ChartDashStyle.Dot;
+                    }
+                    else
+                    {
+                        //chartVoltammogram.ChartAreas[0].CursorX.LineDashStyle = System.Windows.Forms.DataVisualization.Charting.ChartDashStyle.NotSet;
+                        //chartVoltammogram.ChartAreas[0].CursorY.LineDashStyle = System.Windows.Forms.DataVisualization.Charting.ChartDashStyle.NotSet;
+
+                        System.IO.MemoryStream memStream = new System.IO.MemoryStream();
+
+                        //bool scrollbar_x = false, scrollbar_y = false;
+                        //if (chartVoltammogram.ChartAreas[0].AxisX.ScrollBar.IsVisible)
+                        //{
+                        //    scrollbar_x = true;
+                        //    chartVoltammogram.ChartAreas[0].AxisX.ScrollBar.Enabled = false;
+                        //}
+                        //if (chartVoltammogram.ChartAreas[0].AxisY.ScrollBar.IsVisible)
+                        //{
+                        //    scrollbar_y = true;
+                        //    chartVoltammogram.ChartAreas[0].AxisY.ScrollBar.Enabled = false;
+                        //}
+                        chartVoltammogram.ChartAreas[0].CursorX.LineDashStyle = System.Windows.Forms.DataVisualization.Charting.ChartDashStyle.NotSet;
+                        chartVoltammogram.ChartAreas[0].CursorY.LineDashStyle = System.Windows.Forms.DataVisualization.Charting.ChartDashStyle.NotSet;
+
+                        //chartVoltammogram.ChartAreas[0].CursorX.
+
+                        chartVoltammogram.SaveImage(memStream, System.Drawing.Imaging.ImageFormat.Emf);
+                        memStream.Seek(0, SeekOrigin.Begin);
+                        System.Drawing.Imaging.Metafile mf1 = new System.Drawing.Imaging.Metafile(memStream);
+                        //Metafile
+                        //chartVoltammogram.SaveImage(@"c:\temp\test.wmf", System.Drawing.Imaging.ImageFormat.Wmf);
+                        //System.Drawing.Imaging.Metafile mf2 = new System.Drawing.Imaging.Metafile(@"c:\temp\test.wmf");
+                        //mf2.Dispose();
+
+                        //Image img = Image.FromFile(@"c:\temp\test4.wmf");
+                        //System.Windows.Forms.Clipboard.SetDataObject(img);
+                        //img.Dispose();
+
+
+                        ClipboardMetafileHelper.PutEnhMetafileOnClipboard(this.Handle, mf1);
+
+                        //Clipboard.SetDataObject(memStream);
+
+                        mf1.Dispose();
+
+                    }
+                    break;
+
+                default:
+                    break;
+            }
+        }
+
         private void Potentiostat_FormClosing(object sender, FormClosingEventArgs e)
         {
             if ((_handle != 0 && _handle != -1) && backgroundWorkerCV.IsBusy)
@@ -1239,6 +1282,8 @@ namespace Voltammogrammer
             _arduino.Close();
             //_voltammogram.Close();
         }
+        
+        #endregion
 
         //
         // Event Handlers for backgroundWorker
@@ -1247,89 +1292,92 @@ namespace Voltammogrammer
         private void backgroundWorkerCV_DoWork(object sender, DoWorkEventArgs e)
         {
             bool is_initial_potential_referring_to_OCP = ((Properties.Settings.Default.configure_referencing_for_initial_potential) == 1);
-            double ocp = 0.0, ocp_uncorrected = 0.0; 
+            double ocp = 0.0, ocp_uncorrected = 0.0;
 
-            if (DIGITALIO_FROM_ARDUINO)
+            switch (_selectedSubModule)
             {
-                _arduino.closeCircuit();
-                _arduino.stopPurging();
+                case typeSubModule.RDE:
+                    SetPurging(on: false);
+                    break;
+
+                case typeSubModule.Synchronous_switching:
+                    break;
+
+                default:
+                    break;
             }
-            else
-            {
-                SetPurging(on: false);
 
-                //
-                // Initialがvs OCPの場合、OCPを取得して、それをInitialに加算。
-                //
-                if(is_initial_potential_referring_to_OCP && (_selectedMode != modeMeasurement.galvanometry))
+            //
+            // Initialがvs OCPの場合、OCPを取得して、それをInitialに加算。
+            //
+            if(is_initial_potential_referring_to_OCP && (_selectedMode != modeMeasurement.galvanometry))
+            {
+                Console.WriteLine("Starting to measure OCP...");
+
+                FDwfAnalogInBufferSizeGet(_handle, out int maxBuffer);
+                FDwfAnalogInBufferSizeSet(_handle, 10);
+                FDwfAnalogInAcquisitionModeSet(_handle, acqmodeScanShift);
+                FDwfAnalogInFrequencySet(_handle, ((double)100.0));
+                FDwfAnalogInChannelFilterSet(_handle, -1, filterAverage);
+                FDwfAnalogInConfigure(_handle, Convert.ToInt32(false), Convert.ToInt32(true));
+
+                byte sts = 0;
+                int cSamples = 0;
+                //int cAvailable = 0, cLost = 0, cCorrupted = 0;
+
+                do
                 {
-                    Console.WriteLine("Starting to measure OCP...");
+                    Thread.Sleep(100);
 
-                    FDwfAnalogInBufferSizeGet(_handle, out int maxBuffer);
-                    FDwfAnalogInBufferSizeSet(_handle, 10);
-                    FDwfAnalogInAcquisitionModeSet(_handle, acqmodeScanShift);
-                    FDwfAnalogInFrequencySet(_handle, ((double)100.0));
-                    FDwfAnalogInChannelFilterSet(_handle, -1, filterAverage);
-                    FDwfAnalogInConfigure(_handle, Convert.ToInt32(false), Convert.ToInt32(true));
-
-                    byte sts = 0;
-                    int cSamples = 0;
-                    //int cAvailable = 0, cLost = 0, cCorrupted = 0;
-
-                    do
+                    if (backgroundWorkerCV.CancellationPending)
                     {
-                        Thread.Sleep(100);
+                        e.Cancel = true;
 
-                        if (backgroundWorkerCV.CancellationPending)
-                        {
-                            e.Cancel = true;
-
-                            break;
-                        }
-
-                        if (FDwfAnalogInStatus(_handle, Convert.ToInt32(true), out sts) == 0)
-                        {
-                            Console.WriteLine("error");
-                            return;
-                        }
-
-                        //Console.WriteLine($"sts : {sts}");
-                        if (true && (sts == stsCfg || sts == stsPrefill || sts == stsArm))
-                        {
-                            // Acquisition not yet started.
-                            continue;
-                        }
-
-                        //FDwfAnalogInStatusIndexWrite(_handle, out int pWrite);
-                        FDwfAnalogInStatusSamplesValid(_handle, out int pWrite);
-                        //Console.WriteLine($"pWrite: {pWrite}");
-                        // FDwfAnalogInBufferSizeSetで10個の指定だが、ここでは、最初の1個だけデータとして採取。いまのところ、平均していない。
-                        FDwfAnalogInStatusData2(_handle, (CHANNEL_POTENTIAL - 1), _readingBuffers[(CHANNEL_POTENTIAL - 1)], pWrite, 1);
-
-                        ocp_uncorrected += _readingBuffers[(CHANNEL_POTENTIAL - 1)][0] * -1;
-                        Console.WriteLine("OCP = {0}", _readingBuffers[(CHANNEL_POTENTIAL - 1)][0] * -1);
-
-                        if (++cSamples >= 20)
-                        {
-                            ocp_uncorrected /= cSamples; // ここで平均を取る。
-                            Console.WriteLine("OCP = {0} V (ave.)", _readingBuffers[(CHANNEL_POTENTIAL - 1)][0] * -1);
-
-                            break;
-                        }
+                        break;
                     }
-                    while (true);
 
-                    FDwfAnalogInConfigure(_handle, Convert.ToInt32(false), Convert.ToInt32(false));
-                    FDwfAnalogInBufferSizeSet(_handle, maxBuffer);
+                    if (FDwfAnalogInStatus(_handle, Convert.ToInt32(true), out sts) == 0)
+                    {
+                        Console.WriteLine("error");
+                        return;
+                    }
 
-                    // TODO: ここでのOCPはRATIO_POTENTIALの影響を受けていない値。なので、POTENTIAL_SLOPE_OSC/(1/RATIO_POTENTIAL)だけ補正する必要がある。
-                    //       その後、POTENTIAL_OFFSET_AWGとPOTENTIAL_SLOPE_AWGを補正する必要がある。
-                    ocp = (((ocp_uncorrected * POTENTIAL_SCALE - POTENTIAL_OFFSET_OSC) / 1.0) - POTENTIAL_OFFSET_AWG) / POTENTIAL_SLOPE_AWG;
-                    _millivoltInitial += ocp; // [mV]
+                    //Console.WriteLine($"sts : {sts}");
+                    if (true && (sts == stsCfg || sts == stsPrefill || sts == stsArm))
+                    {
+                        // Acquisition not yet started.
+                        continue;
+                    }
+
+                    //FDwfAnalogInStatusIndexWrite(_handle, out int pWrite);
+                    FDwfAnalogInStatusSamplesValid(_handle, out int pWrite);
+                    //Console.WriteLine($"pWrite: {pWrite}");
+                    // FDwfAnalogInBufferSizeSetで10個の指定だが、ここでは、最初の1個だけデータとして採取。いまのところ、平均していない。
+                    FDwfAnalogInStatusData2(_handle, (CHANNEL_POTENTIAL - 1), _readingBuffers[(CHANNEL_POTENTIAL - 1)], pWrite, 1);
+
+                    ocp_uncorrected += _readingBuffers[(CHANNEL_POTENTIAL - 1)][0] * -1;
+                    Console.WriteLine("OCP = {0}", _readingBuffers[(CHANNEL_POTENTIAL - 1)][0] * -1);
+
+                    if (++cSamples >= 20)
+                    {
+                        ocp_uncorrected /= cSamples; // ここで平均を取る。
+                        Console.WriteLine("OCP = {0} V (ave.)", _readingBuffers[(CHANNEL_POTENTIAL - 1)][0] * -1);
+
+                        break;
+                    }
                 }
+                while (true);
 
-                //if(_selectedMethod != methodMeasurement.OCP) SetCircuit(open:false);
+                FDwfAnalogInConfigure(_handle, Convert.ToInt32(false), Convert.ToInt32(false));
+                FDwfAnalogInBufferSizeSet(_handle, maxBuffer);
+
+                // TODO: ここでのOCPはRATIO_POTENTIALの影響を受けていない値。なので、POTENTIAL_SLOPE_OSC/(1/RATIO_POTENTIAL)だけ補正する必要がある。
+                //       その後、POTENTIAL_OFFSET_AWGとPOTENTIAL_SLOPE_AWGを補正する必要がある。
+                ocp = (((ocp_uncorrected * POTENTIAL_SCALE - POTENTIAL_OFFSET_OSC) / 1.0) - POTENTIAL_OFFSET_AWG) / POTENTIAL_SLOPE_AWG;
+                _millivoltInitial += ocp; // [mV]
             }
+
+            //if(_selectedMethod != methodMeasurement.OCP) SetCircuit(open:false);
 
             if (   _selectedMethod == methodMeasurement.Cyclicvoltammetry
                 || _selectedMethod == methodMeasurement.CyclicvoltammetryQuick
@@ -1436,8 +1484,8 @@ namespace Voltammogrammer
                         rgdSamples[0] = dir_step * (0.0); // ステップ電位のオーバーシュートを避けるために必要
 
 
-                        double step = 10.0 / POTENTIAL_SLOPE_AWG; // TODO: 電位の変換(SWV用)
-                        double pulse = 25.0 / POTENTIAL_SLOPE_AWG;
+                        double step = 10.0 / POTENTIAL_SLOPE_AWG; // 電位の変換(SWV用)
+                        double pulse = 25.0 / POTENTIAL_SLOPE_AWG; // TODO: SWVでの固定stepをやめる
 
                         double widthStep = 4096 / (millivoltHeight / step);
                         double halfwidthStep = widthStep / 2;
@@ -1570,7 +1618,7 @@ namespace Voltammogrammer
                          || _selectedMethod == methodMeasurement.OSWV
                         )
                 {
-                    double _herzAcquisition_prev = _herzAcquisition; //_herzAcquisition = 400;
+                    double _herzAcquisition_prev = _hertzAcquisition; //_herzAcquisition = 400;
 
                     backgroundWorkerCV.ReportProgress((int)statusMeasurement.Initialized);
                     toolStripStatusLabelCycle.Text = "(Cycle 1)";
@@ -1586,7 +1634,7 @@ namespace Voltammogrammer
 
                     backgroundWorkerCV.ReportProgress((int)statusMeasurement.MeasuremetWasDone);
 
-                    _herzAcquisition = _herzAcquisition_prev;
+                    _hertzAcquisition = _herzAcquisition_prev;
                 }
                 else if (   _selectedMethod == methodMeasurement.Series_of_RDE_CV
                          || _selectedMethod == methodMeasurement.Series_of_RDE_LSV
@@ -1618,9 +1666,20 @@ namespace Voltammogrammer
                         }
                         else
                         {
-                            SetRotation(Convert.ToUInt32(_rotation_speeds[i]));
                             //SetCircuit(open: false);
-                            SetPurging(on: false);
+                            switch (_selectedSubModule)
+                            {
+                                case typeSubModule.RDE:
+                                    SetRotation(Convert.ToUInt32(_rotation_speeds[i]));
+                                    SetPurging(on: false);
+                                    break;
+
+                                case typeSubModule.Synchronous_switching:
+                                    break;
+
+                                default:
+                                    break;
+                            }
                         }
 
                         if (_file_path != null)
@@ -1642,9 +1701,20 @@ namespace Voltammogrammer
                         }
                         else
                         {
-                            SetRotation(1600);
                             SetCircuit(open: true);
-                            SetPurging(on: true);
+                            switch (_selectedSubModule)
+                            {
+                                case typeSubModule.RDE:
+                                    SetRotation(1600);
+                                    SetPurging(on: true);
+                                    break;
+
+                                case typeSubModule.Synchronous_switching:
+                                    break;
+
+                                default:
+                                    break;
+                            }
                         }
 
                         for (int j = 0; j < (10 * 30); j++)
@@ -1695,7 +1765,7 @@ namespace Voltammogrammer
                 FDwfAnalogInBufferSizeSet(_handle, 16);
                 FDwfAnalogInAcquisitionModeSet(_handle, acqmodeScanShift);
                 //FDwfAnalogInAcquisitionModeSet(_handle, acqmodeScanScreen);
-                FDwfAnalogInFrequencySet(_handle, ((double)_herzAcquisition)); // 取り込み周波数を設定
+                FDwfAnalogInFrequencySet(_handle, ((double)_hertzAcquisition)); // 取り込み周波数を設定
                 //FDwfAnalogInChannelFilterSet(_handle, -1, filterDecimate);
                 FDwfAnalogInChannelFilterSet(_handle, -1, filterAverage);
                 //FDwfAnalogInRecordLengthSet(_handle, (secCAing + secRecording + secDelta)); // 取り込みする時間[s]の設定。サンプル数[] / 周波数[s-1]
@@ -1706,18 +1776,19 @@ namespace Voltammogrammer
                 byte sts = 0;
                 int cSamples = 0;
                 int cAvailable = 0, cLost = 0, cCorrupted = 0;
+                int cSwitching = 1;
 
                 for (int i = -1; (i <= (_secDuration * 60 / _secInterval)) && (i < BUFFER_SIZE); i++)
                 {
-                    long t1, t2;
-                    t1 = _clockingStopwatch.ElapsedMilliseconds;
+                    long t_current; // long t1, t2; 
+                    //t1 = _clockingStopwatch.ElapsedMilliseconds;
                     do
                     {
                         Thread.Sleep(10);
 
-                        t2 = _clockingStopwatch.ElapsedMilliseconds;
+                        t_current = _clockingStopwatch.ElapsedMilliseconds;
                     }
-                    while (t2 < nextMeasurementTiming);
+                    while (t_current < nextMeasurementTiming);
                     //nextMeasurementTiming = t2;
 
                     if (FDwfAnalogInStatus(_handle, Convert.ToInt32(true), out sts) == 0)
@@ -1756,7 +1827,7 @@ namespace Voltammogrammer
                         FDwfAnalogInStatusData2(_handle, (CHANNEL_CURRENT - 1), _readingBuffers[(CHANNEL_CURRENT - 1)], pWrite, 1);
                         _recordingSeries[CHANNEL_CURRENT][i] = _readingBuffers[(CHANNEL_CURRENT - 1)][0]; ;
 
-                        _recordingSeries[0][i] = t2;// nextMeasurementTiming;
+                        _recordingSeries[0][i] = t_current;// nextMeasurementTiming;
 
 
                         //SampleSingleValue((CHANNEL_POTENTIAL-1), out double valueCh1);
@@ -1795,9 +1866,42 @@ namespace Voltammogrammer
                         break;
                     }
 
+                    switch (_selectedSubModule)
+                    {
+                        case typeSubModule.RDE:
+                            break;
+
+                        case typeSubModule.Synchronous_switching:
+                            if (_is_using_automatical_switcher && t_current > (_secSwitcingInterval * cSwitching) * 1000)
+                            {
+                                SetSwitchOnAsync(!_is_switched_on);
+                                cSwitching++;
+                            }
+                            break;
+
+                        default:
+                            break;
+                    }
+
                     nextMeasurementTiming += (long)Math.Round(_secInterval * 1000); // [ms]
                     //if (nextMeasurementTiming > (_millivoltVertex * 60 * 1000) ) break;
                     //Console.WriteLine("elapsed time: {0} [s]", nextMeasurementTiming/1000);
+                }
+
+                switch (_selectedSubModule)
+                {
+                    case typeSubModule.RDE:
+                        break;
+
+                    case typeSubModule.Synchronous_switching:
+                        //
+                        // TODO: Finally On?
+                        // 
+                        if(_is_using_automatical_switcher) SetSwitchOnAsync(_is_applying_switching_on_finally);
+                        break;
+
+                    default:
+                        break;
                 }
 
                 FDwfAnalogInConfigure(_handle, Convert.ToInt32(false), Convert.ToInt32(false));
@@ -1903,7 +2007,7 @@ namespace Voltammogrammer
                     _recordingSeries[CHANNEL_VIRTUAL_REAL_Z][i] = -1 * resi; // due to cirtutry of PP0.9e
                     _recordingSeries[CHANNEL_VIRTUAL_IM_Z][i] = reac;
                     _recordingSeries[CHANNEL_VIRTUAL_PHASE][i] = phase;
-                    _recordingSeries[CHANNEL_POTENTIAL][i] = _millivoltInitial; // TODO: 戻り値はPOTENTIAL_RATIOの影響を受けている
+                    _recordingSeries[CHANNEL_POTENTIAL][i] = _millivoltInitial; // 戻り値はPOTENTIAL_RATIOの影響を受けている
 
 
                     switch (_selectedMethod)
@@ -2066,7 +2170,7 @@ namespace Voltammogrammer
                     _recordingSeries[CHANNEL_VIRTUAL_REAL_Z][i] = -1 * resi; // due to cirtutry of PP0.9e
                     _recordingSeries[CHANNEL_VIRTUAL_IM_Z][i] = reac;
                     _recordingSeries[CHANNEL_VIRTUAL_PHASE][i] = phase;
-                    _recordingSeries[CHANNEL_POTENTIAL][i] = potential; // TODO: 戻り値はPOTENTIAL_RATIOの影響を受けている
+                    _recordingSeries[CHANNEL_POTENTIAL][i] = potential; // 戻り値はPOTENTIAL_RATIOの影響を受けている
 
                     switch (_selectedMethod)
                     {
@@ -2140,7 +2244,7 @@ namespace Voltammogrammer
                 //
 
                 FDwfAnalogInAcquisitionModeSet(_handle, acqmodeSingle1);
-                FDwfAnalogInFrequencySet(_handle, _herzAcquisition); Console.WriteLine($"FDwfAnalogInFrequencySet: {_herzAcquisition}");
+                FDwfAnalogInFrequencySet(_handle, _hertzAcquisition); Console.WriteLine($"FDwfAnalogInFrequencySet: {_hertzAcquisition}");
                 FDwfAnalogInChannelFilterSet(_handle, -1, filterAverage);
                 FDwfAnalogInTriggerAutoTimeoutSet(_handle, 1.0 / _hertzInitial * 10);
                 FDwfAnalogInTriggerSourceSet(_handle, trigsrcDetectorAnalogIn);
@@ -2227,7 +2331,7 @@ namespace Voltammogrammer
                         //Array.Copy(_readingBuffers[(CHANNEL_CURRENT - 1)], 0, _recordingSeries[CHANNEL_CURRENT], cSamples, cAvailable);
                         for (int i = 0; i < cAvailable; i++)
                         {
-                            _recordingSeries[0][i] = (double)(i) / (_herzAcquisition) * 1000;
+                            _recordingSeries[0][i] = (double)(i) / (_hertzAcquisition) * 1000;
 
                             _recordingSeries[CHANNEL_POTENTIAL][i] += _readingBuffers[(CHANNEL_POTENTIAL - 1)][i];
                             _recordingSeries[CHANNEL_CURRENT][i] += _readingBuffers[(CHANNEL_CURRENT - 1)][i];
@@ -2283,18 +2387,19 @@ namespace Voltammogrammer
 
             }
 
-            //SetDCVoltage(0*1000);
+            SetCircuit(open:true);
+            switch (_selectedSubModule)
+            {
+                case typeSubModule.RDE:
+                    SetRotation(0);            
+                    SetPurging(on: true);
+                    break;
 
-            if (DIGITALIO_FROM_ARDUINO)
-            {
-                _arduino.openCircuit();
-                _arduino.startPurging();
-            }
-            else
-            {
-                SetCircuit(open:true);
-                SetPurging(on:true);
-                SetRotation(0);
+                case typeSubModule.Synchronous_switching:
+                    break;
+
+                default:
+                    break;
             }
         }
 
@@ -2347,7 +2452,7 @@ namespace Voltammogrammer
                         || _selectedMethod == methodMeasurement.ConstantCurrent
                         )
                     {
-                        _exp_conditions.SetDatum("potential", (_millivoltInitial_raw).ToString());  // TODO: 電位の変換。ファイルに記録する情報は入力値そのものであるべき
+                        _exp_conditions.SetDatum("potential", (_millivoltInitial_raw).ToString());  // ファイルに記録する情報は入力値そのものであるべき
                         _exp_conditions.SetDatum("duration", _secDuration.ToString());
                         _exp_conditions.SetDatum("sampling-interval", _secInterval.ToString());
                     }
@@ -2370,7 +2475,7 @@ namespace Voltammogrammer
                         _exp_conditions.SetDatum("vertex", (_millivoltVertex_raw ).ToString());
                         _exp_conditions.SetDatum("scanrate", (_millivoltScanrate_raw ).ToString());
                         _exp_conditions.SetDatum("rpm", _rpmRDE.ToString());
-                        _exp_conditions.SetDatum("freq", _herzAcquisition.ToString());
+                        _exp_conditions.SetDatum("freq", _hertzAcquisition.ToString());
                     }
                     _voltammogram.AddExpConditions(_series, _exp_conditions);
 
@@ -2432,8 +2537,8 @@ namespace Voltammogrammer
                     //{
                     //    _herzAcquisition = 400;
                     //}
-                    _digital_filter_notch.Notch(_target_filtering_frequency, _herzAcquisition, 3.0);
-                    _digital_filter_lowpass.LowPass(_target_filtering_frequency * 1, _herzAcquisition);
+                    _digital_filter_notch.Notch(_hertzTargetFilteringFrequency, _hertzAcquisition, 3.0);
+                    _digital_filter_lowpass.LowPass(_hertzTargetFilteringFrequency * 1, _hertzAcquisition);
                     break;
 
                 case (int)statusMeasurement.CAGotStarted: // CA got started
@@ -2445,7 +2550,7 @@ namespace Voltammogrammer
                     break;
 
                 case (int)statusMeasurement.MeasuremetWasDone: // Measurement was done
-                    if (_selectedMethod == methodMeasurement.IRC)  // TODO: 電位の変換
+                    if (_selectedMethod == methodMeasurement.IRC)  
                     {
                         // 全体の時間はsecCAing (2.0s) + _millivoltScanrate (標準では0.1s)かかる
                         // _millivoltScanrateの間に(4096/256)回だけ電位を+-_millivoltVertex [mV]だけ変化させる
@@ -2489,7 +2594,7 @@ namespace Voltammogrammer
                                 if (trigger == 0 && (Math.Abs(((_recordingSeries[CHANNEL_POTENTIAL][i] * POTENTIAL_SCALE - POTENTIAL_OFFSET_OSC) / POTENTIAL_SLOPE_OSC) - (double)(millivolt_actual_initial_voltage + (_millivoltVertex / POTENTIAL_SLOPE_OSC))) < 5.0))
                                 {
                                     // 電位が+25mVになったときにtriggerを設定する
-                                    trigger = i + (int)Math.Round(0.005 * _herzAcquisition); // デッドタイムは5msほどか？
+                                    trigger = i + (int)Math.Round(0.005 * _hertzAcquisition); // デッドタイムは5msほどか？
                                 }
 
                                 if (trigger != 0)
@@ -2498,9 +2603,9 @@ namespace Voltammogrammer
                                     //{
                                     //    begin = i + 1;
                                     //}
-                                    if (end == 0 && ((_recordingSeries[0][i] / 1000) >= ((_recordingSeries[0][trigger] / 1000) + (_secDuration / (4096 / 256)) * 1))) // TODO: ここで、_millivoltScanrateはDurationを指す
+                                    if (end == 0 && ((_recordingSeries[0][i] / 1000) >= ((_recordingSeries[0][trigger] / 1000) + (_secDuration / (4096 / 256)) * 1))) 
                                     {
-                                        end = i - 2 - (int)Math.Round(0.005 * _herzAcquisition) * 4;
+                                        end = i - 2 - (int)Math.Round(0.005 * _hertzAcquisition) * 4;
 
                                         Console.WriteLine("Analysis of IRC curve (trigger, {0} - {1})", trigger, end);
                                         // 計算に使用したデータ点をプロットしておく
@@ -2508,7 +2613,7 @@ namespace Voltammogrammer
                                         chartVoltammogram.Series[5].Points.AddXY(_recordingSeries[0][end] / 1000, (_recordingSeries[CHANNEL_CURRENT][end] - CURRENT_OFFSET) * ((double)_selectedCurrentFactor));
 
                                         // beginとendの範囲でtの関数でfittingされる。begin0は、本当のt0の推定値。デッドタイムの倍数にしてあるが、何倍がよいか？もう少し検討が必要
-                                        if (_nlr.perform(ref _recordingSeries[0], ref _recordingSeries[CHANNEL_CURRENT], (double)_selectedCurrentFactor, (double)_millivoltVertex, trigger, end, _recordingSeries[0][trigger - (int)Math.Round(0.005 * 1 * _herzAcquisition)], out double c, out double r))
+                                        if (_nlr.perform(ref _recordingSeries[0], ref _recordingSeries[CHANNEL_CURRENT], (double)_selectedCurrentFactor, (double)_millivoltVertex, trigger, end, _recordingSeries[0][trigger - (int)Math.Round(0.005 * 1 * _hertzAcquisition)], out double c, out double r))
                                         {
                                             if (cnt > 0) { cap += c; res += r; }
 
@@ -2547,20 +2652,20 @@ namespace Voltammogrammer
                             toolStripStatusLabelStatus.Text = "Measurement was done (IRC constant cannot be determined)";
                         }
                     }
-                    else if(_selectedMethod == methodMeasurement.OSWV) // TODO: 電位の変換
+                    else if(_selectedMethod == methodMeasurement.OSWV) 
                     {
                         // OSWV測定後、正方向と負方向のパルス印加時に記録された電流を引き算し、OSWVを得る
                         // 演算対象の電流のタイミングは、記録された電位の変化から決定する。
 
-                        // TODO: 現状は正のスイープ方向のみ対応しているので、ステップ電位stepを固定値でなくす必要がある。
+                        // TODO: ステップ電位stepを固定値でなくす必要がある。
 
                         int trigger = 0, begin = 0, end = 0;
 
                         //double cap = 0.0, res = 0.0; int cnt = 0;
                         double sampling_percentage = 0.35; // 0.3だとエッジ検出が甘いせいで、次のパルスの先頭に採取点がきたりする
-                        double herz = _herzAcquisition;
+                        double herz = _hertzAcquisition;
                         int direction = (_millivoltVertex > _millivoltInitial) ? 1 : -1;
-                        double step = 10.0 * direction; double pulse = 25.0 * direction; // TODO: 電位の変換 (ここの電位は、設定電位のままで良いはず)
+                        double step = 10.0 * direction; double pulse = 25.0 * direction; // ここの電位は、設定電位のままで良い(=電位の変換は不要)はず
                         int c = 1; int sampling = (int)Math.Round(step / (_millivoltScanrate/POTENTIAL_SLOPE_OSC) / 2 * herz * sampling_percentage);
                         Console.WriteLine("OSWV sampling pos.: {0} ({1} from end of pulse)", sampling, sampling_percentage);
 
@@ -2698,7 +2803,7 @@ namespace Voltammogrammer
                                 chartVoltammogram.Series[1].Points[i].YValues[0], 
                                 chartVoltammogram.Series[1].Points[i].XValue, 
                                 chartVoltammogram.Series[6].Points[i].XValue,
-                                (_recordingSeries[CHANNEL_POTENTIAL][i] * POTENTIAL_SCALE - POTENTIAL_OFFSET_OSC) / POTENTIAL_SLOPE_OSC / 1000); // TODO: 電位の変換
+                                (_recordingSeries[CHANNEL_POTENTIAL][i] * POTENTIAL_SCALE - POTENTIAL_OFFSET_OSC) / POTENTIAL_SLOPE_OSC / 1000); 
                             _writer.WriteLine();
                         }
                         _writer.Close();
@@ -2719,13 +2824,15 @@ namespace Voltammogrammer
                         _writer.Close();
                     }
                     _voltammogram.EndRecording();
+                    _itrRecording = -1;
                     break;
 
                 case (int)statusMeasurement.MeasuremetWasCancelled: //
                     _voltammogram.EndRecording();
                     break;
 
-                case -6: //
+                case (int)statusMeasurement.BackgroundProcessWasDone: //
+                    _itrRecording = -1;
                     break;
 
                 default:
@@ -2759,7 +2866,7 @@ namespace Voltammogrammer
                         //{
                         if (true)
                         {
-                            int k = (_flag_digitalfilter) ? (int)Math.Round(_herzAcquisition / _target_filtering_frequency * 2) : 1;
+                            int k = (_is_using_digitalfilter) ? (int)Math.Round(_hertzAcquisition / _hertzTargetFilteringFrequency * 2) : 1;
                             //const int k = 16;
                             if (progress >= (k - 1))
                             {
@@ -2964,7 +3071,7 @@ namespace Voltammogrammer
                             _voltammogram.AddDataToCurrentSeries(
                                 _series,
                                 true,
-                                (_recordingSeries[CHANNEL_POTENTIAL][i] * POTENTIAL_SCALE - POTENTIAL_OFFSET_OSC) / POTENTIAL_SLOPE_OSC, // TODO: 電位の変換が必要？ //_millivoltInitial + (POTENTIAL_OFFSET_AWG),
+                                (_recordingSeries[CHANNEL_POTENTIAL][i] * POTENTIAL_SCALE - POTENTIAL_OFFSET_OSC) / POTENTIAL_SLOPE_OSC, // 電位の変換が必要 //_millivoltInitial + (POTENTIAL_OFFSET_AWG),
                                 formVoltammogram.typeAxisX.Potential_in_mV,
                                 0,
                                 formVoltammogram.typeAxisY.Current_in_uA,
@@ -3159,6 +3266,8 @@ namespace Voltammogrammer
             toolStripTextBoxScanrate.Enabled = true;
             toolStripTextBoxRepeat.Enabled = true;
 
+            //backgroundWorkerCV.ReportProgress((int)statusMeasurement.BackgroundProcessWasDone);
+
             if (!DEBUG_VOLTAMMOGRAM) timerCurrentEandI.Enabled = true;
 
             //toolStripStatusLabelStatus.Text = "Ready";
@@ -3192,7 +3301,7 @@ namespace Voltammogrammer
                 //SetEIS(false);
                 SetMode(modeMeasurement.voltammetry);
 
-                toolStripComboBoxRDESpeed.SelectedIndex = 0;
+                toolStripMenuItemSubModuleOption3Param1.SelectedIndex = 0;
                 toolStripComboBoxMethod.SelectedIndex = 0;
                 toolStripComboBoxRange.SelectedIndex = 3;
 
@@ -3439,13 +3548,25 @@ namespace Voltammogrammer
                 //SetEIS(false);
                 SetMode(modeMeasurement.voltammetry);
 
-                SetPurging(on:true);
                 SetCircuit(open:true);
+                switch (_selectedSubModule)
+                {
+                    case typeSubModule.RDE:
+                        SetRotation(0);
+                        SetPurging(on: true);
+                        break;
+
+                    case typeSubModule.Synchronous_switching:
+                        break;
+
+                    default:
+                        break;
+                }
                 SetDCVoltageCH1(0);
 
                 SelectCurrentRange(_selectedCurrentRange);
             }
-            toolStripComboBoxRDESpeed.SelectedIndex = 0;
+            toolStripMenuItemSubModuleOption3Param1.SelectedIndex = 0;
             toolStripComboBoxMethod.SelectedIndex = 0;
             toolStripComboBoxRange.SelectedIndex = 3;
 
@@ -3470,1128 +3591,6 @@ namespace Voltammogrammer
             StartAcquisition(true);
         }
 
-        private void StartAcquisition(bool fSave)
-        {
-            if (toolStripButtonRecord.Text == "&Record")
-            {
-                double channel_range = 0;
-
-                _millivoltInitial = Double.NaN; _millivoltInitial_raw = Double.NaN;
-                _millivoltVertex = Double.NaN; _millivoltVertex_raw = Double.NaN;
-                _millivoltLimit = Double.NaN; _millivoltLimit_raw = Double.NaN;
-                _countRepeat = Double.NaN;
-                _millivoltScanrate = Double.NaN; _millivoltScanrate_raw = Double.NaN;
-                _millivoltAmplitude = Double.NaN; _millivoltAmplitude_raw = Double.NaN;
-                _millivoltStep = Double.NaN; _millivoltStep_raw = Double.NaN;
-                _countStep = Double.NaN;
-                _hertzInitial = Double.NaN;
-                _hertzFinal = Double.NaN;
-                _secDuration = Double.NaN;
-                _secInterval = Double.NaN;
-
-                switch (_selectedMethod)
-                {
-                    case methodMeasurement.Cyclicgalvanometry:
-                        if (double.TryParse(toolStripTextBoxInitialV.Text, out _millivoltInitial)
-                            && (_millivoltInitial <= 50000)
-                            && (_millivoltInitial >= -50000))
-                        {
-                            _millivoltInitial_raw = _millivoltInitial;
-
-                            _millivoltInitial *= (-1000.0 / (_selectedCurrentFactor));
-
-                            _millivoltInitial -= POTENTIAL_OFFSET_AWG;
-                            _millivoltInitial /= POTENTIAL_SLOPE_AWG;
-                        }
-                        else { MessageBox.Show(this, "The value of Initial [uA] is invalid."); return; }
-
-                        if (double.TryParse(toolStripTextBoxVertexV.Text, out _millivoltVertex)
-                            && (_millivoltVertex <= 50000)
-                            && (_millivoltVertex >= -50000))
-                        {
-                            _millivoltVertex_raw = _millivoltVertex;
-
-                            _millivoltVertex *= (-1000.0 / (_selectedCurrentFactor));
-
-                            _millivoltVertex -= POTENTIAL_OFFSET_AWG;
-                            _millivoltVertex /= POTENTIAL_SLOPE_AWG;
-                        }
-                        else { MessageBox.Show(this, "The value of Vertex [uA] is invalid."); return; }
-
-                        if (double.TryParse(toolStripTextBoxScanrate.Text, out _millivoltScanrate)
-                            && (_millivoltScanrate <= 1000000)
-                            && (_millivoltScanrate > 0))
-                        {
-                            _millivoltScanrate_raw = _millivoltScanrate;
-
-                            if (hzToolStripMenuItemAuto.Checked)
-                            {
-                                // 取り込み速度を自動決定する。目安としては0.25mV/point。高速掃引時には2.5mV/ptでもよいか？？
-                                // すなわち掃引速度が100mV/sの時には400Hzで、10000mV/s (10V/s)の時には4kHzで取り込めばよいことになる
-
-                                SetFrequencyOfAcquisition(0);
-                                for (int i = (_toolstripmenuitemsFrequencyOfAcquisition.Length-1); i >= 0; i--)
-                                {
-                                    if( (_millivoltScanrate * 4) >= Double.Parse(_toolstripmenuitemsFrequencyOfAcquisition[i].Tag.ToString()) )
-                                    {
-                                        SetFrequencyOfAcquisition(i);
-                                        break;
-                                    }
-                                }
-                            }
-
-                            _millivoltScanrate *= (1000 / (_selectedCurrentFactor));
-                            _millivoltScanrate /= POTENTIAL_SLOPE_AWG;
-                        }
-                        else { MessageBox.Show(this, "The value of Scan rate [uA/s] is invalid."); return; }
-
-                        if (Math.Abs(_millivoltVertex - _millivoltInitial) > 50000)
-                        {
-                            MessageBox.Show(this, "The value of Scanning range [uA] is too wide (> 50000 uV)."); return;
-                        }
-
-
-                        FDwfAnalogInChannelOffsetSet(_handle, (CHANNEL_POTENTIAL - 1), 0.0);
-
-                        break;
-
-                    case methodMeasurement.ConstantCurrent:
-                        if (double.TryParse(toolStripTextBoxInitialV.Text, out _millivoltInitial)
-                            && (_millivoltInitial <= 200000)
-                            && (_millivoltInitial >= -200000))
-                        {
-                            _millivoltInitial_raw = _millivoltInitial;
-                            _millivoltInitial = (_millivoltInitial * (-1000.0 / (double)_selectedCurrentFactor));
-
-                            _millivoltInitial -= POTENTIAL_OFFSET_AWG;// - POTENTIAL_OFFSET_OSC;
-                            _millivoltInitial /= POTENTIAL_SLOPE_AWG;
-                            //_millivoltInitial *= CURRENT_SLOPE / (_selectedCurrentFactor / 10000) / POTENTIAL_SLOPE_OSC;
-                            //_millivoltInitial *= CURRENT_SLOPE / POTENTIAL_SLOPE_OSC;
-
-                            // TODO: (in case methodMeasurement.ConstantCurrent) これでOK？
-                            _millivoltInitial /= POTENTIAL_SLOPE_OSC;
-                            _millivoltInitial *= (1 + _calibrate_potentiostat.ohmInternalResistance / (1000000 / _selectedCurrentFactor));
-                           Console.WriteLine("_millivoltInitial (corrected): {0}", _millivoltInitial);
-                        }
-                        else { MessageBox.Show(this, "The value of Current [uA] is invalid."); return; }
-
-                        if (double.TryParse(toolStripTextBoxVertexV.Text, out _secDuration)
-                            && (_secDuration >= 1))
-                        {
-                            //_millivoltVertex += (int)POTENTIAL_OFFSET;
-                        }
-                        else { MessageBox.Show(this, "The value of Time [min] is invalid."); return; }
-
-                        if (double.TryParse(toolStripTextBoxScanrate.Text, out _secInterval)
-                            && (_secInterval <= 60)
-                            && (_secInterval >= 1))
-                        {
-                        }
-                        else { MessageBox.Show(this, "The value of Sampling Interval [s] is invalid."); return; }
-
-                        if (double.TryParse(toolStripTextBoxRepeat.Text, out _countRepeat)
-                            && (_countRepeat >= 0.0))
-                        {
-                        }
-                        else { MessageBox.Show(this, "The target Q [C] (as an absolute value) must be >= 0."); toolStripTextBoxRepeat.Text = "0"; return; }
-
-                        if (double.TryParse(toolStripTextBoxStep.Text, out _millivoltLimit)
-                            && (_millivoltLimit >= 0.0))
-                        {
-                            _millivoltLimit_raw = _millivoltLimit;
-
-                            _millivoltLimit /= RATIO_POTENTIAL;
-                            _millivoltLimit -= POTENTIAL_OFFSET_AWG;
-                            _millivoltLimit /= POTENTIAL_SLOPE_AWG;
-                        }
-                        else { MessageBox.Show(this, "The potential limit, E [mV] for S electrode (as an absolute value) must be >= 0."); toolStripTextBoxRepeat.Text = "0"; return; }
-
-                        FDwfAnalogInChannelOffsetSet(_handle, (CHANNEL_POTENTIAL - 1), 0.0);
-
-                        break;
-
-                    case methodMeasurement.EIS:
-                    case methodMeasurement.EIS_Open_Circuit:
-                    case methodMeasurement.EIS_Short_Circuit:
-                        if (double.TryParse(toolStripTextBoxInitialV.Text, out _millivoltInitial)
-                            && (_millivoltInitial <= 5000)
-                            && (_millivoltInitial >= -5000))
-                        {
-                            _millivoltInitial_raw = _millivoltInitial;
-
-                            _millivoltInitial /= RATIO_POTENTIAL;
-                            _millivoltInitial -= POTENTIAL_OFFSET_AWG;
-                            _millivoltInitial /= POTENTIAL_SLOPE_AWG;
-                        }
-                        else { MessageBox.Show(this, "The value of Potential [mV] is invalid."); return; }
-
-                        if (double.TryParse(toolStripTextBoxVertexV.Text, out _millivoltAmplitude)
-                            && (_millivoltAmplitude <= 500)
-                            && (_millivoltAmplitude >= 1))
-                        {
-                            _millivoltAmplitude_raw = _millivoltAmplitude;
-
-                            _millivoltAmplitude /= RATIO_POTENTIAL;
-                            //_millivoltAmplitude -= POTENTIAL_OFFSET_AWG;
-                            _millivoltAmplitude /= POTENTIAL_SLOPE_AWG;
-                        }
-                        else { MessageBox.Show(this, "The value of Amplitude [mV] is invalid."); return; }
-
-                        if (double.TryParse(toolStripTextBoxScanrate.Text, out _hertzInitial)
-                            && (_hertzInitial <= 10000000)
-                            && (_hertzInitial >= 0.0001))
-                        {
-                        }
-                        else { MessageBox.Show(this, "The value of Initial Scanning Frequency [Hz] is invalid."); return; }
-
-                        if (double.TryParse(toolStripTextBoxScanrate2.Text, out _hertzFinal)
-                            && (_hertzFinal <= 10000000)
-                            && (_hertzFinal >= 0.0001))
-                        {
-                        }
-                        else { MessageBox.Show(this, "The value of Final Scanning Frequency [Hz] is invalid."); return; }
-
-                        if (double.TryParse(toolStripTextBoxRepeat.Text, out _countRepeat)
-                            && (_countRepeat <= 4096)
-                            && (_countRepeat >= 1))
-                        {
-                        }
-                        else { MessageBox.Show(this, "The value of Accumulation Time is invalid."); return; }
-
-                        if (double.TryParse(toolStripTextBoxStep.Text, out _countStep)
-                            && (_countStep <= 1000)
-                            && (_countStep >= 1))
-                        {
-                        }
-                        else { MessageBox.Show(this, "The value of Steps is invalid."); return; }
-
-                        break;
-
-                    case methodMeasurement.EIS_MottSchottkey:
-                        if (double.TryParse(toolStripTextBoxInitialV.Text, out _millivoltInitial)
-                            && (_millivoltInitial <= 5000)
-                            && (_millivoltInitial >= -5000))
-                        {
-                            _millivoltInitial_raw = _millivoltInitial;
-
-                            _millivoltInitial /= RATIO_POTENTIAL;
-                            _millivoltInitial -= POTENTIAL_OFFSET_AWG;
-                            _millivoltInitial /= POTENTIAL_SLOPE_AWG;
-                        }
-                        else { MessageBox.Show(this, "The value of Initial potential [mV] is invalid."); return; }
-
-                        if (double.TryParse(toolStripTextBoxFinalV.Text, out _millivoltVertex)
-                            && (_millivoltVertex <= 5000)
-                            && (_millivoltVertex >= -5000))
-                        {
-                            _millivoltVertex_raw = _millivoltVertex;
-
-                            _millivoltVertex /= RATIO_POTENTIAL;
-                            _millivoltVertex -= POTENTIAL_OFFSET_AWG;
-                            _millivoltVertex /= POTENTIAL_SLOPE_AWG;
-                        }
-                        else { MessageBox.Show(this, "The value of Final potential [mV] is invalid."); return; }
-
-                        if (double.TryParse(toolStripTextBoxVertexV.Text, out _millivoltAmplitude)
-                            && (_millivoltAmplitude <= 500)
-                            && (_millivoltAmplitude >= 1))
-                        {
-                            _millivoltAmplitude_raw = _millivoltAmplitude;
-
-                            _millivoltAmplitude /= RATIO_POTENTIAL;
-                            //_millivoltAmplitude -= POTENTIAL_OFFSET_AWG;
-                            _millivoltAmplitude /= POTENTIAL_SLOPE_AWG;
-                        }
-                        else { MessageBox.Show(this, "The value of Amplitude [mV] is invalid."); return; }
-
-                        if (double.TryParse(toolStripTextBoxScanrate.Text, out _hertzInitial)
-                            && (_hertzInitial <= 100000)
-                            && (_hertzInitial >= 0.001))
-                        {
-                        }
-                        else { MessageBox.Show(this, "The value of Frequency [Hz] is invalid."); return; }
-
-                        if (double.TryParse(toolStripTextBoxRepeat.Text, out _countRepeat)
-                            && (_countRepeat <= 4096)
-                            && (_countRepeat >= 1))
-                        {
-                        }
-                        else { MessageBox.Show(this, "The value of Accumulation Time is invalid."); return; }
-
-                        if (double.TryParse(toolStripTextBoxStep.Text, out _millivoltStep)
-                            && (_millivoltStep <= 100000)
-                            && (_millivoltStep >= 0.001))
-                        {
-                            _millivoltStep_raw = _millivoltStep;
-
-                            _millivoltStep /= RATIO_POTENTIAL;
-                            //_millivoltAmplitude -= POTENTIAL_OFFSET_AWG;
-                            _millivoltStep /= POTENTIAL_SLOPE_AWG;
-                        }
-                        else { MessageBox.Show(this, "The value of Step [mV] is invalid."); return; }
-
-                        break;
-
-                    case methodMeasurement.Oscilloscope:
-                        if (double.TryParse(toolStripTextBoxInitialV.Text, out _millivoltInitial)
-                            && (_millivoltInitial <= 5000)
-                            && (_millivoltInitial >= -5000))
-                        {
-                            _millivoltInitial_raw = _millivoltInitial;
-
-                            _millivoltInitial /= RATIO_POTENTIAL;
-                            _millivoltInitial -= POTENTIAL_OFFSET_AWG;
-                            _millivoltInitial /= POTENTIAL_SLOPE_AWG;
-                        }
-                        else { MessageBox.Show(this, "The value of Initial potential [mV] is invalid."); return; }
-
-                        //if (double.TryParse(toolStripTextBoxFinalV.Text, out _millivoltVertex)
-                        //    && (_millivoltVertex <= 5000)
-                        //    && (_millivoltVertex >= -5000))
-                        //{
-                        //    _millivoltVertex -= POTENTIAL_OFFSET_AWG;
-                        //    _millivoltVertex /= POTENTIAL_SLOPE_AWG;
-                        //}
-                        //else { MessageBox.Show(this, "The value of Final potential [mV] is invalid."); return; }
-
-                        if (double.TryParse(toolStripTextBoxVertexV.Text, out _millivoltAmplitude)
-                            && (_millivoltAmplitude <= 500)
-                            && (_millivoltAmplitude >= 1))
-                        {
-                            _millivoltAmplitude_raw = _millivoltAmplitude;
-
-                            _millivoltAmplitude /= RATIO_POTENTIAL;
-                            //_millivoltAmplitude -= POTENTIAL_OFFSET_AWG;
-                            _millivoltAmplitude /= POTENTIAL_SLOPE_AWG;
-                        }
-                        else { MessageBox.Show(this, "The value of Amplitude [mV] is invalid."); return; }
-
-                        if (double.TryParse(toolStripTextBoxScanrate.Text, out _hertzInitial)
-                            && (_hertzInitial <= 100000)
-                            && (_hertzInitial >= 0.001))
-                        {
-                        }
-                        else { MessageBox.Show(this, "The value of Frequency [Hz] is invalid."); return; }
-
-                        if (double.TryParse(toolStripTextBoxRepeat.Text, out _countRepeat)
-                            && (_countRepeat <= 4096)
-                            && (_countRepeat >= 1))
-                        {
-                        }
-                        else { MessageBox.Show(this, "The value of Accumulation Time is invalid."); return; }
-
-                        //if (double.TryParse(toolStripTextBoxStep.Text, out _millivoltStep)
-                        //    && (_millivoltStep <= 100000)
-                        //    && (_millivoltStep >= 0.001))
-                        //{
-                        //}
-                        //else { MessageBox.Show(this, "The value of Step [mV] is invalid."); return; }
-
-                        if (hzToolStripMenuItemCustom.Checked)
-                        {
-                            if (double.TryParse(toolStripTextBoxFreqOfAcquisition.Text, out double ret))
-                            {
-                                _herzAcquisition = ret;
-                            }
-                            else
-                            {
-                                hzToolStripMenuItemAuto.Checked = true;
-                                hzToolStripMenuItemCustom.Checked = false;
-                            }
-                        }
-
-                        if (hzToolStripMenuItemAuto.Checked)
-                        {
-                            //double millivoltHeight = Math.Abs(_millivoltVertex - _millivoltInitial);
-                            //double secRecording = (2 * millivoltHeight) / _millivoltScanrate;
-                            _herzAcquisition = _hertzInitial * 1000;
-                        }
-
-                        FDwfAnalogInChannelRangeGet(_handle, (CHANNEL_POTENTIAL - 1), out channel_range);
-                        Console.WriteLine("Channel range for potential measurement: {0}", channel_range);
-
-                        if ((Math.Abs(_millivoltVertex - _millivoltInitial) > (2700)) && (channel_range <= 5.6))
-                        {
-                            if (true)
-                            {
-                                Console.WriteLine("Need to adjust ChannelOffset...");
-                                // Need to adjust ChannelOffset...
-                                double center = (_millivoltVertex - _millivoltInitial) / 2;
-
-                                FDwfAnalogInChannelOffsetSet(_handle, (CHANNEL_POTENTIAL - 1), (center / 1000.0));
-                                FDwfAnalogInChannelRangeSet(_handle, (CHANNEL_POTENTIAL - 1), 5.0); // for E measurement
-                            }
-                        }
-                        else
-                        {
-                            FDwfAnalogInChannelOffsetSet(_handle, (CHANNEL_POTENTIAL - 1), 0.0);
-                        }
-
-                        break;
-
-                    case methodMeasurement.Cyclicvoltammetry:
-                    case methodMeasurement.Series_of_RDE_CV:
-                    case methodMeasurement.LSV:
-                    case methodMeasurement.Series_of_RDE_LSV:
-                    case methodMeasurement.OSWV:
-                        if (double.TryParse(toolStripTextBoxInitialV.Text, out _millivoltInitial)
-                            && (_millivoltInitial <= 5000)
-                            && (_millivoltInitial >= -5000))
-                        {
-                            _millivoltInitial_raw = _millivoltInitial;
-
-                            _millivoltInitial /= RATIO_POTENTIAL;
-                            _millivoltInitial -= POTENTIAL_OFFSET_AWG;
-                            _millivoltInitial /= POTENTIAL_SLOPE_AWG;
-                        }
-                        else { MessageBox.Show(this, "The value of Initial [mV] is invalid."); return; }
-
-                        if (double.TryParse(toolStripTextBoxVertexV.Text, out _millivoltVertex)
-                            && (_millivoltVertex <= 5000)
-                            && (_millivoltVertex >= -5000))
-                        {
-                            _millivoltVertex_raw = _millivoltVertex;
-
-                            _millivoltVertex /= RATIO_POTENTIAL;
-                            _millivoltVertex -= POTENTIAL_OFFSET_AWG;
-                            _millivoltVertex /= POTENTIAL_SLOPE_AWG;
-                        }
-                        else { MessageBox.Show(this, "The value of Vertex [mV] is invalid."); return; }
-
-                        if (double.TryParse(toolStripTextBoxScanrate.Text, out _millivoltScanrate)
-                            && (_millivoltScanrate <= 1000000000)
-                            && (_millivoltScanrate > 0))
-                        {
-                            _millivoltScanrate_raw = _millivoltScanrate;
-
-                            _millivoltScanrate /= RATIO_POTENTIAL;
-                            _millivoltScanrate /= POTENTIAL_SLOPE_AWG;
-                        }
-                        else { MessageBox.Show(this, "The value of Scan rate [mV/s] is invalid."); return; }
-
-                        //if (Math.Abs(_millivoltVertex - _millivoltInitial) > 5000)
-                        //{
-                        //    MessageBox.Show(this, "The value of Scanning range [mV] is too wide (> 5000 mV)."); return;
-                        //}
-
-                        if (double.TryParse(toolStripTextBoxRepeat.Text, out _countRepeat)
-                            && (_countRepeat <= 100)
-                            && (_countRepeat >= 1))
-                        {
-                        }
-                        else { MessageBox.Show(this, "The number of repeat (>= 1) is invalid."); toolStripTextBoxRepeat.Text = "1";  return; }
-
-
-                        if(hzToolStripMenuItemCustom.Checked)
-                        {
-                            if (double.TryParse(toolStripTextBoxFreqOfAcquisition.Text, out double ret))
-                            {
-                                _herzAcquisition = ret;
-                            }
-                            else
-                            {
-                                hzToolStripMenuItemAuto.Checked = true;
-                                hzToolStripMenuItemCustom.Checked = false;
-                            }
-                        }
-
-                        if (hzToolStripMenuItemAuto.Checked)
-                        {
-                            // 取り込み速度を自動決定する。目安としては0.25mV/point。高速掃引時には2.5mV/ptでもよいか？？
-                            // すなわち掃引速度が100mV/sの時には400Hzで、10000mV/s (10V/s)の時には4kHzで取り込めばよいことになる
-
-                            SetFrequencyOfAcquisition(0);
-                            for (int i = (_toolstripmenuitemsFrequencyOfAcquisition.Length-1); i >= 0; i--)
-                            {
-                                if( ((_millivoltScanrate / POTENTIAL_SLOPE_OSC) * 4) >= Double.Parse(_toolstripmenuitemsFrequencyOfAcquisition[i].Tag.ToString()) ) // 100mV/s => 100Hzにしてみる
-                                {
-                                    SetFrequencyOfAcquisition(i);
-                                    break;
-                                }
-                            }
-                        }
-
-                        //double min = 0, max = 0, step = 0;
-                        //FDwfAnalogInChannelOffsetInfo(_handle, ref min, ref max, ref step); min/max was -25/+25, step was 16xxx.
-
-                        FDwfAnalogInChannelRangeGet(_handle, (CHANNEL_POTENTIAL - 1), out channel_range);
-                        Console.WriteLine("Channel range for potential measurement: {0}", channel_range);
-
-                        if ((Math.Abs(_millivoltVertex - _millivoltInitial) > (2700)) && (channel_range <= 5.6))
-                        {
-                            if (Math.Abs(_millivoltVertex - _millivoltInitial) < 5000)
-                            {
-                                Console.WriteLine("Need to adjust ChannelOffset...");
-                                // Need to adjust ChannelOffset...
-                                double center = (_millivoltVertex - _millivoltInitial) / 2;
-
-                                FDwfAnalogInChannelOffsetSet(_handle, (CHANNEL_POTENTIAL-1), (center / 1000.0));
-                                FDwfAnalogInChannelRangeSet(_handle, (CHANNEL_POTENTIAL-1), 5.0); // for E measurement
-                            }
-                            else
-                            {
-                                MessageBox.Show(this, "The value of Scanning range [mV] is too wide (> 5000 mV). Try to switch the potential range to +-25V."); return; 
-                            }
-                        }
-                        else
-                        {
-                            FDwfAnalogInChannelOffsetSet(_handle, (CHANNEL_POTENTIAL - 1), 0.0);
-                        }
-
-                        //_millivoltInitial = +1 * _millivoltInitial / 2;
-                        //_millivoltVertex = +1 * _millivoltVertex / 2;
-                        //_millivoltScanrate = _millivoltScanrate / 2;
-
-                        break;
-
-                    case methodMeasurement.CyclicvoltammetryQuick: // TODO: (in case methodMeasurement.CyclicvoltammetryQuick) RATIO_POTENTIALに起因する問題は未検討
-                        if (double.TryParse(toolStripTextBoxInitialV.Text, out _millivoltInitial)
-                            && (_millivoltInitial <= 5000)
-                            && (_millivoltInitial >= -5000))
-                        {
-                            _millivoltInitial_raw = _millivoltInitial;
-
-                            _millivoltInitial -= POTENTIAL_OFFSET_AWG;
-                            _millivoltInitial /= POTENTIAL_SLOPE_AWG;
-                        }
-                        else { MessageBox.Show(this, "The value of Initial [mV] is invalid."); return; }
-
-                        if (double.TryParse(toolStripTextBoxVertexV.Text, out _millivoltVertex)
-                            && (_millivoltVertex <= 5000)
-                            && (_millivoltVertex >= -5000))
-                        {
-                            _millivoltVertex_raw = _millivoltVertex;
-
-                            _millivoltVertex -= POTENTIAL_OFFSET_AWG;
-                            _millivoltVertex /= POTENTIAL_SLOPE_AWG;
-                        }
-                        else { MessageBox.Show(this, "The value of Vertex [mV] is invalid."); return; }
-
-                        if (double.TryParse(toolStripTextBoxScanrate.Text, out _millivoltScanrate)
-                            && (_millivoltScanrate <= 1000000)
-                            && (_millivoltScanrate >= 1))
-                        {
-                            _millivoltScanrate_raw = _millivoltScanrate;
-
-                            _millivoltScanrate *= 1000;
-                            _millivoltScanrate /= POTENTIAL_SLOPE_AWG;
-                        }
-                        else { MessageBox.Show(this, "The value of Scan rate [V/s] is invalid."); return; }
-
-                        if (Math.Abs(_millivoltVertex - _millivoltInitial) > 5000)
-                        {
-                            MessageBox.Show(this, "The value of Scanning range [mV] is too wide (> 5000 mV)."); return;
-                        }
-
-
-                        if(hzToolStripMenuItemCustom.Checked)
-                        {
-                            if(double.TryParse(toolStripTextBoxFreqOfAcquisition.Text, out double ret))
-                            {
-                                _herzAcquisition = ret;
-                            }
-                            else
-                            {
-                                hzToolStripMenuItemAuto.Checked = true;
-                                hzToolStripMenuItemCustom.Checked = false;
-                            }
-                        }
-
-                        if (hzToolStripMenuItemAuto.Checked)
-                        {
-                            double millivoltHeight = Math.Abs(_millivoltVertex - _millivoltInitial);
-                            double secRecording = (2 * millivoltHeight) / _millivoltScanrate;
-                            _herzAcquisition = (1.0 / secRecording) * 6000;
-                        }
-
-
-                        FDwfAnalogInChannelRangeGet(_handle, (CHANNEL_POTENTIAL - 1), out channel_range);
-                        Console.WriteLine("Channel range for potential measurement: {0}", channel_range);
-
-                        if ((Math.Abs(_millivoltVertex - _millivoltInitial) > (2700)) && (channel_range <= 5.6))
-                        {
-                            if (Math.Abs(_millivoltVertex - _millivoltInitial) < 5000)
-                            {
-                                Console.WriteLine("Need to adjust ChannelOffset...");
-                                // Need to adjust ChannelOffset...
-                                double center = (_millivoltVertex - _millivoltInitial) / 2;
-
-                                FDwfAnalogInChannelOffsetSet(_handle, (CHANNEL_POTENTIAL - 1), (center / 1000.0));
-                                FDwfAnalogInChannelRangeSet(_handle, (CHANNEL_POTENTIAL - 1), 5.0); // for E measurement
-                            }
-                            else
-                            {
-                                MessageBox.Show(this, "The value of Scanning range [mV] is too wide (> 5000 mV). Try to switch the potential range to +-25V."); return; 
-                            }
-                        }
-                        else
-                        {
-                            FDwfAnalogInChannelOffsetSet(_handle, (CHANNEL_POTENTIAL - 1), 0.0);
-                        }
-
-                        break;
-
-                    case methodMeasurement.BulkElectrolysis:
-                        if (double.TryParse(toolStripTextBoxInitialV.Text, out _millivoltInitial)
-                            && (_millivoltInitial <= 11000)
-                            && (_millivoltInitial >= -11000))
-                        {
-                            _millivoltInitial_raw = _millivoltInitial;
-
-                            _millivoltInitial /= RATIO_POTENTIAL;
-                            _millivoltInitial -= POTENTIAL_OFFSET_AWG;
-                            _millivoltInitial /= POTENTIAL_SLOPE_AWG;
-                        }
-                        else { MessageBox.Show(this, "The value of Potential [mV] is invalid."); return; }
-
-                        if (double.TryParse(toolStripTextBoxVertexV.Text, out _secDuration)
-                            && (_secDuration >= 1))
-                        {
-                            //_millivoltVertex += (int)POTENTIAL_OFFSET;
-                        }
-                        else { MessageBox.Show(this, "The value of Duration [min] is invalid."); return; }
-
-                        if (double.TryParse(toolStripTextBoxScanrate.Text, out _secInterval)
-                            && (_secInterval <= 60)
-                            && (_secInterval >= 1))
-                        {
-                        }
-                        else { MessageBox.Show(this, "The value of Sampling Interval [s] is invalid."); return; }
-
-                        if (double.TryParse(toolStripTextBoxRepeat.Text, out _countRepeat)
-                            && (_countRepeat >= 0.0))
-                        {
-                        }
-                        else { MessageBox.Show(this, "The target Q [C] (as an absolute value) must be >= 0."); toolStripTextBoxRepeat.Text = "0"; return; }
-
-
-                        FDwfAnalogInChannelRangeGet(_handle, (CHANNEL_POTENTIAL - 1), out channel_range);
-
-                        if ((Math.Abs(_millivoltInitial) > (2700)) && (channel_range <= 5.6))
-                        {
-                            if (Math.Abs(_millivoltInitial) < 5000)
-                            {
-                                Console.WriteLine("Need to adjust ChannelOffset...");
-                                // Need to adjust ChannelOffset...
-                                double center = _millivoltInitial;
-
-                                FDwfAnalogInChannelOffsetSet(_handle, (CHANNEL_POTENTIAL - 1), (center / 1000.0));
-                                FDwfAnalogInChannelRangeSet(_handle, (CHANNEL_POTENTIAL - 1), 5.0); // for E measurement
-                            }
-                            else
-                            {
-                                MessageBox.Show(this, "The value of potential [mV] is out of range (> 5000 mV). Try to switch the potential range to +-25V."); return;
-                            }
-                        }
-                        else
-                        {
-                            FDwfAnalogInChannelOffsetSet(_handle, (CHANNEL_POTENTIAL - 1), 0.0);
-                        }
-
-                        //_millivoltInitial = +1 * _millivoltInitial / 2;
-
-                        break;
-
-                    case methodMeasurement.OCP:
-                        if (double.TryParse(toolStripTextBoxVertexV.Text, out _secDuration)
-                            && (_secDuration >= 0))
-                        {
-                        }
-                        else { MessageBox.Show(this, "The value of Duration [min] is invalid."); return; }
-
-                        if (double.TryParse(toolStripTextBoxScanrate.Text, out _secInterval)
-                            && (_secInterval <= 10)
-                            && (_secInterval >= 1))
-                        {
-                        }
-                        else { MessageBox.Show(this, "The value of Sampling Interval [s] is invalid."); return; }
-
-                        break;
-
-                    case methodMeasurement.DPSCA:
-                    case methodMeasurement.IRC:
-                        if (double.TryParse(toolStripTextBoxInitialV.Text, out _millivoltInitial)
-                            && (_millivoltInitial <= 5000)
-                            && (_millivoltInitial >= -5000))
-                        {
-                            _millivoltInitial_raw = _millivoltInitial;
-
-                            _millivoltInitial /= RATIO_POTENTIAL;
-                            _millivoltInitial -= POTENTIAL_OFFSET_AWG;
-                            _millivoltInitial /= POTENTIAL_SLOPE_AWG;
-                        }
-                        else { MessageBox.Show(this, "The value of Initial [mV] is invalid."); return; }
-
-                        if (double.TryParse(toolStripTextBoxVertexV.Text, out _millivoltVertex)
-                            && (_millivoltVertex <= 5000)
-                            && (_millivoltVertex >= -5000))
-                        {
-                            _millivoltVertex_raw = _millivoltVertex;
-
-                            if (_selectedMethod == methodMeasurement.DPSCA)
-                            {
-                                //_millivoltVertex /= RATIO_POTENTIAL;
-                                _millivoltVertex -= POTENTIAL_OFFSET_AWG;
-                                //_millivoltVertex /= POTENTIAL_SLOPE_AWG;
-                            }
-                            _millivoltVertex /= POTENTIAL_SLOPE_AWG;
-                        }
-                        else { MessageBox.Show(this, "The value of Step-in (or Amplitude) [mV] is invalid."); return; }
-
-                        if (double.TryParse(toolStripTextBoxScanrate.Text, out _secDuration)
-                            && (_secDuration <= 120)
-                            && (_secDuration >= 1))
-                        {
-                        }
-                        else { MessageBox.Show(this, "The value of Duration [s] is invalid."); return; }
-
-                        FDwfAnalogInChannelRangeGet(_handle, (CHANNEL_POTENTIAL - 1), out channel_range);
-
-                        double range = 0;
-                        if (_selectedMethod == methodMeasurement.DPSCA)
-                        {
-                            range = _millivoltVertex - _millivoltInitial;
-                        } 
-                        else
-                        {
-                            range = _millivoltInitial;
-                        }
-                        if ((Math.Abs(range) > (2700)) && (channel_range <= 5.6))
-                        {
-                            if (Math.Abs(_millivoltInitial) < 5000)
-                            {
-                                Console.WriteLine("Need to adjust ChannelOffset...");
-                                // Need to adjust ChannelOffset...
-                                double center = (range) / 2;
-
-                                FDwfAnalogInChannelOffsetSet(_handle, (CHANNEL_POTENTIAL - 1), (center / 1000.0));
-                                FDwfAnalogInChannelRangeSet(_handle, (CHANNEL_POTENTIAL - 1), 5.0); // for E measurement
-                            }
-                            else
-                            {
-                                MessageBox.Show(this, "The value of potential [mV] is out of range (> 5000 mV). Try to switch the potential range to +-25V."); return;
-                            }
-                        }
-                        else
-                        {
-                            FDwfAnalogInChannelOffsetSet(_handle, (CHANNEL_POTENTIAL - 1), 0.0);
-                        }
-
-                        //_millivoltInitial = +1 * _millivoltInitial / 2;
-                        //_millivoltVertex = +1 * _millivoltVertex / 2;
-
-                        break;
-                }
-
-                //if ((_selectedMethod = (methodMeasurement)toolStripComboBoxMethod.SelectedIndex) == methodMeasurement.none)
-                //{
-                //    MessageBox.Show("Method is not selected."); return;
-                //}
-
-                _file_path = null;
-                
-                if(fSave)
-                {
-                    saveFileDialog1.Filter = "EC-Lab Text file (*.mpt)|*.mpt|All types(*.*)|*.*";
-                    saveFileDialog1.FilterIndex = 1;
-                    saveFileDialog1.Title = "Save As";
-                    saveFileDialog1.FileName = "";
-                    saveFileDialog1.ShowHelp = true;
-
-                    if (saveFileDialog1.InitialDirectory == null)
-                    {
-                        saveFileDialog1.InitialDirectory = @"c:\";
-                    }
-
-                    if (saveFileDialog1.ShowDialog() == DialogResult.OK)
-                    {
-                        _file_path = saveFileDialog1.FileName;
-                        //string _tmp = System.IO.Path.GetExtension(_file_path);
-                        if(System.IO.Path.GetExtension(_file_path) != ".mpt") _file_path += ".mpt";
-
-                        toolStripStatusLabelFileName.Text = PathCompactEx.Converter.ShrinkPath(_file_path, 70);
-                        toolStripStatusLabelFileName.ToolTipText = _file_path;
-
-                        //saveFileDialog1.InitialDirectory = System.IO.Directory.GetCurrentDirectory();
-                    }
-                }
-                else
-                {
-                    _file_path = null;
-
-                    toolStripStatusLabelFileName.Text = "(not to be saved)";
-                }
-
-                if(fSave && _file_path == null)
-                {
-                    return;
-                }
-
-                //
-                // TODO: 直ぐに測定を始める、もしくは一定時間待機してから始める
-                //
-
-                // ここで別スレッドを立ち上げる必要はない。その場合、async void StartAcquisitionとする
-                new Thread(new ThreadStart(() => // delegate
-                {
-                    Invoke((Action)async delegate ()
-                    {
-                        bool fCancel = false; 
-
-                        if (toolStripMenuItemDelay.Checked)
-                        {
-                            WaitDialog wd = new WaitDialog();
-                            //wd.ShowWithTimeout(this, 10);
-
-                            //Invoke((Action)delegate ()
-                            //{
-                            //    //this.Enabled = false;
-
-                            //    wd.Test(this);
-
-                            //    //this.Enabled = true;
-                            //});
-
-                            //this.Enabled = false;
-                            toolStrip1.Enabled = false;
-                            toolStrip2.Enabled = false;
-
-                            //wd.Show();
-
-                            //Task HogeTask = Task.Run(
-                            //    async () => { await Task.Delay(5000); }
-                            //);
-                            //await HogeTask;
-
-                            if(int.TryParse(toolStripTextBoxDelayTime.Text, out int timeout))
-                            {
-                                fCancel = await wd.ShowAsync(timeout);
-                            }
-                            else
-                            { 
-                                fCancel = false;
-                            }
-
-                            //this.Enabled = true;
-                            toolStrip1.Enabled = true;
-                            toolStrip2.Enabled = true;
-                        }
-
-                        if(!fCancel)
-                        {
-                            toolStripButtonRecord.Text = "&Stop"; toolStripButtonRecord.Image = global::Voltammogrammer.Properties.Resources.Stop;
-                            toolStripButtonScan.Enabled = false;
-                            toolStripComboBoxMethod.Enabled = false;
-                            toolStripComboBoxRange.Enabled = false;
-                            toolStripComboBoxReferenceForInitialPotential.Enabled = false;
-
-                            toolStripTextBoxInitialV.Enabled = false;
-                            if (_selectedMethod != methodMeasurement.BulkElectrolysis && _selectedMethod != methodMeasurement.ConstantCurrent)
-                            {
-                                toolStripTextBoxVertexV.Enabled = false;
-                                toolStripTextBoxScanrate.Enabled = false;
-                                toolStripTextBoxRepeat.Enabled = false;
-                            }
-
-                            timerCurrentEandI.Enabled = false;
-
-                            Console.WriteLine("Collect block immediate...");
-                            backgroundWorkerCV.RunWorkerAsync();
-                        }
-                        else
-                        {
-                            Console.WriteLine("Collect block was cancelled.");
-                        }
-                    });
-                })).Start();
-            }
-            else
-            {
-                backgroundWorkerCV.CancelAsync();
-
-                toolStripButtonRecord.Enabled = false;
-                toolStripButtonRecord.Text = "Stopping...";
-            }
-        }
-
-        private void updateComboBoxMethod()
-        {
-            string unit1 = "", unit2 = "";
-
-            if(_selectedMode != _selectedMode_previous)
-            {
-            }
-
-            //if(_selectedMode != _selectedMode_previous)
-            //{
-                switch (_selectedMode)
-                {
-                    case modeMeasurement.voltammetry:
-                        unit1 = "mV"; unit2 = "mV/s";
-                        if(_selectedMethod != methodMeasurement.Oscilloscope)
-                        {
-                            chartVoltammogram.ChartAreas[0].AxisX.Title = "Time / s";
-                        }
-                        else 
-                        {
-                            chartVoltammogram.ChartAreas[0].AxisX.Title = "Time / ms";
-                        }
-                        chartVoltammogram.ChartAreas[0].AxisX.Maximum = Double.NaN;
-                        chartVoltammogram.ChartAreas[0].AxisX.Minimum = 0;
-                        chartVoltammogram.ChartAreas[0].AxisY.Title = "Potential / mV";
-                        chartVoltammogram.ChartAreas[0].AxisX2.Title = "";
-                        chartVoltammogram.ChartAreas[0].AxisX2.Enabled = System.Windows.Forms.DataVisualization.Charting.AxisEnabled.False;
-                        chartVoltammogram.ChartAreas[0].AxisX2.IsLogarithmic = false;
-                        chartVoltammogram.ChartAreas[0].AxisY2.Title = "Current / uA";
-                        chartVoltammogram.ChartAreas[0].AxisY2.IsLogarithmic = false;
-                        chartVoltammogram.ChartAreas[0].AxisY2.MinorTickMark.Enabled = false;
-
-                        toolStripComboBoxReferenceForInitialPotential.Enabled = true;
-
-                        if (_selectedMode_previous != modeMeasurement.voltammetry) toolStripComboBoxRange.SelectedIndex = 3;
-
-                        break;
-
-                    case modeMeasurement.galvanometry:
-                        unit1 = "uA"; unit2 = "uA/s";
-                        chartVoltammogram.ChartAreas[0].AxisX.Title = "Time / s";
-                        chartVoltammogram.ChartAreas[0].AxisX.Maximum = Double.NaN;
-                        chartVoltammogram.ChartAreas[0].AxisX.Minimum = 0;
-                        chartVoltammogram.ChartAreas[0].AxisY.Title = "Potential of S. / mV\nvs Ref. electrode";
-                        chartVoltammogram.ChartAreas[0].AxisX2.Title = "";
-                        chartVoltammogram.ChartAreas[0].AxisX2.IsLogarithmic = false;
-                        chartVoltammogram.ChartAreas[0].AxisX2.Enabled = System.Windows.Forms.DataVisualization.Charting.AxisEnabled.False;
-                        chartVoltammogram.ChartAreas[0].AxisY2.Title = "Potential of W. / mV\nvs C. electrode";
-                        chartVoltammogram.ChartAreas[0].AxisY2.IsLogarithmic = false;
-                        chartVoltammogram.ChartAreas[0].AxisY2.MinorTickMark.Enabled = false;
-
-                        toolStripComboBoxReferenceForInitialPotential.Enabled = false;
-
-                        if (_selectedMode_previous != modeMeasurement.galvanometry) toolStripComboBoxRange.SelectedIndex = 2;
-
-                        break;
-
-                    case modeMeasurement.eis:
-                        chartVoltammogram.Series[1].Points.Clear();
-                        chartVoltammogram.Series[2].Points.Clear();
-                        chartVoltammogram.Series[3].Points.Clear();
-                        chartVoltammogram.Series[4].Points.Clear();
-                        chartVoltammogram.Series[5].Points.Clear();
-
-                        chartVoltammogram.Series[6].Points.SuspendUpdates();
-                            chartVoltammogram.Series[6].Points.Clear();
-                            chartVoltammogram.Series[6].Points.AddXY(1, 1);
-                        chartVoltammogram.Series[6].Points.ResumeUpdates();
-
-                        chartVoltammogram.Update();
-
-                        unit1 = "mV"; unit2 = "Hz";
-                        chartVoltammogram.ChartAreas[0].AxisX.Title = "Re[Z] / ohm";
-                        chartVoltammogram.ChartAreas[0].AxisX.Maximum = Double.NaN;
-                        chartVoltammogram.ChartAreas[0].AxisX.Minimum = 0;// Double.NaN;
-                        chartVoltammogram.ChartAreas[0].AxisY.Title = "Im[Z] / ohm";
-                        chartVoltammogram.ChartAreas[0].AxisX2.Title = "Frequency / Hz";
-                        chartVoltammogram.ChartAreas[0].AxisX2.Minimum = Double.NaN;
-                        //chartVoltammogram.ChartAreas[0].AxisX2.Minimum = 1;
-                        //chartVoltammogram.ChartAreas[0].AxisX2.Maximum = 1000000;
-                        chartVoltammogram.ChartAreas[0].AxisX2.IsLogarithmic = true;
-                        chartVoltammogram.ChartAreas[0].AxisX2.Enabled = System.Windows.Forms.DataVisualization.Charting.AxisEnabled.True;
-                        chartVoltammogram.ChartAreas[0].AxisY2.Title = "|Z| / ohm";
-                        chartVoltammogram.ChartAreas[0].AxisY2.IsLogarithmic = true;
-                        chartVoltammogram.ChartAreas[0].AxisY2.MinorTickMark.Enabled = true;
-                        chartVoltammogram.ChartAreas[0].AxisY2.MinorTickMark.LineColor = System.Drawing.Color.Red;
-                        chartVoltammogram.ChartAreas[0].AxisY2.MinorTickMark.Size = 0.5F;
-                        chartVoltammogram.ChartAreas[0].AxisY2.MinorTickMark.Interval = 1;
-
-                        toolStripComboBoxReferenceForInitialPotential.Enabled = true;
-
-                        if (_selectedMode_previous != modeMeasurement.eis) toolStripComboBoxRange.SelectedIndex = 2;
-
-                        break;
-
-                    default:
-                        break;
-                }
-            //}
-            //_selectedMode_previous = _selectedMode;
-
-            toolStripLabel1.ToolTipText = ""; toolStripLabel1.AutoToolTip = true;
-            toolStripLabel1.Visible = true; toolStripTextBoxInitialV.Visible = true; toolStripComboBoxReferenceForInitialPotential.Visible = true;
-            toolStripLabel6.Visible = false;
-            toolStripTextBoxFinalV.Visible = false;
-            toolStripLabel7.Visible = false;
-            toolStripTextBoxScanrate2.Visible = false;
-            toolStripLabel8.Visible = false;
-            toolStripTextBoxStep.Visible = false;
-
-            if (_selectedMode == modeMeasurement.voltammetry || _selectedMode == modeMeasurement.galvanometry)
-            {
-                switch (_selectedMethod)
-                {
-                    case methodMeasurement.Cyclicvoltammetry:
-                    case methodMeasurement.Series_of_RDE_CV:
-                    case methodMeasurement.Cyclicgalvanometry:
-                        toolStripLabel1.Text = "Initial [" + unit1 + "]:";
-                        toolStripLabel2.Text = "Vertex [" + unit1 + "]:";
-                        toolStripTextBoxVertexV.Text = "500";
-                        toolStripLabel3.Text = "Scanning rate [" + unit1 + "/s]:";
-                        toolStripTextBoxScanrate.Text = "100";
-                        toolStripLabel4.Text = "Repeat:";
-                        toolStripTextBoxRepeat.Text = "1";
-                        break;
-
-                    case methodMeasurement.CyclicvoltammetryQuick:
-                        toolStripLabel1.Text = "Initial [" + unit1 + "]:";
-                        toolStripLabel2.Text = "Vertex [" + unit1 + "]:";
-                        toolStripTextBoxVertexV.Text = "500";
-                        toolStripLabel3.Text = "Scanning rate [V/s]:";
-                        toolStripTextBoxScanrate.Text = "1";
-                        toolStripLabel4.Text = "Repeat:";
-                        toolStripTextBoxRepeat.Text = "1";
-                        break;
-
-                    case methodMeasurement.BulkElectrolysis:
-                        toolStripLabel1.Text = "Potential [" + unit1 + "]:";
-                        toolStripLabel2.Text = "Duration [min]:";
-                        toolStripTextBoxVertexV.Text = "60";
-                        toolStripLabel3.Text = "Sampling Interval [s]:";
-                        toolStripTextBoxScanrate.Text = "1";
-                        toolStripLabel4.Text = "Target |Q| [C]:";
-                        toolStripTextBoxRepeat.Text = "0";
-                        break;
-
-                    case methodMeasurement.ConstantCurrent:
-                        toolStripLabel1.Text = "Current [" + unit1 + "]:"; toolStripLabel1.ToolTipText = "Set the amplitude of a current flowed out from the working to current electrodes";
-                        toolStripLabel2.Text = "Duration [min]:";
-                        toolStripTextBoxVertexV.Text = "60";
-                        toolStripLabel3.Text = "Sampling Interval [s]:";
-                        toolStripTextBoxScanrate.Text = "1";
-                        toolStripLabel4.Text = "Target |Q| [C]:";
-                        toolStripTextBoxRepeat.Text = "0";
-                        toolStripLabel8.Text = "Limit of |E| for S [mV]:"; toolStripLabel8.Visible = true;
-                        toolStripTextBoxStep.Text = "0"; toolStripTextBoxStep.Visible = true;
-                        break;
-
-                    case methodMeasurement.LSV:
-                    case methodMeasurement.Series_of_RDE_LSV:
-                    case methodMeasurement.OSWV:
-                        toolStripLabel1.Text = "Initial [" + unit1 + "]:";
-                        toolStripLabel2.Text = "Final [" + unit1 + "]:";
-                        toolStripTextBoxVertexV.Text = "500";
-                        toolStripLabel3.Text = "Scanning rate [" + unit1 + "/s]:";
-                        toolStripTextBoxScanrate.Text = "100";
-                        toolStripLabel4.Text = "Repeat:";
-                        toolStripTextBoxRepeat.Text = "1";
-                        break;
-
-                    case methodMeasurement.DPSCA:
-                        toolStripLabel1.Text = "Initial [" + unit1 + "]:";
-                        toolStripLabel2.Text = "Step in [" + unit1 + "]:";
-                        toolStripTextBoxVertexV.Text = "500";
-                        toolStripLabel3.Text = "Duration [s]:";
-                        toolStripTextBoxScanrate.Text = "5";
-                        toolStripLabel4.Text = "Repeat:";
-                        toolStripTextBoxRepeat.Text = "1";
-                        break;
-
-                    case methodMeasurement.IRC:
-                        toolStripLabel1.Text = "Initial [" + unit1 + "]:";
-                        toolStripLabel2.Text = "Amplitude [" + unit1 + "]:";
-                        toolStripTextBoxVertexV.Text = "25";
-                        toolStripLabel3.Text = "Duration [s]:";
-                        toolStripTextBoxScanrate.Text = "1";
-                        toolStripLabel4.Text = "Repeat:";
-                        toolStripTextBoxRepeat.Text = "1";
-                        break;
-
-                    case methodMeasurement.OCP:
-                        //toolStripLabel1.Text = "N/A:"; 
-                        toolStripLabel1.Visible = false; toolStripTextBoxInitialV.Visible = false; toolStripComboBoxReferenceForInitialPotential.Visible = false;
-                        toolStripLabel2.Text = "Duration [min]:";
-                        toolStripTextBoxVertexV.Text = "60";
-                        toolStripLabel3.Text = "Sampling Interval [s]:";
-                        toolStripTextBoxScanrate.Text = "1";
-                        toolStripLabel4.Text = "Repeat:";
-                        toolStripTextBoxRepeat.Text = "1";
-                        break;
-
-                    case methodMeasurement.Oscilloscope:
-                        toolStripLabel1.Text = "Potential [" + unit1 + "]:";
-                        toolStripTextBoxInitialV.Text = "0";
-                        toolStripLabel2.Text = "Amplitude [" + unit1 + "]:";
-                        toolStripTextBoxVertexV.Text = "10";
-                        toolStripLabel3.Text = "Frequency [" + "Hz" + "]:";
-                        toolStripTextBoxScanrate.Text = "1000";
-                        toolStripLabel4.Text = "Accumulation:";
-                        toolStripTextBoxRepeat.Text = "64";
-                        break;
-                }
-                toolStripLabel5.Text = "Current Range:";
-            }
-            else if (_selectedMode == modeMeasurement.eis)// && _selectedMode_previous != modeMeasurement.eis)
-            {
-                //
-                // TODO: methodを選択すると値が初期化されるのは良くないが、異なるModeからの変更では、初期値を入れる必要がある
-                //
-                //if(
-                //       _selectedMethod_previous != methodMeasurement.EIS_Open_Circuit
-                //    && _selectedMethod_previous != methodMeasurement.EIS_Short_Circuit
-                //    && _selectedMethod_previous != methodMeasurement.EIS
-                //    && _selectedMethod_previous != methodMeasurement.EIS_MottSchottkey
-                //)
-                //{
-                    switch (_selectedMethod)
-                    {
-                        case methodMeasurement.EIS_Open_Circuit:
-                        case methodMeasurement.EIS_Short_Circuit:
-                        case methodMeasurement.EIS:
-                            toolStripLabel1.Text = "Potential [" + unit1 + "]:";
-                            toolStripLabel2.Text = "Amplitude [" + unit1 + "]:";
-                            toolStripTextBoxVertexV.Text = "100";
-                            toolStripLabel3.Text = "Scanning Frequency [" + unit2 + "] from:";
-                            toolStripTextBoxScanrate.Text = "1";
-                            toolStripLabel7.Text = "to:";  toolStripLabel7.Visible = true;
-                            toolStripTextBoxScanrate2.Text = "1000000"; toolStripTextBoxScanrate2.Visible = true;
-                            toolStripLabel4.Text = "Accumulation:";
-                            toolStripTextBoxRepeat.Text = "64";
-                            toolStripLabel8.Text = "Steps/dec.:"; toolStripLabel8.Visible = true;
-                            toolStripTextBoxStep.Text = "10"; toolStripTextBoxStep.Visible = true;
-                            toolStripLabel5.Text = "Reference Resistor:";
-
-                            toolStripComboBoxRange.SelectedIndex = 2;
-
-                            break;
-
-                        case methodMeasurement.EIS_MottSchottkey:
-                            toolStripLabel1.Text = "Initial [" + unit1 + "]:";
-                            toolStripTextBoxInitialV.Text = "0";
-                            toolStripLabel6.Text = "Final [mV]:"; toolStripLabel6.Visible = true;
-                            toolStripTextBoxFinalV.Text = "-1000"; toolStripTextBoxFinalV.Visible = true;                          
-                            toolStripLabel2.Text = "Amplitude [" + unit1 + "]:";
-                            toolStripTextBoxVertexV.Text = "10";
-                            toolStripLabel3.Text = "Frequency [" + unit2 + "]:";
-                            toolStripTextBoxScanrate.Text = "1000";
-                            toolStripLabel4.Text = "Accumulation:";
-                            toolStripTextBoxRepeat.Text = "64";
-                            toolStripLabel8.Text = "Step [mV]:"; toolStripLabel8.Visible = true;
-                            toolStripTextBoxStep.Text = "10"; toolStripTextBoxStep.Visible = true;                          
-                            toolStripLabel5.Text = "Reference Resistor:";
-
-                            toolStripComboBoxRange.SelectedIndex = 1;
-
-                            break;
-                    }
-                //}
-            }
-            else
-            {
-
-            }
-
-            _selectedMode_previous = _selectedMode;
-
-        }
-
         private void toolStripComboBoxMethod_SelectedIndexChanged(object sender, EventArgs e)
         {
             //_selectedMethod = (methodMeasurement)toolStripComboBoxMethod.SelectedIndex;
@@ -4602,53 +3601,6 @@ namespace Voltammogrammer
             //if (_selectedMethod == _selectedMethod_previous) return;
 
             updateComboBoxMethod();
-        }
-
-        private void chartVoltammogram_CursorPositionChanged(object sender, System.Windows.Forms.DataVisualization.Charting.CursorEventArgs e)
-        {
-            double X = e.ChartArea.CursorX.Position;
-            double Y1 = e.ChartArea.CursorY.Position;
-            double X2 = Math.Pow(10, e.ChartArea.AxisX2.PositionToValue(e.ChartArea.AxisX.ValueToPosition(e.ChartArea.CursorX.Position)));
-            double Y2 = e.ChartArea.AxisY2.PositionToValue(e.ChartArea.AxisY.ValueToPosition(e.ChartArea.CursorY.Position));// / 1000 * ((long)_selectedRange / 1000);
-            double F1 = 0.0;
-
-            Console.WriteLine($"x1, y1, f1, x2, y2: {X}, {Y1}, {F1}, {X2}, {Y2}");
-
-            string XY = "";
-            switch (_selectedMode)
-            {
-                case modeMeasurement.eis:
-                    for(int i = 0; i < chartVoltammogram.Series[1].Points.Count; i++)
-                    {
-                        if(chartVoltammogram.Series[1].Points[i].XValue < X)
-                        {
-                            if(i > 0)
-                            {
-                                // Bode plot: chartVoltammogram.Series[6].Points
-                                // Cole-Cole plot: chartVoltammogram.Series[1].Points
-
-                                // indexがiとi-1のデータ間にXがある
-
-                                double F1_1 = chartVoltammogram.Series[6].Points[i].XValue;
-                                double F1_0 = chartVoltammogram.Series[6].Points[i-1].XValue;
-                                double X1_1 = chartVoltammogram.Series[1].Points[i].XValue;
-                                double X1_0 = chartVoltammogram.Series[1].Points[i-1].XValue;
-
-                                F1 = (F1_1 - F1_0) / (X1_1 - X1_0) * (X - X1_0) + F1_0;
-
-                                break;
-                            }
-                        }
-                    }
-                    //XY = "(" + X + " ohm, " + Y1 + " ohm, " + Math.Sqrt(Math.Pow(X,2) + Math.Pow(Y1, 2)).ToString("0") + " ohm)";
-                    XY = "[(" + X + " ohm, " + Y1 + " ohm, " + F1.ToString("0.0") + " Hz), (" + X2.ToString("0.0") + " Hz, " + Math.Pow(10, Y2).ToString("0.0") + " ohm)]";
-                    break;
-                default:
-                    XY = "(" + X + " s, " + Y1 + " mV, " + Y2.ToString("0.000") + " uA)";
-                    break;
-            }
-
-            toolStripStatusCursor.Text = XY;
         }
 
         private void toolStripComboBoxRange_SelectedIndexChanged(object sender, EventArgs e)
@@ -4693,97 +3645,257 @@ namespace Voltammogrammer
             }
         }
 
-        private void toolStripMenuItemRDE_Click(object sender, EventArgs e)
+        private void toolStripMenuItemSubModule_DropDownItemClicked(object sender, ToolStripItemClickedEventArgs e)
         {
-            if(toolStripMenuItemRDE.Checked)
-            {
-                if (DIGITALIO_FROM_ARDUINO)
-                {
-                    _arduino.setRotation(0);
-                }
-                else
-                {
-                    SetRotation(0);
-                }
-                //toolStripMenuItemRDE.Checked = false;
-            }
-            else
-            {
-                string rpm = toolStripComboBoxRDESpeed.Items[toolStripComboBoxRDESpeed.SelectedIndex].ToString();
-                if (DIGITALIO_FROM_ARDUINO)
-                {
-                    _arduino.setRotation(Convert.ToUInt16(rpm));
-                }
-                else
-                {
-                    SetRotation(Convert.ToUInt16(rpm));
-                }
-                //toolStripMenuItemRDE.Checked = true;
-            }
+            ToolStripMenuItem item = (ToolStripMenuItem)sender;
+            int idx = item.DropDownItems.IndexOf(e.ClickedItem);
+
+            SetSubmodule(idx);
         }
 
         private void toolStripMenuItemSubModuleOption1_Click(object sender, EventArgs e)
         {
-            if (DIGITALIO_FROM_ARDUINO)
+            switch (_selectedSubModule)
             {
-                _arduino.stopPurging();
+                case typeSubModule.RDE:
+                    SetPurging(!toolStripMenuItemSubModuleOption1.Checked);
+                    break;
+
+                case typeSubModule.Synchronous_switching:
+                    SetSwitchOnAsync(!toolStripMenuItemSubModuleOption1.Checked);
+                    //toolStripMenuItemSubModuleOption1.Checked = !toolStripMenuItemSubModuleOption1.Checked;
+                    break;
+
+                default:
+                    break;
             }
-            else
-            {
-                SetPurging(!toolStripMenuItemSubModuleOption1.Checked);
-            }
-            //toolStripMenuItemPurge.Checked = false;
         }
 
-        private void toolStripComboBoxRDESpeed_SelectedIndexChanged(object sender, EventArgs e)
+        private void toolStripMenuItemSubModuleOption2_Click(object sender, EventArgs e)
         {
-            if (toolStripMenuItemRDE.Checked)
+            switch (_selectedSubModule)
             {
-                string rpm = toolStripComboBoxRDESpeed.Items[toolStripComboBoxRDESpeed.SelectedIndex].ToString();
-                if (DIGITALIO_FROM_ARDUINO)
-                {
-                    _arduino.setRotation(Convert.ToUInt16(rpm));
-                }
-                else
-                {
-                    SetRotation(Convert.ToUInt16(rpm));
-                }
+                case typeSubModule.RDE:
+                    break;
+
+                case typeSubModule.Synchronous_switching:
+                    break;
+
+                default:
+                    break;
+            }
+        }
+
+        private void toolStripMenuItemSubModuleOption3_Click(object sender, EventArgs e)
+        {
+            switch (_selectedSubModule)
+            {
+                case typeSubModule.RDE:
+                    if (toolStripMenuItemSubModuleOption3.Checked)
+                    {
+                        SetRotation(0);
+                    }
+                    else
+                    {
+                        string rpm = toolStripMenuItemSubModuleOption3Param1.Items[toolStripMenuItemSubModuleOption3Param1.SelectedIndex].ToString();
+                        SetRotation(Convert.ToUInt16(rpm));
+                    }
+                    break;
+
+                case typeSubModule.Synchronous_switching:
+                    toolStripMenuItemSubModuleOption3.Checked = (_is_using_automatical_switcher = !toolStripMenuItemSubModuleOption3.Checked);
+                    break;
+
+                default:
+                    break;
+            }
+        }
+
+        //private int SwitchingInterval
+        //{
+        //    set;
+        //    get;
+        //} = 0;
+        //private bool IsSwitchingAutomatically
+        //{
+        //    set
+        //    {
+        //        toolStripMenuItemSubModuleOption3.Checked = value;
+        //    }
+        //    get
+        //    {
+        //        return IsSwitchingAutomatically;
+        //   }
+        //}
+        //private bool IsSwitchingFinallyOn
+        //{
+        //    set
+        //    {
+        //        toolStripMenuItemSubModuleOption3Param2.Checked = value;
+        //    }
+        //    get
+        //    {
+        //        return IsSwitchingFinallyOn;
+        //    }
+        //}
+        //private async void SwitchingStateAsync(bool? value_to_be_set = null)
+        //{
+        //    if (value_to_be_set.HasValue)
+        //    {
+        //        // GUI操作は非同期で呼び出す
+        //        await Task.Run(() => { SetPurging(value_to_be_set.Value); }); //SetPurging(on); 
+        //    }
+        //    else
+        //    {
+        //    }
+        //}
+        //public static readonly Func<bool?, string> GetDefinition = (new Func<Func<bool?, string>>(() =>
+        //{
+        //    string def = string.Empty;
+        //    return (x) => string.IsNullOrEmpty(def) ? def = "ret" : def;
+        //}))();
+        //public bool GetSwitchingStatus(bool on)
+        //{
+        //    return (bool)Invoke((Func<bool>)delegate ()
+        //    {
+        //        return toolStripMenuItemSubModuleOption1.Checked;
+        //    });
+        //}
+        //public bool SwitchingStateAsync
+        //{
+        //    set
+        //    {
+        //        ((Action)(async () =>
+        //        {
+        //            await Task.Run(() =>
+        //            {
+        //                SetPurging(value);
+        //            });
+        //        }))();
+        //    }
+        //    get
+        //    {
+        //        return (bool)Invoke((Func<bool>)delegate ()
+        //        {
+        //            return toolStripMenuItemSubModuleOption1.Checked;
+        //        });
+        //    }
+        //}
+        
+        private void toolStripMenuItemSubModuleOption3Param1_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            switch (_selectedSubModule)
+            {
+                case typeSubModule.RDE:
+                    if (toolStripMenuItemSubModuleOption3.Checked)
+                    {
+                        string rpm = toolStripMenuItemSubModuleOption3Param1.Items[toolStripMenuItemSubModuleOption3Param1.SelectedIndex].ToString();
+                        SetRotation(Convert.ToUInt16(rpm));
+                    }
+                    break;
+
+                case typeSubModule.Synchronous_switching:
+                    break;
+
+                default:
+                    break; 
+            }
+        }
+
+        private void toolStripMenuItemSubModuleOption3Param1_TextUpdate(object sender, EventArgs e)
+        {
+            switch (_selectedSubModule)
+            {
+                case typeSubModule.RDE:
+                    break;
+
+                case typeSubModule.Synchronous_switching:
+                    if (double.TryParse(toolStripMenuItemSubModuleOption3Param1.Text, out double value)
+                        && (value >= 1.0))
+                    {
+                        _secSwitcingInterval = value;
+                        Console.WriteLine("Switcing Interval: {0}", _secSwitcingInterval);
+                    }
+                    else {  }
+                    break;
+
+                default:
+                    break;
+            }
+        }
+
+        private void toolStripMenuItemSubModuleOption3Param2_Click(object sender, EventArgs e)
+        {
+            switch (_selectedSubModule)
+            {
+                case typeSubModule.RDE:
+                    break;
+
+                case typeSubModule.Synchronous_switching:
+                    toolStripMenuItemSubModuleOption3Param2.Checked = (_is_applying_switching_on_finally = !toolStripMenuItemSubModuleOption3Param2.Checked);
+                    break;
+
+                default:
+                    break;
+            }
+        }
+
+        private void toolStripMenuItemSubModuleOption4_Click(object sender, EventArgs e)
+        {
+            switch (_selectedSubModule)
+            {
+                case typeSubModule.RDE:
+                    _select_rotation_speeds.Show();
+                    break;
+
+                case typeSubModule.Synchronous_switching:
+                    break;
+
+                default:
+                    break;
             }
         }
 
         private void toolStripMenuItemSaveAvaragedData_Click(object sender, EventArgs e)
         {
-            toolStripMenuItemSaveAvaragedData.Checked = !toolStripMenuItemSaveAvaragedData.Checked;
-
-            _flag_digitalfilter = toolStripMenuItemSaveAvaragedData.Checked;
+            toolStripMenuItemSaveAvaragedData.Checked = (_is_using_digitalfilter = !toolStripMenuItemSaveAvaragedData.Checked);
         }
 
-        private void chartVoltammogram_SelectionRangeChanged(object sender, System.Windows.Forms.DataVisualization.Charting.CursorEventArgs e)
+        private void timerCurrentEandI_Tick(object sender, EventArgs e)
         {
-            //Console.WriteLine("Changed:");
-            //Console.WriteLine(e.Axis.AxisName + ": " + e.NewSelectionStart.ToString());
-            //Console.WriteLine(e.Axis.AxisName + ": " + e.NewSelectionEnd.ToString());
-            //if (e.Axis.AxisName.ToString() == "Y")
-            //{
-            //    Console.WriteLine("Changed:");
-            //    //Console.WriteLine(e.Axis.AxisName + ": " + e.NewSelectionStart.ToString());
-            //    //Console.WriteLine(e.Axis.AxisName + ": " + e.NewSelectionEnd.ToString());
-
-            //    double Y2max = e.ChartArea.AxisY2.PositionToValue(e.ChartArea.AxisY.ValueToPosition(e.NewSelectionStart));
-            //    double Y2min = e.ChartArea.AxisY2.PositionToValue(e.ChartArea.AxisY.ValueToPosition(e.NewSelectionEnd));
-
-            //    Console.WriteLine("Ymax: " + Y2max + ", Ymin:" + Y2min);
+            double value;
+            SampleSingleValue((CHANNEL_POTENTIAL - 1), out value);
+            toolStripStatusCurrentEandI.Text = "(" + (value * -1 * POTENTIAL_SCALE).ToString("0.0") + " mV)";
 
 
-
-            //}
+            int r = FDwfAnalogIOStatus(_handle);
+            //Console.WriteLine("FDwfAnalogIOStatus ({0})", r);
+            int sts = 0;
+            int ret = FDwfAnalogIOEnableStatus(_handle, out sts);
+            //Console.WriteLine("FDwfAnalogIOEnableStatus ({0}): sts = {1}", ret, sts);
+            if (r == 0 || ret == 0 || sts == 0)
+            {
+                timerCurrentEandI.Enabled = false;
+                toolStripButtonRecord.Enabled = false;
+                toolStripButtonScan.Enabled =false;
+                toolStripButtonConnect.Enabled = true;
+                FDwfDeviceClose(_handle);
+                Console.WriteLine("Failed to power PocketPotentiostat on");
+                MessageBox.Show(this, "Failed to power PocketPotentiostat on. \nPlease check the auxiliary power supply.\nOr, re-connect to PocketPotentiostat.", "Error Opening Device", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
         }
+
+        //
+        // Event Handlers for Chart
+        //
 
         double _chartselectionY2max, _chartselectionY2min;
         bool _chartselectionTuringOn = false;
 
         private void chartVoltammogram_AxisViewChanged(object sender, System.Windows.Forms.DataVisualization.Charting.ViewEventArgs e)
         {
+            return;
+
             //double Y2max = e.ChartArea.AxisY2.PositionToValue(e.ChartArea.AxisY.ValueToPosition(e.Axis.ScaleView.ViewMaximum));
             //double Y2min = e.ChartArea.AxisY2.PositionToValue(e.ChartArea.AxisY.ValueToPosition(e.Axis.ScaleView.ViewMinimum));
 
@@ -4812,8 +3924,261 @@ namespace Voltammogrammer
             }
         }
 
+        private void chartVoltammogram_AxisViewChanging(object sender, System.Windows.Forms.DataVisualization.Charting.ViewEventArgs e)
+        {
+            //double Y2max = e.ChartArea.AxisY2.PositionToValue(e.ChartArea.AxisY.ValueToPosition(e.Axis.ScaleView.ViewMaximum));
+            //double Y2min = e.ChartArea.AxisY2.PositionToValue(e.ChartArea.AxisY.ValueToPosition(e.Axis.ScaleView.ViewMinimum));
+
+            //Console.WriteLine(e.Axis.AxisName);
+            //Console.WriteLine(" X: " + e.Axis.ScaleView.ViewMaximum.ToString() + ", " + e.Axis.ScaleView.ViewMinimum.ToString());
+            //Console.WriteLine("Y2: " + Y2max + ", " + Y2min);
+        }
+
+        private void chartVoltammogram_SelectionRangeChanged(object sender, System.Windows.Forms.DataVisualization.Charting.CursorEventArgs e)
+        {
+            Console.WriteLine("chartVoltammogram_SelectionRangeChanged: " + e.NewPosition);
+            Console.WriteLine("    {0}", e.Axis.ToString());
+            Console.WriteLine("    e.NewSelection: start {0}; end {1}", e.NewSelectionStart, e.NewSelectionEnd);
+            Console.WriteLine("    e.NewSelection (%): start {0}; end {1}", e.Axis.ValueToPosition(e.NewSelectionStart), e.Axis.ValueToPosition(e.NewSelectionEnd));
+            Console.WriteLine("    e.Axis.ScaleView.Size: {0}", e.Axis.ScaleView.Size);
+            Console.WriteLine("    e.NewPosition: {0}", e.NewPosition);
+            Console.WriteLine("    e.ChartArea.CursorX.Position: X {0}; Y {1}", e.ChartArea.CursorX.Position, e.ChartArea.CursorY.Position);
+
+            if (chartVoltammogram.Series.Count == 0) return;
+            if ((chartVoltammogram.Series[0]).Points.Count == 0) return;
+
+            if (Math.Abs(e.Axis.ValueToPosition(e.NewSelectionStart) - e.Axis.ValueToPosition(e.NewSelectionEnd)) < 1)
+            {
+            }
+            else
+            {
+                //Console.WriteLine("    Zooming");
+                try
+                {
+                    System.Windows.Forms.DataVisualization.Charting.ChartArea ca = chartVoltammogram.ChartAreas[0];
+
+                    if (e.Axis.ToString().StartsWith("Axis-X"))
+                    {
+                        double p = Math.Min(e.NewSelectionStart, e.ChartArea.CursorX.Position);
+                        double size = Math.Abs(e.NewSelectionStart - e.NewSelectionEnd);
+                        //p = 100000;
+                        //size = 125000;
+                        double order = Math.Truncate(Math.Log10(Math.Abs(size)));
+                        double interval = Math.Pow(10, order - 1);
+                        //double interval_m = RescaleTicksX(size, p, is_zooming: true);
+                        //double new_size = Math.Ceiling(size / (interval_m)) * interval_m;
+                        double new_p = Math.Round(p / (interval)) * (interval);
+                                                
+                        double p_x2;
+                        double start_x2;
+                        double end_x2;
+                        double size_x2;
+                        double order_x2;
+                        double interval_y2;
+                        double new_p_x2;
+                        if(_selectedMode != modeMeasurement.eis)
+                        {
+                            p_x2 = ca.AxisX2.PositionToValue(ca.AxisX.ValueToPosition(p));
+                            start_x2 = ca.AxisX2.PositionToValue(ca.AxisX.ValueToPosition(e.NewSelectionStart));
+                            end_x2 = ca.AxisX2.PositionToValue(ca.AxisX.ValueToPosition(e.NewSelectionEnd));
+                            size_x2 = Math.Abs(start_x2 - end_x2);
+                            order_x2 = Math.Truncate(Math.Log10(Math.Abs(size_x2)));
+                            interval_y2 = Math.Pow(10, order_x2 - 1);
+                            new_p_x2 = Math.Round(p_x2 / (interval_y2)) * (interval_y2);
+                        }
+                        else
+                        {
+                            // X2は対数軸なので、対数値を指定する
+                            p_x2 = ca.AxisX2.PositionToValue(ca.AxisX.ValueToPosition(p));
+                            start_x2 = ca.AxisX2.PositionToValue(ca.AxisX.ValueToPosition(e.NewSelectionStart));
+                            end_x2 = ca.AxisX2.PositionToValue(ca.AxisX.ValueToPosition(e.NewSelectionEnd));
+                            size_x2 = Math.Abs(start_x2 - end_x2);
+                            //order_x2 = Math.Truncate(Math.Abs(size_x2));
+                            //interval_y2 = order_x2 - 1;
+                            //new_p_x2 = Math.Round(p_x2 / (interval_y2)) * (interval_y2);
+                            new_p_x2 = p_x2;
+                        }
+
+                        // 座標軸の計算が全て終わってから、Zoomを実行
+                        ca.AxisX.ScaleView.Zoom(new_p, size, System.Windows.Forms.DataVisualization.Charting.DateTimeIntervalType.Number, false);
+                        ca.AxisX2.ScaleView.Zoom(new_p_x2, size_x2, System.Windows.Forms.DataVisualization.Charting.DateTimeIntervalType.Number, false);
+
+                        //Console.WriteLine("    After zooming: ViewMinimum {0}; size {1}; offset {2}; new_p {3}",
+                        //    chartVoltammogram.ChartAreas[0].AxisX.ScaleView.ViewMinimum,
+                        //    chartVoltammogram.ChartAreas[0].AxisX.ScaleView.Size,
+                        //    chartVoltammogram.ChartAreas[0].AxisX.LabelStyle.IntervalOffset,
+                        //    new_p);
+
+                        // Chartコントロールのバグ？Zoom後に少しずれるのを補正する
+                        double delta = ca.AxisX.ScaleView.ViewMinimum - new_p;
+                        ca.AxisX.LabelStyle.IntervalOffset = -delta;
+                        ca.AxisX.MajorTickMark.IntervalOffset = -delta;
+                        ca.AxisX.MinorTickMark.IntervalOffset = -delta;
+                        double delta_x2 = (ca.AxisX2.ScaleView.ViewMinimum - new_p_x2);
+                        ca.AxisX2.LabelStyle.IntervalOffset = -delta_x2;
+                        ca.AxisX2.MajorTickMark.IntervalOffset = -delta_x2;
+                        ca.AxisX2.MinorTickMark.IntervalOffset = -delta_x2;
+
+                        if (_selectedMode != modeMeasurement.eis)
+                        {
+                            // 軸ラベル位置をキリのよいところ＝主目盛り間隔で始まるようにする
+                            //double delta2 = (Math.Ceiling(new_p / (interval_m)) * (interval_m)) - new_p;
+                            //chartVoltammogram.ChartAreas[0].AxisX.LabelStyle.IntervalOffset += delta2;
+                            //chartVoltammogram.ChartAreas[0].AxisX.MajorTickMark.IntervalOffset += delta2;
+                            //chartVoltammogram.ChartAreas[0].AxisX.MinorTickMark.IntervalOffset += delta2;
+                            //chartVoltammogram.ChartAreas[0].AxisX2.MajorTickMark.IntervalOffset += delta2;
+                            //chartVoltammogram.ChartAreas[0].AxisX2.MinorTickMark.IntervalOffset += delta2;
+
+                            // 副目盛りは、主目盛りよりもoffsetとしては小さくなるので (現状、副目盛り間隔は、主目盛りよりも5倍狭い) 
+                            // Offsetは、グラフの左下が基準
+                            //double delta3 = (new_p + delta2) - (Math.Ceiling(new_p / (interval_m / 5)) * (interval_m / 5));
+                            //chartVoltammogram.ChartAreas[0].AxisX.MinorTickMark.IntervalOffset -= delta3;
+                            //chartVoltammogram.ChartAreas[0].AxisX2.MinorTickMark.IntervalOffset -= delta3;
+                        }
+                        else
+                        {
+                            double delta2_x2 = Math.Ceiling(new_p_x2) - new_p_x2;
+                            ca.AxisX2.LabelStyle.IntervalOffset += delta2_x2;
+                            ca.AxisX2.MajorTickMark.IntervalOffset += delta2_x2;
+                            ca.AxisX2.MinorTickMark.IntervalOffset += delta2_x2;
+                            //double delta3_x2 = (Math.Ceiling(new_p_x2 / (1.0/10)) * (1.0/10)) - new_p_x2;
+                            ca.AxisX2.MinorTickMark.IntervalOffset += -1;
+                        }
+
+                        // selectioの解除
+                        double new_x = (e.NewSelectionStart + e.NewSelectionEnd) / 2;
+                        e.ChartArea.CursorX.Position = new_x;
+                        e.ChartArea.CursorX.SetSelectionPosition(new_x, new_x);
+
+                        // selectionの範囲が狭い時には、zoomしないので、ここでselectionを解除しておく
+                        if (Math.Abs(
+                                ca.AxisY.ValueToPosition(e.ChartArea.CursorY.SelectionEnd)
+                            - ca.AxisY.ValueToPosition(e.ChartArea.CursorY.SelectionStart)
+                                    ) < 1)
+                        {
+                            double new_y = (e.ChartArea.CursorY.SelectionEnd + e.ChartArea.CursorY.SelectionStart) / 2;
+                            e.ChartArea.CursorY.SetSelectionPosition(new_y, new_y);
+                        }                    
+                    }
+                    else
+                    {
+                        //   2. 最小値と最大値に基づく目盛り間隔の更新
+                        double p = Math.Min(e.NewSelectionStart, e.ChartArea.CursorY.Position);
+                        double size = Math.Abs(e.NewSelectionStart - e.NewSelectionEnd);
+                        //p = -100;
+                        //size = 100;
+                        double order = Math.Truncate(Math.Log10(Math.Abs(size)));
+                        double interval = Math.Pow(10, order - 1);
+                        //double interval_m = RescaleTicksY(size, p, is_zooming: true);
+                        //double new_size = Math.Ceiling(size / (interval_m)) * interval_m;
+                        double new_p = Math.Round(p / (interval)) * (interval);
+
+                        // TODO: Y2は軸のスケールが違うので要変換
+                        double p_y2 = ca.AxisY2.PositionToValue(ca.AxisY.ValueToPosition(p));
+                        double start_y2 = ca.AxisY2.PositionToValue(ca.AxisY.ValueToPosition(e.NewSelectionStart));
+                        double end_y2 = ca.AxisY2.PositionToValue(ca.AxisY.ValueToPosition(e.NewSelectionEnd));
+                        double size_y2 = Math.Abs(start_y2 - end_y2);
+                        double order_y2 = Math.Truncate(Math.Log10(Math.Abs(size_y2)));
+                        double interval_y2 = Math.Pow(10, order_y2 - 1);
+                        double new_p_y2 = Math.Round(p_y2 / (interval_y2)) * (interval_y2);
+                        if (_selectedMode != modeMeasurement.eis)
+                        {
+                            p_y2 = ca.AxisY2.PositionToValue(ca.AxisY.ValueToPosition(p));
+                            start_y2 = ca.AxisY2.PositionToValue(ca.AxisY.ValueToPosition(e.NewSelectionStart));
+                            end_y2 = ca.AxisY2.PositionToValue(ca.AxisY.ValueToPosition(e.NewSelectionEnd));
+                            size_y2 = Math.Abs(start_y2 - end_y2);
+                            order_y2 = Math.Truncate(Math.Log10(Math.Abs(size_y2)));
+                            interval_y2 = Math.Pow(10, order_y2 - 1);
+                            new_p_y2 = Math.Round(p_y2 / (interval_y2)) * (interval_y2);
+                        }
+                        else
+                        {
+                            p_y2 = ca.AxisY2.PositionToValue(ca.AxisY.ValueToPosition(p));
+                            start_y2 = ca.AxisY2.PositionToValue(ca.AxisY.ValueToPosition(e.NewSelectionStart));
+                            end_y2 = ca.AxisY2.PositionToValue(ca.AxisY.ValueToPosition(e.NewSelectionEnd));
+                            size_y2 = Math.Abs(start_y2 - end_y2);
+                            //order_y2 = Math.Truncate(Math.Log10(Math.Abs(size_y2)));
+                            //interval_y2 = Math.Pow(10, order_y2 - 1);
+                            new_p_y2 = p_y2; // Math.Round(p_y2 / (interval_y2)) * (interval_y2);
+                        }
+
+                        // 座標軸の計算が全て終わってから、Zoomを実行
+                        ca.AxisY.ScaleView.Zoom(new_p, size, System.Windows.Forms.DataVisualization.Charting.DateTimeIntervalType.Number, false);
+                        ca.AxisY2.ScaleView.Zoom(new_p_y2, size_y2, System.Windows.Forms.DataVisualization.Charting.DateTimeIntervalType.Number, false);
+
+                        //Console.WriteLine("    After zooming: ViewMinimum {0}; (ScaleView)Size {1}; IntervalOffset {2}; new_p {3}; size {4}",
+                        //    chartVoltammogram.ChartAreas[0].AxisY.ScaleView.ViewMinimum - chartVoltammogram.ChartAreas[0].AxisY.ScaleView.ViewMaximum,
+                        //    chartVoltammogram.ChartAreas[0].AxisY.ScaleView.Size,
+                        //    chartVoltammogram.ChartAreas[0].AxisY.LabelStyle.IntervalOffset,
+                        //    new_p, size);
+
+                        double delta = (ca.AxisY.ScaleView.ViewMinimum - new_p);
+                        ca.AxisY.LabelStyle.IntervalOffset = -delta;
+                        ca.AxisY.MajorTickMark.IntervalOffset = -delta;
+                        ca.AxisY.MinorTickMark.IntervalOffset = -delta;
+                        double delta_y2 = (ca.AxisY2.ScaleView.ViewMinimum - new_p_y2);
+                        ca.AxisY2.LabelStyle.IntervalOffset = -delta_y2;
+                        ca.AxisY2.MajorTickMark.IntervalOffset = -delta_y2;
+                        ca.AxisY2.MinorTickMark.IntervalOffset = -delta_y2;
+
+                        if (_selectedMode != modeMeasurement.eis)
+                        {
+                            // 軸ラベル位置をキリのよいところ＝主目盛り間隔で始まるようにする
+                            double delta2 = (AbsCeiling(new_p / (ca.AxisY.MajorTickMark.Interval)) * (ca.AxisY.MajorTickMark.Interval)) - new_p;
+                            ca.AxisY.LabelStyle.IntervalOffset += delta2;
+                            ca.AxisY.MajorTickMark.IntervalOffset += delta2;
+                            ca.AxisY.MinorTickMark.IntervalOffset += delta2;
+                            double delta2_y2 = (AbsCeiling(new_p_y2 / (ca.AxisY2.MajorTickMark.Interval)) * (ca.AxisY2.MajorTickMark.Interval)) - new_p_y2;
+                            ca.AxisY2.LabelStyle.IntervalOffset += delta2_y2;
+                            ca.AxisY2.MajorTickMark.IntervalOffset += delta2_y2;
+                            ca.AxisY2.MinorTickMark.IntervalOffset += delta2_y2;
+
+                            // 副目盛りは、主目盛りよりもoffsetとしては小さくなるので (現状、副目盛り間隔は、主目盛りよりも2倍狭い) 
+                            // Offsetは、グラフの左下が基準
+                            //double delta3 = (new_p + delta2) - (Math.Ceiling(new_p / (interval_m / 2)) * (interval_m / 2));
+                            //chartVoltammogram.ChartAreas[0].AxisY.MinorTickMark.IntervalOffset -= delta3;
+                            //chartVoltammogram.ChartAreas[0].AxisY2.MinorTickMark.IntervalOffset -= delta3;
+                        }
+                        else
+                        {
+                            double delta2_y2 = Math.Ceiling(new_p_y2) - new_p_y2;
+                            ca.AxisY2.LabelStyle.IntervalOffset += delta2_y2;
+                            ca.AxisY2.MajorTickMark.IntervalOffset += delta2_y2;
+                            ca.AxisY2.MinorTickMark.IntervalOffset += delta2_y2;
+                            //double delta3_y2 = (Math.Ceiling(new_p_y2 / (1.0 / 10)) * (1.0 / 10)) - new_p_y2;
+                            ca.AxisY2.MinorTickMark.IntervalOffset += -1;// delta3_y2;
+                        }
+                            
+                        double new_y = (e.NewSelectionStart + e.NewSelectionEnd) / 2;
+                        e.ChartArea.CursorY.Position = new_y;
+                        e.ChartArea.CursorY.SetSelectionPosition(new_y, new_y);
+
+                        if (Math.Abs(
+                                ca.AxisX.ValueToPosition(e.ChartArea.CursorX.SelectionEnd)
+                            - ca.AxisX.ValueToPosition(e.ChartArea.CursorX.SelectionStart)
+                                    ) < 1)
+                        {
+                            double new_x = (e.ChartArea.CursorX.SelectionEnd + e.ChartArea.CursorX.SelectionStart) / 2;
+                            e.ChartArea.CursorX.SetSelectionPosition(new_x, new_x);
+                        }
+                    }
+
+                    double AbsCeiling(double v)
+                    {
+                        return (v > 0) ? Math.Ceiling(v) : Math.Floor(v);
+                    }
+                }
+                catch (System.Exception error)
+                {
+                    Console.WriteLine("Exception: {0}", error.Message);
+                }
+            }
+        }
+
         private void chartVoltammogram_SelectionRangeChanging(object sender, System.Windows.Forms.DataVisualization.Charting.CursorEventArgs e)
         {
+            return;
+
             if(e.Axis.AxisName.ToString() == "Y")
             {
                 //Console.WriteLine("Changing:");
@@ -4830,45 +4195,62 @@ namespace Voltammogrammer
                 _chartselectionTuringOn = true;
             }
         }
-
-        private void chartVoltammogram_AxisViewChanging(object sender, System.Windows.Forms.DataVisualization.Charting.ViewEventArgs e)
+        
+        private void chartVoltammogram_CursorPositionChanged(object sender, System.Windows.Forms.DataVisualization.Charting.CursorEventArgs e)
         {
-            //double Y2max = e.ChartArea.AxisY2.PositionToValue(e.ChartArea.AxisY.ValueToPosition(e.Axis.ScaleView.ViewMaximum));
-            //double Y2min = e.ChartArea.AxisY2.PositionToValue(e.ChartArea.AxisY.ValueToPosition(e.Axis.ScaleView.ViewMinimum));
-
-            //Console.WriteLine(e.Axis.AxisName);
-            //Console.WriteLine(" X: " + e.Axis.ScaleView.ViewMaximum.ToString() + ", " + e.Axis.ScaleView.ViewMinimum.ToString());
-            //Console.WriteLine("Y2: " + Y2max + ", " + Y2min);
-        }
-
-        private void chartVoltammogram_DoubleClick(object sender, EventArgs e)
-        {
-        }
-
-        private void timerCurrentEandI_Tick(object sender, EventArgs e)
-        {
-            double value;
-            SampleSingleValue((CHANNEL_POTENTIAL - 1), out value);
-            toolStripStatusCurrentEandI.Text = "(" + (value * -1 * POTENTIAL_SCALE).ToString("0.0") + " mV)";
-
-
-            int r = FDwfAnalogIOStatus(_handle);
-            //Console.WriteLine("FDwfAnalogIOStatus ({0})", r);
-            int sts = 0;
-            int ret = FDwfAnalogIOEnableStatus(_handle, out sts);
-            //Console.WriteLine("FDwfAnalogIOEnableStatus ({0}): sts = {1}", ret, sts);
-            if (r == 0 || ret == 0 || sts == 0)
+            try
             {
-                timerCurrentEandI.Enabled = false;
-                toolStripButtonRecord.Enabled = false;
-                toolStripButtonScan.Enabled =false;
-                toolStripButtonConnect.Enabled = true;
-                FDwfDeviceClose(_handle);
-                Console.WriteLine("Failed to power PocketPotentiostat on");
-                MessageBox.Show(this, "Failed to power PocketPotentiostat on. \nPlease check the auxiliary power supply.\nOr, re-connect to PocketPotentiostat.", "Error Opening Device", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                double X = e.ChartArea.CursorX.Position;
+                double Y1 = e.ChartArea.CursorY.Position;
+                double X2 = Math.Pow(10, e.ChartArea.AxisX2.PositionToValue(e.ChartArea.AxisX.ValueToPosition(e.ChartArea.CursorX.Position)));
+                double Y2 = e.ChartArea.AxisY2.PositionToValue(e.ChartArea.AxisY.ValueToPosition(e.ChartArea.CursorY.Position));// / 1000 * ((long)_selectedRange / 1000);
+                double F1 = 0.0;
+
+                Console.WriteLine($"x1, y1, f1, x2, y2: {X}, {Y1}, {F1}, {X2}, {Y2}");
+
+                string XY = "";
+                switch (_selectedMode)
+                {
+                    case modeMeasurement.eis:
+                        for (int i = 0; i < chartVoltammogram.Series[1].Points.Count; i++)
+                        {
+                            if (chartVoltammogram.Series[1].Points[i].XValue < X)
+                            {
+                                if (i > 0)
+                                {
+                                    // Bode plot: chartVoltammogram.Series[6].Points
+                                    // Cole-Cole plot: chartVoltammogram.Series[1].Points
+
+                                    // indexがiとi-1のデータ間にXがある
+
+                                    double F1_1 = chartVoltammogram.Series[6].Points[i].XValue;
+                                    double F1_0 = chartVoltammogram.Series[6].Points[i - 1].XValue;
+                                    double X1_1 = chartVoltammogram.Series[1].Points[i].XValue;
+                                    double X1_0 = chartVoltammogram.Series[1].Points[i - 1].XValue;
+
+                                    F1 = (F1_1 - F1_0) / (X1_1 - X1_0) * (X - X1_0) + F1_0;
+
+                                    break;
+                                }
+                            }
+                        }
+                        //XY = "(" + X + " ohm, " + Y1 + " ohm, " + Math.Sqrt(Math.Pow(X,2) + Math.Pow(Y1, 2)).ToString("0") + " ohm)";
+                        XY = "[(" + X + " ohm, " + Y1 + " ohm, " + F1.ToString("0.0") + " Hz), (" + X2.ToString("0.0") + " Hz, " + Math.Pow(10, Y2).ToString("0.0") + " ohm)]";
+                        break;
+                    default:
+                        XY = "(" + X + " s, " + Y1 + " mV, " + Y2.ToString("0.000") + " uA)";
+                        break;
+                }
+
+                toolStripStatusCursor.Text = XY;
+            }
+            catch (System.Exception error)
+            {
+                Console.WriteLine("Exception: {0}", error.Message);
             }
         }
 
+        #region Functions for digital I/O pins from AnalogDiscovery 2
         //
         // Functions for digital I/O pins from AnalogDiscovery 2
         //
@@ -4931,7 +4313,7 @@ namespace Voltammogrammer
                 }
             }
 
-            Invoke((Action)delegate ()
+            BeginInvoke((Action)delegate ()  
             {
                 toolStripMenuItemSubModuleOption1.Checked = on;
             });
@@ -4977,17 +4359,17 @@ namespace Voltammogrammer
         public void SetRotation(uint rpm)
         {
             SetDCVoltageCH2(Convert.ToInt32(rpm * 1000));
-
+            
             Invoke((Action)delegate ()
             {
                 if (rpm > 0)
                 {
-                    toolStripMenuItemRDE.Checked = true;
+                    toolStripMenuItemSubModuleOption3.Checked = true;
                     _rpmRDE = rpm;
                 }
                 else
                 {
-                    toolStripMenuItemRDE.Checked = false;
+                    toolStripMenuItemSubModuleOption3.Checked = false;
                     _rpmRDE = 0;
                 }
             });
@@ -5432,11 +4814,6 @@ namespace Voltammogrammer
             }
         }
 
-        public void SetSequenceOfRDE(int[] speeds)
-        {
-            _rotation_speeds = speeds;
-        }
-
         public bool TurnPowerSupply(bool on)
         {
             if(on)
@@ -5833,6 +5210,12 @@ namespace Voltammogrammer
             }
         }
 
+        #endregion
+
+        //
+        // Methods
+        //
+
         public void SetCalibrationData(
             double potential_awg, double potential_osc, double current,
             double potential_slope_awg, double potential_slope_osc, double current_slope_osc
@@ -5853,6 +5236,29 @@ namespace Voltammogrammer
             Console.WriteLine("CURRENT_SLOPE: {0}", CURRENT_SLOPE);
         }
 
+        public void UpdateResistors(DataTable tableResistor)
+        {
+            //InitializeResistors();
+            //OverrideResistorsWithCustomValues();
+
+            for (int i = 0; i < 6; i++)
+            {
+                // Override with a custom value
+                _tablesRanges[(int)modeMeasurement.voltammetry].Rows[i][0] = tableResistor.Rows[i][2];
+            }
+
+            _tablesRanges[(int)modeMeasurement.galvanometry] = _tablesRanges[(int)modeMeasurement.voltammetry];
+
+            for (int i = 0; i < 6; i++)
+            {
+                // Override with a custom value
+                _tablesRanges[(int)modeMeasurement.eis].Rows[i][0] = tableResistor.Rows[i][3];
+            }
+
+            SetSubmodule(Properties.Settings.Default.configure_submodule_pluggedin);
+            SetFilteringMethod(Properties.Settings.Default.configure_filtering_method);
+        }
+
         private void SetFrequencyOfAcquisition(int index)
         {
             for (int i = 0; i < _toolstripmenuitemsFrequencyOfAcquisition.Length; i++)
@@ -5860,8 +5266,8 @@ namespace Voltammogrammer
                 if(i == index)
                 {
                     _toolstripmenuitemsFrequencyOfAcquisition[i].Checked = true;
-                    _herzAcquisition = double.Parse(_toolstripmenuitemsFrequencyOfAcquisition[i].Tag.ToString())
-                                       * (_target_filtering_frequency / 50.0); // for the aligmment of SINC filter (50 or 60 Hz?)
+                    _hertzAcquisition = double.Parse(_toolstripmenuitemsFrequencyOfAcquisition[i].Tag.ToString())
+                                       * (_hertzTargetFilteringFrequency / 50.0); // for the aligmment of SINC filter (50 or 60 Hz?)
                 }
                 else
                 {
@@ -5869,7 +5275,7 @@ namespace Voltammogrammer
                 }
             }
 
-            Console.WriteLine("FrequencyOfAcquisition: {0} Hz", _herzAcquisition);
+            Console.WriteLine("FrequencyOfAcquisition: {0} Hz", _hertzAcquisition);
         }
 
         private void SetFilteringMethod(int index)
@@ -5881,7 +5287,7 @@ namespace Voltammogrammer
                 if (i == index)
                 {
                     ((ToolStripMenuItem)items[i]).Checked = true;
-                    _target_filtering_frequency = double.Parse(((ToolStripMenuItem)items[i]).Tag.ToString());
+                    _hertzTargetFilteringFrequency = double.Parse(((ToolStripMenuItem)items[i]).Tag.ToString());
                 }
                 else
                 {
@@ -5889,32 +5295,7 @@ namespace Voltammogrammer
                 }
             }
 
-            Console.WriteLine("FilteringMethod: {0} Hz", _target_filtering_frequency);
-        }
-
-        private void SetSubmodule(int idx)
-        {
-            ToolStripItemCollection items = toolStripMenuItemSubModule.DropDownItems;
-
-            for (int i = 0; i < items.Count; i++)
-            {
-                if (i == idx)
-                {
-                    ((ToolStripMenuItem)items[i]).Checked = true;
-                    _selectedSubModule = (typeSubModule)i;
-                }
-                else
-                {
-                    ((ToolStripMenuItem)items[i]).Checked = false;
-                }
-            }
-
-            // TODO: _selectedSubModuleに合わせて、メニュー項目を動的に変更する
-            // TODO: メニューのイベントハンドラ内：_selectedSubModuleに合わせて、処理内容を変更するようにする
-            // TODO: backgroundWorkerCV_DoWork 内：_selectedSubModuleに合わせて、処理内容を変更するようにする (SetPurging＋SetRotation)
-            // TODO: DoVoltammetry 内：_selectedSubModuleに合わせて、処理内容を変更するようにする
-
-            Console.WriteLine("Submodule selected: {0}, {1}", _selectedSubModule, items[idx].Text);
+            Console.WriteLine("FilteringMethod: {0} Hz", _hertzTargetFilteringFrequency);
         }
 
         private void SetMode(modeMeasurement mode)
@@ -5987,11 +5368,1248 @@ namespace Voltammogrammer
             //Console.WriteLine("FilteringMethod: {0} Hz", _target_filtering_frequency);
         }
 
+        public void SetSequenceOfRDE(int[] speeds)
+        {
+            _rotation_speeds = speeds;
+        }
 
+        public async void SetSwitchOnAsync(bool value_to_be_set)
+        {
+            // GUI操作は非同期で呼び出す
+            await Task.Run(() => { _is_switched_on = value_to_be_set; SetPurging(value_to_be_set); });
+        }
+
+        private void SetSubmodule(int idx)
+        {
+            ToolStripItemCollection items = toolStripMenuItemSubModule.DropDownItems;
+
+            for (int i = 0; i < items.Count; i++)
+            {
+                if (i == idx)
+                {
+                    ((ToolStripMenuItem)items[i]).Checked = true;
+                    _selectedSubModule = (typeSubModule)i;
+                }
+                else
+                {
+                    ((ToolStripMenuItem)items[i]).Checked = false;
+                }
+            }
+
+            // TODO: _selectedSubModuleに合わせて、メニュー項目を動的に変更する
+            // TODO:     メニューのイベントハンドラ内：_selectedSubModuleに合わせて、処理内容を変更するようにする
+            // TODO:     backgroundWorkerCV_DoWork 内：_selectedSubModuleに合わせて、処理内容を変更するようにする (SetPurging＋SetRotation)
+            // TODO:     DoVoltammetry 内：_selectedSubModuleに合わせて、処理内容を変更するようにする
+
+            Console.WriteLine("Submodule selected: {0}, {1}", _selectedSubModule, items[idx].Text);
+
+            switch (_selectedSubModule)
+            {
+                case typeSubModule.RDE:
+                    toolStripMenuItemSubModuleOption1.Visible = true;
+                    toolStripMenuItemSubModuleOption2.Visible = false;
+                    toolStripMenuItemSubModuleOption3.Visible = true;
+                    toolStripMenuItemSubModuleOption3Param1.Visible = true;
+                    toolStripMenuItemSubModuleOption3Param2.Visible = false;
+                    toolStripMenuItemSubModuleOption4.Visible = true;
+
+                    toolStripMenuItemSubModuleOption1.Text = "    Purge";
+                    toolStripMenuItemSubModuleOption2.Text = "    ";
+                    toolStripMenuItemSubModuleOption3.Text = "    Rotate disk at the speed [rpm] of";
+                    toolStripMenuItemSubModuleOption3Param2.Text = "";
+                    toolStripMenuItemSubModuleOption4.Text = "    Set a sequence of rotating speeds...";
+
+                    toolStripMenuItemSubModuleOption1.Checked = false;
+                    toolStripMenuItemSubModuleOption2.Checked = false;
+                    toolStripMenuItemSubModuleOption3.Checked = false;
+                    toolStripMenuItemSubModuleOption3Param2.Checked = false;
+                    toolStripMenuItemSubModuleOption4.Checked = false;
+
+                    break;
+
+                case typeSubModule.Synchronous_switching:
+                    toolStripMenuItemSubModuleOption1.Visible = true;
+                    toolStripMenuItemSubModuleOption2.Visible = false;
+                    toolStripMenuItemSubModuleOption3.Visible = true;
+                    toolStripMenuItemSubModuleOption3Param1.Visible = true;
+                    toolStripMenuItemSubModuleOption3Param2.Visible = true;
+                    toolStripMenuItemSubModuleOption4.Visible = false;
+
+                    toolStripMenuItemSubModuleOption1.Text = "    Switch on";
+                    toolStripMenuItemSubModuleOption2.Text = "    ";
+                    toolStripMenuItemSubModuleOption3.Text = "    Switch on/off at intervals [s] of ";
+                    toolStripMenuItemSubModuleOption3Param2.Text = "Finally on";
+                    toolStripMenuItemSubModuleOption4.Text = "    ";
+
+                    toolStripMenuItemSubModuleOption1.Checked = false;
+                    toolStripMenuItemSubModuleOption2.Checked = false;
+                    toolStripMenuItemSubModuleOption3.Checked = false;
+                    toolStripMenuItemSubModuleOption3Param2.Checked = false;
+                    toolStripMenuItemSubModuleOption4.Checked = false;
+
+                    break;
+
+                default:
+                    break;
+            }
+        }
+
+        private void StartAcquisition(bool fSave)
+        {
+            if (toolStripButtonRecord.Text == "&Record")
+            {
+                double channel_range = 0;
+
+                _millivoltInitial = Double.NaN; _millivoltInitial_raw = Double.NaN;
+                _millivoltVertex = Double.NaN; _millivoltVertex_raw = Double.NaN;
+                _millivoltLimit = Double.NaN; _millivoltLimit_raw = Double.NaN;
+                _countRepeat = Double.NaN;
+                _millivoltScanrate = Double.NaN; _millivoltScanrate_raw = Double.NaN;
+                _millivoltAmplitude = Double.NaN; _millivoltAmplitude_raw = Double.NaN;
+                _millivoltStep = Double.NaN; _millivoltStep_raw = Double.NaN;
+                _countStep = Double.NaN;
+                _hertzInitial = Double.NaN;
+                _hertzFinal = Double.NaN;
+                _secDuration = Double.NaN;
+                _secInterval = Double.NaN;
+
+                switch (_selectedMethod)
+                {
+                    case methodMeasurement.Cyclicgalvanometry:
+                        if (double.TryParse(toolStripTextBoxInitialV.Text, out _millivoltInitial)
+                            && (_millivoltInitial <= 50000)
+                            && (_millivoltInitial >= -50000))
+                        {
+                            _millivoltInitial_raw = _millivoltInitial;
+
+                            _millivoltInitial *= (-1000.0 / (_selectedCurrentFactor));
+
+                            _millivoltInitial -= POTENTIAL_OFFSET_AWG;
+                            _millivoltInitial /= POTENTIAL_SLOPE_AWG;
+                        }
+                        else { MessageBox.Show(this, "The value of Initial [uA] is invalid."); return; }
+
+                        if (double.TryParse(toolStripTextBoxVertexV.Text, out _millivoltVertex)
+                            && (_millivoltVertex <= 50000)
+                            && (_millivoltVertex >= -50000))
+                        {
+                            _millivoltVertex_raw = _millivoltVertex;
+
+                            _millivoltVertex *= (-1000.0 / (_selectedCurrentFactor));
+
+                            _millivoltVertex -= POTENTIAL_OFFSET_AWG;
+                            _millivoltVertex /= POTENTIAL_SLOPE_AWG;
+                        }
+                        else { MessageBox.Show(this, "The value of Vertex [uA] is invalid."); return; }
+
+                        if (double.TryParse(toolStripTextBoxScanrate.Text, out _millivoltScanrate)
+                            && (_millivoltScanrate <= 1000000)
+                            && (_millivoltScanrate > 0))
+                        {
+                            _millivoltScanrate_raw = _millivoltScanrate;
+
+                            if (hzToolStripMenuItemAuto.Checked)
+                            {
+                                // 取り込み速度を自動決定する。目安としては0.25mV/point。高速掃引時には2.5mV/ptでもよいか？？
+                                // すなわち掃引速度が100mV/sの時には400Hzで、10000mV/s (10V/s)の時には4kHzで取り込めばよいことになる
+
+                                SetFrequencyOfAcquisition(0);
+                                for (int i = (_toolstripmenuitemsFrequencyOfAcquisition.Length - 1); i >= 0; i--)
+                                {
+                                    if ((_millivoltScanrate * 4) >= Double.Parse(_toolstripmenuitemsFrequencyOfAcquisition[i].Tag.ToString()))
+                                    {
+                                        SetFrequencyOfAcquisition(i);
+                                        break;
+                                    }
+                                }
+                            }
+
+                            _millivoltScanrate *= (1000 / (_selectedCurrentFactor));
+                            _millivoltScanrate /= POTENTIAL_SLOPE_AWG;
+                        }
+                        else { MessageBox.Show(this, "The value of Scan rate [uA/s] is invalid."); return; }
+
+                        if (Math.Abs(_millivoltVertex - _millivoltInitial) > 50000)
+                        {
+                            MessageBox.Show(this, "The value of Scanning range [uA] is too wide (> 50000 uV)."); return;
+                        }
+
+
+                        FDwfAnalogInChannelOffsetSet(_handle, (CHANNEL_POTENTIAL - 1), 0.0);
+
+                        break;
+
+                    case methodMeasurement.ConstantCurrent:
+                        if (double.TryParse(toolStripTextBoxInitialV.Text, out _millivoltInitial)
+                            && (_millivoltInitial <= 200000)
+                            && (_millivoltInitial >= -200000))
+                        {
+                            _millivoltInitial_raw = _millivoltInitial;
+                            _millivoltInitial = (_millivoltInitial * (-1000.0 / (double)_selectedCurrentFactor));
+
+                            _millivoltInitial -= POTENTIAL_OFFSET_AWG;// - POTENTIAL_OFFSET_OSC;
+                            _millivoltInitial /= POTENTIAL_SLOPE_AWG;
+                            //_millivoltInitial *= CURRENT_SLOPE / (_selectedCurrentFactor / 10000) / POTENTIAL_SLOPE_OSC;
+                            //_millivoltInitial *= CURRENT_SLOPE / POTENTIAL_SLOPE_OSC;
+
+                            // TODO: (in case methodMeasurement.ConstantCurrent) これでOK？
+                            _millivoltInitial /= POTENTIAL_SLOPE_OSC;
+                            _millivoltInitial *= (1 + _calibrate_potentiostat.ohmInternalResistance / (1000000 / _selectedCurrentFactor));
+                            Console.WriteLine("_millivoltInitial (corrected): {0}", _millivoltInitial);
+                        }
+                        else { MessageBox.Show(this, "The value of Current [uA] is invalid."); return; }
+
+                        if (double.TryParse(toolStripTextBoxVertexV.Text, out _secDuration)
+                            && (_secDuration >= 1))
+                        {
+                            //_millivoltVertex += (int)POTENTIAL_OFFSET;
+                        }
+                        else { MessageBox.Show(this, "The value of Time [min] is invalid."); return; }
+
+                        if (double.TryParse(toolStripTextBoxScanrate.Text, out _secInterval)
+                            && (_secInterval <= 60)
+                            && (_secInterval >= 1))
+                        {
+                        }
+                        else { MessageBox.Show(this, "The value of Sampling Interval [s] is invalid."); return; }
+
+                        if (double.TryParse(toolStripTextBoxRepeat.Text, out _countRepeat)
+                            && (_countRepeat >= 0.0))
+                        {
+                        }
+                        else { MessageBox.Show(this, "The target Q [C] (as an absolute value) must be >= 0."); toolStripTextBoxRepeat.Text = "0"; return; }
+
+                        if (double.TryParse(toolStripTextBoxStep.Text, out _millivoltLimit)
+                            && (_millivoltLimit >= 0.0))
+                        {
+                            _millivoltLimit_raw = _millivoltLimit;
+
+                            _millivoltLimit /= RATIO_POTENTIAL;
+                            _millivoltLimit -= POTENTIAL_OFFSET_AWG;
+                            _millivoltLimit /= POTENTIAL_SLOPE_AWG;
+                        }
+                        else { MessageBox.Show(this, "The potential limit, E [mV] for S electrode (as an absolute value) must be >= 0."); toolStripTextBoxRepeat.Text = "0"; return; }
+
+                        FDwfAnalogInChannelOffsetSet(_handle, (CHANNEL_POTENTIAL - 1), 0.0);
+
+                        break;
+
+                    case methodMeasurement.EIS:
+                    case methodMeasurement.EIS_Open_Circuit:
+                    case methodMeasurement.EIS_Short_Circuit:
+                        if (double.TryParse(toolStripTextBoxInitialV.Text, out _millivoltInitial)
+                            && (_millivoltInitial <= 5000)
+                            && (_millivoltInitial >= -5000))
+                        {
+                            _millivoltInitial_raw = _millivoltInitial;
+
+                            _millivoltInitial /= RATIO_POTENTIAL;
+                            _millivoltInitial -= POTENTIAL_OFFSET_AWG;
+                            _millivoltInitial /= POTENTIAL_SLOPE_AWG;
+                        }
+                        else { MessageBox.Show(this, "The value of Potential [mV] is invalid."); return; }
+
+                        if (double.TryParse(toolStripTextBoxVertexV.Text, out _millivoltAmplitude)
+                            && (_millivoltAmplitude <= 500)
+                            && (_millivoltAmplitude >= 1))
+                        {
+                            _millivoltAmplitude_raw = _millivoltAmplitude;
+
+                            _millivoltAmplitude /= RATIO_POTENTIAL;
+                            //_millivoltAmplitude -= POTENTIAL_OFFSET_AWG;
+                            _millivoltAmplitude /= POTENTIAL_SLOPE_AWG;
+                        }
+                        else { MessageBox.Show(this, "The value of Amplitude [mV] is invalid."); return; }
+
+                        if (double.TryParse(toolStripTextBoxScanrate.Text, out _hertzInitial)
+                            && (_hertzInitial <= 10000000)
+                            && (_hertzInitial >= 0.0001))
+                        {
+                        }
+                        else { MessageBox.Show(this, "The value of Initial Scanning Frequency [Hz] is invalid."); return; }
+
+                        if (double.TryParse(toolStripTextBoxScanrate2.Text, out _hertzFinal)
+                            && (_hertzFinal <= 10000000)
+                            && (_hertzFinal >= 0.0001))
+                        {
+                        }
+                        else { MessageBox.Show(this, "The value of Final Scanning Frequency [Hz] is invalid."); return; }
+
+                        if (double.TryParse(toolStripTextBoxRepeat.Text, out _countRepeat)
+                            && (_countRepeat <= 4096)
+                            && (_countRepeat >= 1))
+                        {
+                        }
+                        else { MessageBox.Show(this, "The value of Accumulation Time is invalid."); return; }
+
+                        if (double.TryParse(toolStripTextBoxStep.Text, out _countStep)
+                            && (_countStep <= 1000)
+                            && (_countStep >= 1))
+                        {
+                        }
+                        else { MessageBox.Show(this, "The value of Steps is invalid."); return; }
+
+                        break;
+
+                    case methodMeasurement.EIS_MottSchottkey:
+                        if (double.TryParse(toolStripTextBoxInitialV.Text, out _millivoltInitial)
+                            && (_millivoltInitial <= 5000)
+                            && (_millivoltInitial >= -5000))
+                        {
+                            _millivoltInitial_raw = _millivoltInitial;
+
+                            _millivoltInitial /= RATIO_POTENTIAL;
+                            _millivoltInitial -= POTENTIAL_OFFSET_AWG;
+                            _millivoltInitial /= POTENTIAL_SLOPE_AWG;
+                        }
+                        else { MessageBox.Show(this, "The value of Initial potential [mV] is invalid."); return; }
+
+                        if (double.TryParse(toolStripTextBoxFinalV.Text, out _millivoltVertex)
+                            && (_millivoltVertex <= 5000)
+                            && (_millivoltVertex >= -5000))
+                        {
+                            _millivoltVertex_raw = _millivoltVertex;
+
+                            _millivoltVertex /= RATIO_POTENTIAL;
+                            _millivoltVertex -= POTENTIAL_OFFSET_AWG;
+                            _millivoltVertex /= POTENTIAL_SLOPE_AWG;
+                        }
+                        else { MessageBox.Show(this, "The value of Final potential [mV] is invalid."); return; }
+
+                        if (double.TryParse(toolStripTextBoxVertexV.Text, out _millivoltAmplitude)
+                            && (_millivoltAmplitude <= 500)
+                            && (_millivoltAmplitude >= 1))
+                        {
+                            _millivoltAmplitude_raw = _millivoltAmplitude;
+
+                            _millivoltAmplitude /= RATIO_POTENTIAL;
+                            //_millivoltAmplitude -= POTENTIAL_OFFSET_AWG;
+                            _millivoltAmplitude /= POTENTIAL_SLOPE_AWG;
+                        }
+                        else { MessageBox.Show(this, "The value of Amplitude [mV] is invalid."); return; }
+
+                        if (double.TryParse(toolStripTextBoxScanrate.Text, out _hertzInitial)
+                            && (_hertzInitial <= 100000)
+                            && (_hertzInitial >= 0.001))
+                        {
+                        }
+                        else { MessageBox.Show(this, "The value of Frequency [Hz] is invalid."); return; }
+
+                        if (double.TryParse(toolStripTextBoxRepeat.Text, out _countRepeat)
+                            && (_countRepeat <= 4096)
+                            && (_countRepeat >= 1))
+                        {
+                        }
+                        else { MessageBox.Show(this, "The value of Accumulation Time is invalid."); return; }
+
+                        if (double.TryParse(toolStripTextBoxStep.Text, out _millivoltStep)
+                            && (_millivoltStep <= 100000)
+                            && (_millivoltStep >= 0.001))
+                        {
+                            _millivoltStep_raw = _millivoltStep;
+
+                            _millivoltStep /= RATIO_POTENTIAL;
+                            //_millivoltAmplitude -= POTENTIAL_OFFSET_AWG;
+                            _millivoltStep /= POTENTIAL_SLOPE_AWG;
+                        }
+                        else { MessageBox.Show(this, "The value of Step [mV] is invalid."); return; }
+
+                        break;
+
+                    case methodMeasurement.Oscilloscope:
+                        if (double.TryParse(toolStripTextBoxInitialV.Text, out _millivoltInitial)
+                            && (_millivoltInitial <= 5000)
+                            && (_millivoltInitial >= -5000))
+                        {
+                            _millivoltInitial_raw = _millivoltInitial;
+
+                            _millivoltInitial /= RATIO_POTENTIAL;
+                            _millivoltInitial -= POTENTIAL_OFFSET_AWG;
+                            _millivoltInitial /= POTENTIAL_SLOPE_AWG;
+                        }
+                        else { MessageBox.Show(this, "The value of Initial potential [mV] is invalid."); return; }
+
+                        //if (double.TryParse(toolStripTextBoxFinalV.Text, out _millivoltVertex)
+                        //    && (_millivoltVertex <= 5000)
+                        //    && (_millivoltVertex >= -5000))
+                        //{
+                        //    _millivoltVertex -= POTENTIAL_OFFSET_AWG;
+                        //    _millivoltVertex /= POTENTIAL_SLOPE_AWG;
+                        //}
+                        //else { MessageBox.Show(this, "The value of Final potential [mV] is invalid."); return; }
+
+                        if (double.TryParse(toolStripTextBoxVertexV.Text, out _millivoltAmplitude)
+                            && (_millivoltAmplitude <= 500)
+                            && (_millivoltAmplitude >= 1))
+                        {
+                            _millivoltAmplitude_raw = _millivoltAmplitude;
+
+                            _millivoltAmplitude /= RATIO_POTENTIAL;
+                            //_millivoltAmplitude -= POTENTIAL_OFFSET_AWG;
+                            _millivoltAmplitude /= POTENTIAL_SLOPE_AWG;
+                        }
+                        else { MessageBox.Show(this, "The value of Amplitude [mV] is invalid."); return; }
+
+                        if (double.TryParse(toolStripTextBoxScanrate.Text, out _hertzInitial)
+                            && (_hertzInitial <= 100000)
+                            && (_hertzInitial >= 0.001))
+                        {
+                        }
+                        else { MessageBox.Show(this, "The value of Frequency [Hz] is invalid."); return; }
+
+                        if (double.TryParse(toolStripTextBoxRepeat.Text, out _countRepeat)
+                            && (_countRepeat <= 4096)
+                            && (_countRepeat >= 1))
+                        {
+                        }
+                        else { MessageBox.Show(this, "The value of Accumulation Time is invalid."); return; }
+
+                        //if (double.TryParse(toolStripTextBoxStep.Text, out _millivoltStep)
+                        //    && (_millivoltStep <= 100000)
+                        //    && (_millivoltStep >= 0.001))
+                        //{
+                        //}
+                        //else { MessageBox.Show(this, "The value of Step [mV] is invalid."); return; }
+
+                        if (hzToolStripMenuItemCustom.Checked)
+                        {
+                            if (double.TryParse(toolStripTextBoxFreqOfAcquisition.Text, out double ret))
+                            {
+                                _hertzAcquisition = ret;
+                            }
+                            else
+                            {
+                                hzToolStripMenuItemAuto.Checked = true;
+                                hzToolStripMenuItemCustom.Checked = false;
+                            }
+                        }
+
+                        if (hzToolStripMenuItemAuto.Checked)
+                        {
+                            //double millivoltHeight = Math.Abs(_millivoltVertex - _millivoltInitial);
+                            //double secRecording = (2 * millivoltHeight) / _millivoltScanrate;
+                            _hertzAcquisition = _hertzInitial * 1000;
+                        }
+
+                        FDwfAnalogInChannelRangeGet(_handle, (CHANNEL_POTENTIAL - 1), out channel_range);
+                        Console.WriteLine("Channel range for potential measurement: {0}", channel_range);
+
+                        if ((Math.Abs(_millivoltVertex - _millivoltInitial) > (2700)) && (channel_range <= 5.6))
+                        {
+                            if (true)
+                            {
+                                Console.WriteLine("Need to adjust ChannelOffset...");
+                                // Need to adjust ChannelOffset...
+                                double center = (_millivoltVertex - _millivoltInitial) / 2;
+
+                                FDwfAnalogInChannelOffsetSet(_handle, (CHANNEL_POTENTIAL - 1), (center / 1000.0));
+                                FDwfAnalogInChannelRangeSet(_handle, (CHANNEL_POTENTIAL - 1), 5.0); // for E measurement
+                            }
+                        }
+                        else
+                        {
+                            FDwfAnalogInChannelOffsetSet(_handle, (CHANNEL_POTENTIAL - 1), 0.0);
+                        }
+
+                        break;
+
+                    case methodMeasurement.Cyclicvoltammetry:
+                    case methodMeasurement.Series_of_RDE_CV:
+                    case methodMeasurement.LSV:
+                    case methodMeasurement.Series_of_RDE_LSV:
+                    case methodMeasurement.OSWV:
+                        if (double.TryParse(toolStripTextBoxInitialV.Text, out _millivoltInitial)
+                            && (_millivoltInitial <= 5000)
+                            && (_millivoltInitial >= -5000))
+                        {
+                            _millivoltInitial_raw = _millivoltInitial;
+
+                            _millivoltInitial /= RATIO_POTENTIAL;
+                            _millivoltInitial -= POTENTIAL_OFFSET_AWG;
+                            _millivoltInitial /= POTENTIAL_SLOPE_AWG;
+                        }
+                        else { MessageBox.Show(this, "The value of Initial [mV] is invalid."); return; }
+
+                        if (double.TryParse(toolStripTextBoxVertexV.Text, out _millivoltVertex)
+                            && (_millivoltVertex <= 5000)
+                            && (_millivoltVertex >= -5000))
+                        {
+                            _millivoltVertex_raw = _millivoltVertex;
+
+                            _millivoltVertex /= RATIO_POTENTIAL;
+                            _millivoltVertex -= POTENTIAL_OFFSET_AWG;
+                            _millivoltVertex /= POTENTIAL_SLOPE_AWG;
+                        }
+                        else { MessageBox.Show(this, "The value of Vertex [mV] is invalid."); return; }
+
+                        if (double.TryParse(toolStripTextBoxScanrate.Text, out _millivoltScanrate)
+                            && (_millivoltScanrate <= 1000000000)
+                            && (_millivoltScanrate > 0))
+                        {
+                            _millivoltScanrate_raw = _millivoltScanrate;
+
+                            _millivoltScanrate /= RATIO_POTENTIAL;
+                            _millivoltScanrate /= POTENTIAL_SLOPE_AWG;
+                        }
+                        else { MessageBox.Show(this, "The value of Scan rate [mV/s] is invalid."); return; }
+
+                        //if (Math.Abs(_millivoltVertex - _millivoltInitial) > 5000)
+                        //{
+                        //    MessageBox.Show(this, "The value of Scanning range [mV] is too wide (> 5000 mV)."); return;
+                        //}
+
+                        if (double.TryParse(toolStripTextBoxRepeat.Text, out _countRepeat)
+                            && (_countRepeat <= 100)
+                            && (_countRepeat >= 1))
+                        {
+                        }
+                        else { MessageBox.Show(this, "The number of repeat (>= 1) is invalid."); toolStripTextBoxRepeat.Text = "1"; return; }
+
+
+                        if (hzToolStripMenuItemCustom.Checked)
+                        {
+                            if (double.TryParse(toolStripTextBoxFreqOfAcquisition.Text, out double ret))
+                            {
+                                _hertzAcquisition = ret;
+                            }
+                            else
+                            {
+                                hzToolStripMenuItemAuto.Checked = true;
+                                hzToolStripMenuItemCustom.Checked = false;
+                            }
+                        }
+
+                        if (hzToolStripMenuItemAuto.Checked)
+                        {
+                            // 取り込み速度を自動決定する。目安としては0.25mV/point。高速掃引時には2.5mV/ptでもよいか？？
+                            // すなわち掃引速度が100mV/sの時には400Hzで、10000mV/s (10V/s)の時には4kHzで取り込めばよいことになる
+
+                            SetFrequencyOfAcquisition(0);
+                            for (int i = (_toolstripmenuitemsFrequencyOfAcquisition.Length - 1); i >= 0; i--)
+                            {
+                                if (((_millivoltScanrate / POTENTIAL_SLOPE_OSC) * 4) >= Double.Parse(_toolstripmenuitemsFrequencyOfAcquisition[i].Tag.ToString())) // 100mV/s => 100Hzにしてみる
+                                {
+                                    SetFrequencyOfAcquisition(i);
+                                    break;
+                                }
+                            }
+                        }
+
+                        //double min = 0, max = 0, step = 0;
+                        //FDwfAnalogInChannelOffsetInfo(_handle, ref min, ref max, ref step); min/max was -25/+25, step was 16xxx.
+
+                        FDwfAnalogInChannelRangeGet(_handle, (CHANNEL_POTENTIAL - 1), out channel_range);
+                        Console.WriteLine("Channel range for potential measurement: {0}", channel_range);
+
+                        if ((Math.Abs(_millivoltVertex - _millivoltInitial) > (2700)) && (channel_range <= 5.6))
+                        {
+                            if (Math.Abs(_millivoltVertex - _millivoltInitial) < 5000)
+                            {
+                                Console.WriteLine("Need to adjust ChannelOffset...");
+                                // Need to adjust ChannelOffset...
+                                double center = (_millivoltVertex - _millivoltInitial) / 2;
+
+                                FDwfAnalogInChannelOffsetSet(_handle, (CHANNEL_POTENTIAL - 1), (center / 1000.0));
+                                FDwfAnalogInChannelRangeSet(_handle, (CHANNEL_POTENTIAL - 1), 5.0); // for E measurement
+                            }
+                            else
+                            {
+                                MessageBox.Show(this, "The value of Scanning range [mV] is too wide (> 5000 mV). Try to switch the potential range to +-25V."); return;
+                            }
+                        }
+                        else
+                        {
+                            FDwfAnalogInChannelOffsetSet(_handle, (CHANNEL_POTENTIAL - 1), 0.0);
+                        }
+
+                        //_millivoltInitial = +1 * _millivoltInitial / 2;
+                        //_millivoltVertex = +1 * _millivoltVertex / 2;
+                        //_millivoltScanrate = _millivoltScanrate / 2;
+
+                        break;
+
+                    case methodMeasurement.CyclicvoltammetryQuick: // TODO: (in case methodMeasurement.CyclicvoltammetryQuick) RATIO_POTENTIALに起因する問題は未検討
+                        if (double.TryParse(toolStripTextBoxInitialV.Text, out _millivoltInitial)
+                            && (_millivoltInitial <= 5000)
+                            && (_millivoltInitial >= -5000))
+                        {
+                            _millivoltInitial_raw = _millivoltInitial;
+
+                            _millivoltInitial -= POTENTIAL_OFFSET_AWG;
+                            _millivoltInitial /= POTENTIAL_SLOPE_AWG;
+                        }
+                        else { MessageBox.Show(this, "The value of Initial [mV] is invalid."); return; }
+
+                        if (double.TryParse(toolStripTextBoxVertexV.Text, out _millivoltVertex)
+                            && (_millivoltVertex <= 5000)
+                            && (_millivoltVertex >= -5000))
+                        {
+                            _millivoltVertex_raw = _millivoltVertex;
+
+                            _millivoltVertex -= POTENTIAL_OFFSET_AWG;
+                            _millivoltVertex /= POTENTIAL_SLOPE_AWG;
+                        }
+                        else { MessageBox.Show(this, "The value of Vertex [mV] is invalid."); return; }
+
+                        if (double.TryParse(toolStripTextBoxScanrate.Text, out _millivoltScanrate)
+                            && (_millivoltScanrate <= 1000000)
+                            && (_millivoltScanrate >= 1))
+                        {
+                            _millivoltScanrate_raw = _millivoltScanrate;
+
+                            _millivoltScanrate *= 1000;
+                            _millivoltScanrate /= POTENTIAL_SLOPE_AWG;
+                        }
+                        else { MessageBox.Show(this, "The value of Scan rate [V/s] is invalid."); return; }
+
+                        if (Math.Abs(_millivoltVertex - _millivoltInitial) > 5000)
+                        {
+                            MessageBox.Show(this, "The value of Scanning range [mV] is too wide (> 5000 mV)."); return;
+                        }
+
+
+                        if (hzToolStripMenuItemCustom.Checked)
+                        {
+                            if (double.TryParse(toolStripTextBoxFreqOfAcquisition.Text, out double ret))
+                            {
+                                _hertzAcquisition = ret;
+                            }
+                            else
+                            {
+                                hzToolStripMenuItemAuto.Checked = true;
+                                hzToolStripMenuItemCustom.Checked = false;
+                            }
+                        }
+
+                        if (hzToolStripMenuItemAuto.Checked)
+                        {
+                            double millivoltHeight = Math.Abs(_millivoltVertex - _millivoltInitial);
+                            double secRecording = (2 * millivoltHeight) / _millivoltScanrate;
+                            _hertzAcquisition = (1.0 / secRecording) * 6000;
+                        }
+
+
+                        FDwfAnalogInChannelRangeGet(_handle, (CHANNEL_POTENTIAL - 1), out channel_range);
+                        Console.WriteLine("Channel range for potential measurement: {0}", channel_range);
+
+                        if ((Math.Abs(_millivoltVertex - _millivoltInitial) > (2700)) && (channel_range <= 5.6))
+                        {
+                            if (Math.Abs(_millivoltVertex - _millivoltInitial) < 5000)
+                            {
+                                Console.WriteLine("Need to adjust ChannelOffset...");
+                                // Need to adjust ChannelOffset...
+                                double center = (_millivoltVertex - _millivoltInitial) / 2;
+
+                                FDwfAnalogInChannelOffsetSet(_handle, (CHANNEL_POTENTIAL - 1), (center / 1000.0));
+                                FDwfAnalogInChannelRangeSet(_handle, (CHANNEL_POTENTIAL - 1), 5.0); // for E measurement
+                            }
+                            else
+                            {
+                                MessageBox.Show(this, "The value of Scanning range [mV] is too wide (> 5000 mV). Try to switch the potential range to +-25V."); return;
+                            }
+                        }
+                        else
+                        {
+                            FDwfAnalogInChannelOffsetSet(_handle, (CHANNEL_POTENTIAL - 1), 0.0);
+                        }
+
+                        break;
+
+                    case methodMeasurement.BulkElectrolysis:
+                        if (double.TryParse(toolStripTextBoxInitialV.Text, out _millivoltInitial)
+                            && (_millivoltInitial <= 11000)
+                            && (_millivoltInitial >= -11000))
+                        {
+                            _millivoltInitial_raw = _millivoltInitial;
+
+                            _millivoltInitial /= RATIO_POTENTIAL;
+                            _millivoltInitial -= POTENTIAL_OFFSET_AWG;
+                            _millivoltInitial /= POTENTIAL_SLOPE_AWG;
+                        }
+                        else { MessageBox.Show(this, "The value of Potential [mV] is invalid."); return; }
+
+                        if (double.TryParse(toolStripTextBoxVertexV.Text, out _secDuration)
+                            && (_secDuration >= 1))
+                        {
+                            //_millivoltVertex += (int)POTENTIAL_OFFSET;
+                        }
+                        else { MessageBox.Show(this, "The value of Duration [min] is invalid."); return; }
+
+                        if (double.TryParse(toolStripTextBoxScanrate.Text, out _secInterval)
+                            && (_secInterval <= 60)
+                            && (_secInterval >= 1))
+                        {
+                        }
+                        else { MessageBox.Show(this, "The value of Sampling Interval [s] is invalid."); return; }
+
+                        if (double.TryParse(toolStripTextBoxRepeat.Text, out _countRepeat)
+                            && (_countRepeat >= 0.0))
+                        {
+                        }
+                        else { MessageBox.Show(this, "The target Q [C] (as an absolute value) must be >= 0."); toolStripTextBoxRepeat.Text = "0"; return; }
+
+
+                        FDwfAnalogInChannelRangeGet(_handle, (CHANNEL_POTENTIAL - 1), out channel_range);
+
+                        if ((Math.Abs(_millivoltInitial) > (2700)) && (channel_range <= 5.6))
+                        {
+                            if (Math.Abs(_millivoltInitial) < 5000)
+                            {
+                                Console.WriteLine("Need to adjust ChannelOffset...");
+                                // Need to adjust ChannelOffset...
+                                double center = _millivoltInitial;
+
+                                FDwfAnalogInChannelOffsetSet(_handle, (CHANNEL_POTENTIAL - 1), (center / 1000.0));
+                                FDwfAnalogInChannelRangeSet(_handle, (CHANNEL_POTENTIAL - 1), 5.0); // for E measurement
+                            }
+                            else
+                            {
+                                MessageBox.Show(this, "The value of potential [mV] is out of range (> 5000 mV). Try to switch the potential range to +-25V."); return;
+                            }
+                        }
+                        else
+                        {
+                            FDwfAnalogInChannelOffsetSet(_handle, (CHANNEL_POTENTIAL - 1), 0.0);
+                        }
+
+                        //_millivoltInitial = +1 * _millivoltInitial / 2;
+
+                        break;
+
+                    case methodMeasurement.OCP:
+                        if (double.TryParse(toolStripTextBoxVertexV.Text, out _secDuration)
+                            && (_secDuration >= 0))
+                        {
+                        }
+                        else { MessageBox.Show(this, "The value of Duration [min] is invalid."); return; }
+
+                        if (double.TryParse(toolStripTextBoxScanrate.Text, out _secInterval)
+                            && (_secInterval <= 10)
+                            && (_secInterval >= 1))
+                        {
+                        }
+                        else { MessageBox.Show(this, "The value of Sampling Interval [s] is invalid."); return; }
+
+                        break;
+
+                    case methodMeasurement.DPSCA:
+                    case methodMeasurement.IRC:
+                        if (double.TryParse(toolStripTextBoxInitialV.Text, out _millivoltInitial)
+                            && (_millivoltInitial <= 5000)
+                            && (_millivoltInitial >= -5000))
+                        {
+                            _millivoltInitial_raw = _millivoltInitial;
+
+                            _millivoltInitial /= RATIO_POTENTIAL;
+                            _millivoltInitial -= POTENTIAL_OFFSET_AWG;
+                            _millivoltInitial /= POTENTIAL_SLOPE_AWG;
+                        }
+                        else { MessageBox.Show(this, "The value of Initial [mV] is invalid."); return; }
+
+                        if (double.TryParse(toolStripTextBoxVertexV.Text, out _millivoltVertex)
+                            && (_millivoltVertex <= 5000)
+                            && (_millivoltVertex >= -5000))
+                        {
+                            _millivoltVertex_raw = _millivoltVertex;
+
+                            if (_selectedMethod == methodMeasurement.DPSCA)
+                            {
+                                //_millivoltVertex /= RATIO_POTENTIAL;
+                                _millivoltVertex -= POTENTIAL_OFFSET_AWG;
+                                //_millivoltVertex /= POTENTIAL_SLOPE_AWG;
+                            }
+                            _millivoltVertex /= POTENTIAL_SLOPE_AWG;
+                        }
+                        else { MessageBox.Show(this, "The value of Step-in (or Amplitude) [mV] is invalid."); return; }
+
+                        if (double.TryParse(toolStripTextBoxScanrate.Text, out _secDuration)
+                            && (_secDuration <= 120)
+                            && (_secDuration >= 1))
+                        {
+                        }
+                        else { MessageBox.Show(this, "The value of Duration [s] is invalid."); return; }
+
+                        FDwfAnalogInChannelRangeGet(_handle, (CHANNEL_POTENTIAL - 1), out channel_range);
+
+                        double range = 0;
+                        if (_selectedMethod == methodMeasurement.DPSCA)
+                        {
+                            range = _millivoltVertex - _millivoltInitial;
+                        }
+                        else
+                        {
+                            range = _millivoltInitial;
+                        }
+                        if ((Math.Abs(range) > (2700)) && (channel_range <= 5.6))
+                        {
+                            if (Math.Abs(_millivoltInitial) < 5000)
+                            {
+                                Console.WriteLine("Need to adjust ChannelOffset...");
+                                // Need to adjust ChannelOffset...
+                                double center = (range) / 2;
+
+                                FDwfAnalogInChannelOffsetSet(_handle, (CHANNEL_POTENTIAL - 1), (center / 1000.0));
+                                FDwfAnalogInChannelRangeSet(_handle, (CHANNEL_POTENTIAL - 1), 5.0); // for E measurement
+                            }
+                            else
+                            {
+                                MessageBox.Show(this, "The value of potential [mV] is out of range (> 5000 mV). Try to switch the potential range to +-25V."); return;
+                            }
+                        }
+                        else
+                        {
+                            FDwfAnalogInChannelOffsetSet(_handle, (CHANNEL_POTENTIAL - 1), 0.0);
+                        }
+
+                        //_millivoltInitial = +1 * _millivoltInitial / 2;
+                        //_millivoltVertex = +1 * _millivoltVertex / 2;
+
+                        break;
+                }
+
+                //if ((_selectedMethod = (methodMeasurement)toolStripComboBoxMethod.SelectedIndex) == methodMeasurement.none)
+                //{
+                //    MessageBox.Show("Method is not selected."); return;
+                //}
+
+                _file_path = null;
+
+                if (fSave)
+                {
+                    saveFileDialog1.Filter = "EC-Lab Text file (*.mpt)|*.mpt|All types(*.*)|*.*";
+                    saveFileDialog1.FilterIndex = 1;
+                    saveFileDialog1.Title = "Save As";
+                    saveFileDialog1.FileName = "";
+                    saveFileDialog1.ShowHelp = true;
+
+                    if (saveFileDialog1.InitialDirectory == null)
+                    {
+                        saveFileDialog1.InitialDirectory = @"c:\";
+                    }
+
+                    if (saveFileDialog1.ShowDialog() == DialogResult.OK)
+                    {
+                        _file_path = saveFileDialog1.FileName;
+                        //string _tmp = System.IO.Path.GetExtension(_file_path);
+                        if (System.IO.Path.GetExtension(_file_path) != ".mpt") _file_path += ".mpt";
+
+                        toolStripStatusLabelFileName.Text = PathCompactEx.Converter.ShrinkPath(_file_path, 70);
+                        toolStripStatusLabelFileName.ToolTipText = _file_path;
+
+                        //saveFileDialog1.InitialDirectory = System.IO.Directory.GetCurrentDirectory();
+                    }
+                }
+                else
+                {
+                    _file_path = null;
+
+                    toolStripStatusLabelFileName.Text = "(not to be saved)";
+                }
+
+                if (fSave && _file_path == null)
+                {
+                    return;
+                }
+
+                //
+                // 直ぐに測定を始める、もしくは一定時間待機してから始める
+                //
+
+                // ここで別スレッドを立ち上げる必要はない。その場合、async void StartAcquisitionとする
+                new Thread(new ThreadStart(() => // delegate
+                {
+                    Invoke((Action)async delegate ()
+                    {
+                        bool fCancel = false;
+
+                        if (toolStripMenuItemDelay.Checked)
+                        {
+                            WaitDialog wd = new WaitDialog();
+                            //wd.ShowWithTimeout(this, 10);
+
+                            //Invoke((Action)delegate ()
+                            //{
+                            //    //this.Enabled = false;
+
+                            //    wd.Test(this);
+
+                            //    //this.Enabled = true;
+                            //});
+
+                            //this.Enabled = false;
+                            toolStrip1.Enabled = false;
+                            toolStrip2.Enabled = false;
+
+                            //wd.Show();
+
+                            //Task HogeTask = Task.Run(
+                            //    async () => { await Task.Delay(5000); }
+                            //);
+                            //await HogeTask;
+
+                            if (int.TryParse(toolStripTextBoxDelayTime.Text, out int timeout))
+                            {
+                                fCancel = await wd.ShowAsync(timeout);
+                            }
+                            else
+                            {
+                                fCancel = false;
+                            }
+
+                            //this.Enabled = true;
+                            toolStrip1.Enabled = true;
+                            toolStrip2.Enabled = true;
+                        }
+
+                        if (!fCancel)
+                        {
+                            toolStripButtonRecord.Text = "&Stop"; toolStripButtonRecord.Image = global::Voltammogrammer.Properties.Resources.Stop;
+                            toolStripButtonScan.Enabled = false;
+                            toolStripComboBoxMethod.Enabled = false;
+                            toolStripComboBoxRange.Enabled = false;
+                            toolStripComboBoxReferenceForInitialPotential.Enabled = false;
+
+                            toolStripTextBoxInitialV.Enabled = false;
+                            if (_selectedMethod != methodMeasurement.BulkElectrolysis && _selectedMethod != methodMeasurement.ConstantCurrent)
+                            {
+                                toolStripTextBoxVertexV.Enabled = false;
+                                toolStripTextBoxScanrate.Enabled = false;
+                                toolStripTextBoxRepeat.Enabled = false;
+                            }
+
+                            timerCurrentEandI.Enabled = false;
+
+                            Console.WriteLine("Collect block immediate...");
+                            backgroundWorkerCV.RunWorkerAsync();
+                        }
+                        else
+                        {
+                            Console.WriteLine("Collect block was cancelled.");
+                        }
+                    });
+                })).Start();
+            }
+            else
+            {
+                backgroundWorkerCV.CancelAsync();
+
+                toolStripButtonRecord.Enabled = false;
+                toolStripButtonRecord.Text = "Stopping...";
+            }
+        }
+
+        private void updateComboBoxMethod()
+        {
+            string unit1 = "", unit2 = "";
+
+            if (_selectedMode != _selectedMode_previous)
+            {
+            }
+
+            //if(_selectedMode != _selectedMode_previous)
+            //{
+            switch (_selectedMode)
+            {
+                case modeMeasurement.voltammetry:
+                    unit1 = "mV"; unit2 = "mV/s";
+                    if (_selectedMethod != methodMeasurement.Oscilloscope)
+                    {
+                        chartVoltammogram.ChartAreas[0].AxisX.Title = "Time / s";
+                    }
+                    else
+                    {
+                        chartVoltammogram.ChartAreas[0].AxisX.Title = "Time / ms";
+                    }
+                    chartVoltammogram.ChartAreas[0].AxisX.Maximum = Double.NaN;
+                    chartVoltammogram.ChartAreas[0].AxisX.Minimum = 0;
+                    chartVoltammogram.ChartAreas[0].AxisY.Title = "Potential / mV";
+                    chartVoltammogram.ChartAreas[0].AxisX2.Title = "";
+                    chartVoltammogram.ChartAreas[0].AxisX2.Enabled = System.Windows.Forms.DataVisualization.Charting.AxisEnabled.False;
+                    chartVoltammogram.ChartAreas[0].AxisX2.IsLogarithmic = false;
+                    chartVoltammogram.ChartAreas[0].AxisY2.Title = "Current / uA";
+                    chartVoltammogram.ChartAreas[0].AxisY2.IsLogarithmic = false;
+                    chartVoltammogram.ChartAreas[0].AxisY2.MinorTickMark.Enabled = false;
+
+                    toolStripComboBoxReferenceForInitialPotential.Enabled = true;
+
+                    if (_selectedMode_previous != modeMeasurement.voltammetry) toolStripComboBoxRange.SelectedIndex = 3;
+
+                    break;
+
+                case modeMeasurement.galvanometry:
+                    unit1 = "uA"; unit2 = "uA/s";
+                    chartVoltammogram.ChartAreas[0].AxisX.Title = "Time / s";
+                    chartVoltammogram.ChartAreas[0].AxisX.Maximum = Double.NaN;
+                    chartVoltammogram.ChartAreas[0].AxisX.Minimum = 0;
+                    chartVoltammogram.ChartAreas[0].AxisY.Title = "Potential of S. / mV\nvs Ref. electrode";
+                    chartVoltammogram.ChartAreas[0].AxisX2.Title = "";
+                    chartVoltammogram.ChartAreas[0].AxisX2.IsLogarithmic = false;
+                    chartVoltammogram.ChartAreas[0].AxisX2.Enabled = System.Windows.Forms.DataVisualization.Charting.AxisEnabled.False;
+                    chartVoltammogram.ChartAreas[0].AxisY2.Title = "Potential of W. / mV\nvs C. electrode";
+                    chartVoltammogram.ChartAreas[0].AxisY2.IsLogarithmic = false;
+                    chartVoltammogram.ChartAreas[0].AxisY2.MinorTickMark.Enabled = false;
+
+                    toolStripComboBoxReferenceForInitialPotential.Enabled = false;
+
+                    if (_selectedMode_previous != modeMeasurement.galvanometry) toolStripComboBoxRange.SelectedIndex = 2;
+
+                    break;
+
+                case modeMeasurement.eis:
+                    chartVoltammogram.Series[1].Points.Clear();
+                    chartVoltammogram.Series[2].Points.Clear();
+                    chartVoltammogram.Series[3].Points.Clear();
+                    chartVoltammogram.Series[4].Points.Clear();
+                    chartVoltammogram.Series[5].Points.Clear();
+
+                    chartVoltammogram.Series[6].Points.SuspendUpdates();
+                    chartVoltammogram.Series[6].Points.Clear();
+                    chartVoltammogram.Series[6].Points.AddXY(1, 1);
+                    chartVoltammogram.Series[6].Points.ResumeUpdates();
+
+                    chartVoltammogram.Update();
+
+                    unit1 = "mV"; unit2 = "Hz";
+                    chartVoltammogram.ChartAreas[0].AxisX.Title = "Re[Z] / ohm";
+                    chartVoltammogram.ChartAreas[0].AxisX.Maximum = Double.NaN;
+                    chartVoltammogram.ChartAreas[0].AxisX.Minimum = 0;// Double.NaN;
+                    chartVoltammogram.ChartAreas[0].AxisY.Title = "Im[Z] / ohm";
+                    chartVoltammogram.ChartAreas[0].AxisX2.Title = "Frequency / Hz";
+                    chartVoltammogram.ChartAreas[0].AxisX2.Minimum = Double.NaN;
+                    //chartVoltammogram.ChartAreas[0].AxisX2.Minimum = 1;
+                    //chartVoltammogram.ChartAreas[0].AxisX2.Maximum = 1000000;
+                    chartVoltammogram.ChartAreas[0].AxisX2.IsLogarithmic = true;
+                    chartVoltammogram.ChartAreas[0].AxisX2.Enabled = System.Windows.Forms.DataVisualization.Charting.AxisEnabled.True;
+                    chartVoltammogram.ChartAreas[0].AxisY2.Title = "|Z| / ohm";
+                    chartVoltammogram.ChartAreas[0].AxisY2.IsLogarithmic = true;
+                    chartVoltammogram.ChartAreas[0].AxisY2.MinorTickMark.Enabled = true;
+                    chartVoltammogram.ChartAreas[0].AxisY2.MinorTickMark.LineColor = System.Drawing.Color.Red;
+                    chartVoltammogram.ChartAreas[0].AxisY2.MinorTickMark.Size = 0.5F;
+                    chartVoltammogram.ChartAreas[0].AxisY2.MinorTickMark.Interval = 1;
+
+                    toolStripComboBoxReferenceForInitialPotential.Enabled = true;
+
+                    if (_selectedMode_previous != modeMeasurement.eis) toolStripComboBoxRange.SelectedIndex = 2;
+
+                    break;
+
+                default:
+                    break;
+            }
+            //}
+            //_selectedMode_previous = _selectedMode;
+
+            toolStripLabel1.ToolTipText = ""; toolStripLabel1.AutoToolTip = true;
+            toolStripLabel1.Visible = true; toolStripTextBoxInitialV.Visible = true; toolStripComboBoxReferenceForInitialPotential.Visible = true;
+            toolStripLabel6.Visible = false;
+            toolStripTextBoxFinalV.Visible = false;
+            toolStripLabel7.Visible = false;
+            toolStripTextBoxScanrate2.Visible = false;
+            toolStripLabel8.Visible = false;
+            toolStripTextBoxStep.Visible = false;
+
+            if (_selectedMode == modeMeasurement.voltammetry || _selectedMode == modeMeasurement.galvanometry)
+            {
+                switch (_selectedMethod)
+                {
+                    case methodMeasurement.Cyclicvoltammetry:
+                    case methodMeasurement.Series_of_RDE_CV:
+                    case methodMeasurement.Cyclicgalvanometry:
+                        toolStripLabel1.Text = "Initial [" + unit1 + "]:";
+                        toolStripLabel2.Text = "Vertex [" + unit1 + "]:";
+                        toolStripTextBoxVertexV.Text = "500";
+                        toolStripLabel3.Text = "Scanning rate [" + unit1 + "/s]:";
+                        toolStripTextBoxScanrate.Text = "100";
+                        toolStripLabel4.Text = "Repeat:";
+                        toolStripTextBoxRepeat.Text = "1";
+                        break;
+
+                    case methodMeasurement.CyclicvoltammetryQuick:
+                        toolStripLabel1.Text = "Initial [" + unit1 + "]:";
+                        toolStripLabel2.Text = "Vertex [" + unit1 + "]:";
+                        toolStripTextBoxVertexV.Text = "500";
+                        toolStripLabel3.Text = "Scanning rate [V/s]:";
+                        toolStripTextBoxScanrate.Text = "1";
+                        toolStripLabel4.Text = "Repeat:";
+                        toolStripTextBoxRepeat.Text = "1";
+                        break;
+
+                    case methodMeasurement.BulkElectrolysis:
+                        toolStripLabel1.Text = "Potential [" + unit1 + "]:";
+                        toolStripLabel2.Text = "Duration [min]:";
+                        toolStripTextBoxVertexV.Text = "60";
+                        toolStripLabel3.Text = "Sampling Interval [s]:";
+                        toolStripTextBoxScanrate.Text = "1";
+                        toolStripLabel4.Text = "Target |Q| [C]:";
+                        toolStripTextBoxRepeat.Text = "0";
+                        break;
+
+                    case methodMeasurement.ConstantCurrent:
+                        toolStripLabel1.Text = "Current [" + unit1 + "]:"; toolStripLabel1.ToolTipText = "Set the amplitude of a current flowed out from the working to current electrodes";
+                        toolStripLabel2.Text = "Duration [min]:";
+                        toolStripTextBoxVertexV.Text = "60";
+                        toolStripLabel3.Text = "Sampling Interval [s]:";
+                        toolStripTextBoxScanrate.Text = "1";
+                        toolStripLabel4.Text = "Target |Q| [C]:";
+                        toolStripTextBoxRepeat.Text = "0";
+                        toolStripLabel8.Text = "Limit of |E| for S [mV]:"; toolStripLabel8.Visible = true;
+                        toolStripTextBoxStep.Text = "0"; toolStripTextBoxStep.Visible = true;
+                        break;
+
+                    case methodMeasurement.LSV:
+                    case methodMeasurement.Series_of_RDE_LSV:
+                    case methodMeasurement.OSWV:
+                        toolStripLabel1.Text = "Initial [" + unit1 + "]:";
+                        toolStripLabel2.Text = "Final [" + unit1 + "]:";
+                        toolStripTextBoxVertexV.Text = "500";
+                        toolStripLabel3.Text = "Scanning rate [" + unit1 + "/s]:";
+                        toolStripTextBoxScanrate.Text = "100";
+                        toolStripLabel4.Text = "Repeat:";
+                        toolStripTextBoxRepeat.Text = "1";
+                        break;
+
+                    case methodMeasurement.DPSCA:
+                        toolStripLabel1.Text = "Initial [" + unit1 + "]:";
+                        toolStripLabel2.Text = "Step in [" + unit1 + "]:";
+                        toolStripTextBoxVertexV.Text = "500";
+                        toolStripLabel3.Text = "Duration [s]:";
+                        toolStripTextBoxScanrate.Text = "5";
+                        toolStripLabel4.Text = "Repeat:";
+                        toolStripTextBoxRepeat.Text = "1";
+                        break;
+
+                    case methodMeasurement.IRC:
+                        toolStripLabel1.Text = "Initial [" + unit1 + "]:";
+                        toolStripLabel2.Text = "Amplitude [" + unit1 + "]:";
+                        toolStripTextBoxVertexV.Text = "25";
+                        toolStripLabel3.Text = "Duration [s]:";
+                        toolStripTextBoxScanrate.Text = "1";
+                        toolStripLabel4.Text = "Repeat:";
+                        toolStripTextBoxRepeat.Text = "1";
+                        break;
+
+                    case methodMeasurement.OCP:
+                        //toolStripLabel1.Text = "N/A:"; 
+                        toolStripLabel1.Visible = false; toolStripTextBoxInitialV.Visible = false; toolStripComboBoxReferenceForInitialPotential.Visible = false;
+                        toolStripLabel2.Text = "Duration [min]:";
+                        toolStripTextBoxVertexV.Text = "60";
+                        toolStripLabel3.Text = "Sampling Interval [s]:";
+                        toolStripTextBoxScanrate.Text = "1";
+                        toolStripLabel4.Text = "Repeat:";
+                        toolStripTextBoxRepeat.Text = "1";
+                        break;
+
+                    case methodMeasurement.Oscilloscope:
+                        toolStripLabel1.Text = "Potential [" + unit1 + "]:";
+                        toolStripTextBoxInitialV.Text = "0";
+                        toolStripLabel2.Text = "Amplitude [" + unit1 + "]:";
+                        toolStripTextBoxVertexV.Text = "10";
+                        toolStripLabel3.Text = "Frequency [" + "Hz" + "]:";
+                        toolStripTextBoxScanrate.Text = "1000";
+                        toolStripLabel4.Text = "Accumulation:";
+                        toolStripTextBoxRepeat.Text = "64";
+                        break;
+                }
+                toolStripLabel5.Text = "Current Range:";
+            }
+            else if (_selectedMode == modeMeasurement.eis)// && _selectedMode_previous != modeMeasurement.eis)
+            {
+                //
+                // TODO: methodを選択すると値が初期化されるのは良くないが、異なるModeからの変更では、初期値を入れる必要がある
+                //
+                //if(
+                //       _selectedMethod_previous != methodMeasurement.EIS_Open_Circuit
+                //    && _selectedMethod_previous != methodMeasurement.EIS_Short_Circuit
+                //    && _selectedMethod_previous != methodMeasurement.EIS
+                //    && _selectedMethod_previous != methodMeasurement.EIS_MottSchottkey
+                //)
+                //{
+                switch (_selectedMethod)
+                {
+                    case methodMeasurement.EIS_Open_Circuit:
+                    case methodMeasurement.EIS_Short_Circuit:
+                    case methodMeasurement.EIS:
+                        toolStripLabel1.Text = "Potential [" + unit1 + "]:";
+                        toolStripLabel2.Text = "Amplitude [" + unit1 + "]:";
+                        toolStripTextBoxVertexV.Text = "100";
+                        toolStripLabel3.Text = "Scanning Frequency [" + unit2 + "] from:";
+                        toolStripTextBoxScanrate.Text = "1";
+                        toolStripLabel7.Text = "to:"; toolStripLabel7.Visible = true;
+                        toolStripTextBoxScanrate2.Text = "1000000"; toolStripTextBoxScanrate2.Visible = true;
+                        toolStripLabel4.Text = "Accumulation:";
+                        toolStripTextBoxRepeat.Text = "64";
+                        toolStripLabel8.Text = "Steps/dec.:"; toolStripLabel8.Visible = true;
+                        toolStripTextBoxStep.Text = "10"; toolStripTextBoxStep.Visible = true;
+                        toolStripLabel5.Text = "Reference Resistor:";
+
+                        toolStripComboBoxRange.SelectedIndex = 2;
+
+                        break;
+
+                    case methodMeasurement.EIS_MottSchottkey:
+                        toolStripLabel1.Text = "Initial [" + unit1 + "]:";
+                        toolStripTextBoxInitialV.Text = "0";
+                        toolStripLabel6.Text = "Final [mV]:"; toolStripLabel6.Visible = true;
+                        toolStripTextBoxFinalV.Text = "-1000"; toolStripTextBoxFinalV.Visible = true;
+                        toolStripLabel2.Text = "Amplitude [" + unit1 + "]:";
+                        toolStripTextBoxVertexV.Text = "10";
+                        toolStripLabel3.Text = "Frequency [" + unit2 + "]:";
+                        toolStripTextBoxScanrate.Text = "1000";
+                        toolStripLabel4.Text = "Accumulation:";
+                        toolStripTextBoxRepeat.Text = "64";
+                        toolStripLabel8.Text = "Step [mV]:"; toolStripLabel8.Visible = true;
+                        toolStripTextBoxStep.Text = "10"; toolStripTextBoxStep.Visible = true;
+                        toolStripLabel5.Text = "Reference Resistor:";
+
+                        toolStripComboBoxRange.SelectedIndex = 1;
+
+                        break;
+                }
+                //}
+            }
+            else
+            {
+
+            }
+
+            _selectedMode_previous = _selectedMode;
+        }
+
+        private void undoZoom()
+        {
+            //if (_currentIndex == -1) return;
+
+            chartVoltammogram.SuspendLayout();
+
+            chartVoltammogram.ChartAreas[0].AxisX.ScaleView.ZoomReset(0);
+            chartVoltammogram.ChartAreas[0].AxisX2.ScaleView.ZoomReset(0);
+            chartVoltammogram.ChartAreas[0].AxisY.ScaleView.ZoomReset(0);
+            chartVoltammogram.ChartAreas[0].AxisY2.ScaleView.ZoomReset(0);
+
+            double delta = 0;
+            chartVoltammogram.ChartAreas[0].AxisY.LabelStyle.IntervalOffset = -delta;
+            chartVoltammogram.ChartAreas[0].AxisY.MajorTickMark.IntervalOffset = -delta;
+            chartVoltammogram.ChartAreas[0].AxisY.MinorTickMark.IntervalOffset = -delta;
+            chartVoltammogram.ChartAreas[0].AxisY2.LabelStyle.IntervalOffset = -delta;
+            chartVoltammogram.ChartAreas[0].AxisY2.MajorTickMark.IntervalOffset = -delta;
+            chartVoltammogram.ChartAreas[0].AxisY2.MinorTickMark.IntervalOffset = -delta;
+
+
+            chartVoltammogram.ChartAreas[0].AxisX.LabelStyle.IntervalOffset = -delta;
+            chartVoltammogram.ChartAreas[0].AxisX.MajorTickMark.IntervalOffset = -delta;
+            chartVoltammogram.ChartAreas[0].AxisX.MinorTickMark.IntervalOffset = -delta;
+            chartVoltammogram.ChartAreas[0].AxisX2.LabelStyle.IntervalOffset = -delta;
+            chartVoltammogram.ChartAreas[0].AxisX2.MajorTickMark.IntervalOffset = -delta;
+            chartVoltammogram.ChartAreas[0].AxisX2.MinorTickMark.IntervalOffset = -delta;
+
+            chartVoltammogram.ResumeLayout();
+            chartVoltammogram.PerformLayout();
+        }
+
+        #region Miscellaneous event handlers
         //
         // Miscellaneous event handlers
         //
-
 
         private void toolStripMenuItem_Click(object sender, EventArgs e)
         {
@@ -6067,67 +6685,6 @@ namespace Voltammogrammer
             _calibrate_potentiostat.Show();
         }
 
-        private void Potentiostat_KeyPress(object sender, KeyPressEventArgs e)
-        {
-            switch (e.KeyChar)
-            {
-                case 'c': //Console.WriteLine("c pressed...");
-
-                    if(chartVoltammogram.ChartAreas[0].CursorX.LineDashStyle == System.Windows.Forms.DataVisualization.Charting.ChartDashStyle.NotSet)
-                    {
-                        chartVoltammogram.ChartAreas[0].CursorX.LineDashStyle = System.Windows.Forms.DataVisualization.Charting.ChartDashStyle.Dot;
-                        chartVoltammogram.ChartAreas[0].CursorY.LineDashStyle = System.Windows.Forms.DataVisualization.Charting.ChartDashStyle.Dot;
-                    }
-                    else
-                    {
-                        //chartVoltammogram.ChartAreas[0].CursorX.LineDashStyle = System.Windows.Forms.DataVisualization.Charting.ChartDashStyle.NotSet;
-                        //chartVoltammogram.ChartAreas[0].CursorY.LineDashStyle = System.Windows.Forms.DataVisualization.Charting.ChartDashStyle.NotSet;
-
-                        System.IO.MemoryStream memStream = new System.IO.MemoryStream();
-
-                        //bool scrollbar_x = false, scrollbar_y = false;
-                        //if (chartVoltammogram.ChartAreas[0].AxisX.ScrollBar.IsVisible)
-                        //{
-                        //    scrollbar_x = true;
-                        //    chartVoltammogram.ChartAreas[0].AxisX.ScrollBar.Enabled = false;
-                        //}
-                        //if (chartVoltammogram.ChartAreas[0].AxisY.ScrollBar.IsVisible)
-                        //{
-                        //    scrollbar_y = true;
-                        //    chartVoltammogram.ChartAreas[0].AxisY.ScrollBar.Enabled = false;
-                        //}
-                        chartVoltammogram.ChartAreas[0].CursorX.LineDashStyle = System.Windows.Forms.DataVisualization.Charting.ChartDashStyle.NotSet;
-                        chartVoltammogram.ChartAreas[0].CursorY.LineDashStyle = System.Windows.Forms.DataVisualization.Charting.ChartDashStyle.NotSet;
-
-                        //chartVoltammogram.ChartAreas[0].CursorX.
-
-                        chartVoltammogram.SaveImage(memStream, System.Drawing.Imaging.ImageFormat.Emf);
-                        memStream.Seek(0, SeekOrigin.Begin);
-                        System.Drawing.Imaging.Metafile mf1 = new System.Drawing.Imaging.Metafile(memStream);
-                        //Metafile
-                        //chartVoltammogram.SaveImage(@"c:\temp\test.wmf", System.Drawing.Imaging.ImageFormat.Wmf);
-                        //System.Drawing.Imaging.Metafile mf2 = new System.Drawing.Imaging.Metafile(@"c:\temp\test.wmf");
-                        //mf2.Dispose();
-
-                        //Image img = Image.FromFile(@"c:\temp\test4.wmf");
-                        //System.Windows.Forms.Clipboard.SetDataObject(img);
-                        //img.Dispose();
-
-
-                        ClipboardMetafileHelper.PutEnhMetafileOnClipboard(this.Handle, mf1);
-
-                        //Clipboard.SetDataObject(memStream);
-
-                        mf1.Dispose();
-
-                        }
-                        break;
-
-                default:
-                    break;
-            }
-        }
-
         private void toolStripMenuClearComp_Click(object sender, EventArgs e)
         {
             toolStripMenuOpenComp.Checked = false;
@@ -6159,14 +6716,6 @@ namespace Voltammogrammer
             if (idx != -1 && idx < c) toolStripComboBoxSerialPort.SelectedIndex = idx;
         }
 
-        private void undoZoom()
-        {
-            chartVoltammogram.ChartAreas[0].AxisX.ScaleView.ZoomReset(0);
-            chartVoltammogram.ChartAreas[0].AxisX2.ScaleView.ZoomReset(0);
-            chartVoltammogram.ChartAreas[0].AxisY.ScaleView.ZoomReset(0);
-            chartVoltammogram.ChartAreas[0].AxisY2.ScaleView.ZoomReset(0);
-        }
-
         private void contextMenuItemUndoZoom_Click(object sender, EventArgs e)
         {
             undoZoom();
@@ -6174,6 +6723,8 @@ namespace Voltammogrammer
 
         private void toolStripTextBoxScanrate_Validating(object sender, CancelEventArgs e)
         {
+            if (!backgroundWorkerCV.IsBusy) return; 
+
             if(_selectedMethod == methodMeasurement.BulkElectrolysis || _selectedMethod == methodMeasurement.ConstantCurrent)
             {
                 if (double.TryParse(toolStripTextBoxScanrate.Text, out double value)
@@ -6187,21 +6738,10 @@ namespace Voltammogrammer
             }
         }
 
-        private void toolStripMenuItemRDECustom_Click(object sender, EventArgs e)
-        {
-            _select_rotation_speeds.Show();
-        }
-
-        private void toolStripMenuItemSubModule_DropDownItemClicked(object sender, ToolStripItemClickedEventArgs e)
-        {
-            ToolStripMenuItem item = (ToolStripMenuItem)sender;
-            int idx = item.DropDownItems.IndexOf(e.ClickedItem);
-
-            SetSubmodule(idx);
-        }
-
         private void toolStripTextBoxVertexV_Validating(object sender, CancelEventArgs e)
         {
+            if (!backgroundWorkerCV.IsBusy) return; 
+
             if(_selectedMethod == methodMeasurement.BulkElectrolysis || _selectedMethod == methodMeasurement.ConstantCurrent)
             {
                 if (int.TryParse(toolStripTextBoxVertexV.Text, out int value)
@@ -6216,6 +6756,8 @@ namespace Voltammogrammer
 
         private void toolStripTextBoxRepeat_Validating(object sender, CancelEventArgs e)
         {
+            if (!backgroundWorkerCV.IsBusy) return; 
+
             if(_selectedMethod == methodMeasurement.BulkElectrolysis || _selectedMethod == methodMeasurement.ConstantCurrent)
             {
                 if (double.TryParse(toolStripTextBoxRepeat.Text, out double value)
@@ -6297,6 +6839,8 @@ namespace Voltammogrammer
                 //}
             }
         }
+
+        #endregion
     }
 
     namespace PathCompactEx

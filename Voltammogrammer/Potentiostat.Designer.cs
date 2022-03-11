@@ -66,9 +66,10 @@
             this.toolStripMenuItemSubModule3 = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripMenuItemSubModuleOption1 = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripMenuItemSubModuleOption2 = new System.Windows.Forms.ToolStripMenuItem();
-            this.toolStripMenuItemRDE = new System.Windows.Forms.ToolStripMenuItem();
-            this.toolStripComboBoxRDESpeed = new System.Windows.Forms.ToolStripComboBox();
-            this.toolStripMenuItemRDECustom = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStripMenuItemSubModuleOption3 = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStripMenuItemSubModuleOption3Param1 = new System.Windows.Forms.ToolStripComboBox();
+            this.toolStripMenuItemSubModuleOption3Param2 = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStripMenuItemSubModuleOption4 = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator5 = new System.Windows.Forms.ToolStripSeparator();
             this.toolStripMenuItemSaveAvaragedData = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripMenuItemFiltering60Hz = new System.Windows.Forms.ToolStripMenuItem();
@@ -208,7 +209,7 @@
             this.toolStrip1.Location = new System.Drawing.Point(4, 0);
             this.toolStrip1.Name = "toolStrip1";
             this.toolStrip1.RenderMode = System.Windows.Forms.ToolStripRenderMode.Professional;
-            this.toolStrip1.Size = new System.Drawing.Size(823, 28);
+            this.toolStrip1.Size = new System.Drawing.Size(782, 28);
             this.toolStrip1.TabIndex = 2;
             this.toolStrip1.Text = "toolStrip1";
             // 
@@ -277,8 +278,8 @@
             this.toolStripMenuItemSubModule,
             this.toolStripMenuItemSubModuleOption1,
             this.toolStripMenuItemSubModuleOption2,
-            this.toolStripMenuItemRDE,
-            this.toolStripMenuItemRDECustom,
+            this.toolStripMenuItemSubModuleOption3,
+            this.toolStripMenuItemSubModuleOption4,
             this.toolStripSeparator5,
             this.toolStripMenuItemSaveAvaragedData,
             this.toolStripSeparator6,
@@ -392,19 +393,21 @@
             this.toolStripMenuItemSubModuleOption2.Size = new System.Drawing.Size(341, 26);
             this.toolStripMenuItemSubModuleOption2.Text = "    Option2";
             this.toolStripMenuItemSubModuleOption2.Visible = false;
+            this.toolStripMenuItemSubModuleOption2.Click += new System.EventHandler(this.toolStripMenuItemSubModuleOption2_Click);
             // 
-            // toolStripMenuItemRDE
+            // toolStripMenuItemSubModuleOption3
             // 
-            this.toolStripMenuItemRDE.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.toolStripComboBoxRDESpeed});
-            this.toolStripMenuItemRDE.Name = "toolStripMenuItemRDE";
-            this.toolStripMenuItemRDE.Size = new System.Drawing.Size(341, 26);
-            this.toolStripMenuItemRDE.Text = "    Rotate disk at the speed [rpm]";
-            this.toolStripMenuItemRDE.Click += new System.EventHandler(this.toolStripMenuItemRDE_Click);
+            this.toolStripMenuItemSubModuleOption3.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.toolStripMenuItemSubModuleOption3Param1,
+            this.toolStripMenuItemSubModuleOption3Param2});
+            this.toolStripMenuItemSubModuleOption3.Name = "toolStripMenuItemSubModuleOption3";
+            this.toolStripMenuItemSubModuleOption3.Size = new System.Drawing.Size(341, 26);
+            this.toolStripMenuItemSubModuleOption3.Text = "    Rotate disk at the speed [rpm]";
+            this.toolStripMenuItemSubModuleOption3.Click += new System.EventHandler(this.toolStripMenuItemSubModuleOption3_Click);
             // 
-            // toolStripComboBoxRDESpeed
+            // toolStripMenuItemSubModuleOption3Param1
             // 
-            this.toolStripComboBoxRDESpeed.Items.AddRange(new object[] {
+            this.toolStripMenuItemSubModuleOption3Param1.Items.AddRange(new object[] {
             "100",
             "200",
             "400",
@@ -412,15 +415,25 @@
             "1600",
             "2500",
             "3600"});
-            this.toolStripComboBoxRDESpeed.Name = "toolStripComboBoxRDESpeed";
-            this.toolStripComboBoxRDESpeed.Size = new System.Drawing.Size(121, 28);
+            this.toolStripMenuItemSubModuleOption3Param1.Name = "toolStripMenuItemSubModuleOption3Param1";
+            this.toolStripMenuItemSubModuleOption3Param1.Size = new System.Drawing.Size(121, 28);
+            this.toolStripMenuItemSubModuleOption3Param1.Text = "10.0";
+            this.toolStripMenuItemSubModuleOption3Param1.SelectedIndexChanged += new System.EventHandler(this.toolStripMenuItemSubModuleOption3Param1_SelectedIndexChanged);
+            this.toolStripMenuItemSubModuleOption3Param1.TextUpdate += new System.EventHandler(this.toolStripMenuItemSubModuleOption3Param1_TextUpdate);
             // 
-            // toolStripMenuItemRDECustom
+            // toolStripMenuItemSubModuleOption3Param2
             // 
-            this.toolStripMenuItemRDECustom.Name = "toolStripMenuItemRDECustom";
-            this.toolStripMenuItemRDECustom.Size = new System.Drawing.Size(341, 26);
-            this.toolStripMenuItemRDECustom.Text = "    Set a sequence of rotating speeds...";
-            this.toolStripMenuItemRDECustom.Click += new System.EventHandler(this.toolStripMenuItemRDECustom_Click);
+            this.toolStripMenuItemSubModuleOption3Param2.Name = "toolStripMenuItemSubModuleOption3Param2";
+            this.toolStripMenuItemSubModuleOption3Param2.Size = new System.Drawing.Size(200, 26);
+            this.toolStripMenuItemSubModuleOption3Param2.Text = "Finally switch on";
+            this.toolStripMenuItemSubModuleOption3Param2.Click += new System.EventHandler(this.toolStripMenuItemSubModuleOption3Param2_Click);
+            // 
+            // toolStripMenuItemSubModuleOption4
+            // 
+            this.toolStripMenuItemSubModuleOption4.Name = "toolStripMenuItemSubModuleOption4";
+            this.toolStripMenuItemSubModuleOption4.Size = new System.Drawing.Size(341, 26);
+            this.toolStripMenuItemSubModuleOption4.Text = "    Set a sequence of rotating speeds...";
+            this.toolStripMenuItemSubModuleOption4.Click += new System.EventHandler(this.toolStripMenuItemSubModuleOption4_Click);
             // 
             // toolStripSeparator5
             // 
@@ -445,14 +458,14 @@
             this.toolStripMenuItemFiltering60Hz.Checked = true;
             this.toolStripMenuItemFiltering60Hz.CheckState = System.Windows.Forms.CheckState.Checked;
             this.toolStripMenuItemFiltering60Hz.Name = "toolStripMenuItemFiltering60Hz";
-            this.toolStripMenuItemFiltering60Hz.Size = new System.Drawing.Size(224, 26);
+            this.toolStripMenuItemFiltering60Hz.Size = new System.Drawing.Size(126, 26);
             this.toolStripMenuItemFiltering60Hz.Tag = "60.0";
             this.toolStripMenuItemFiltering60Hz.Text = "60Hz";
             // 
             // toolStripMenuItemFiltering50Hz
             // 
             this.toolStripMenuItemFiltering50Hz.Name = "toolStripMenuItemFiltering50Hz";
-            this.toolStripMenuItemFiltering50Hz.Size = new System.Drawing.Size(224, 26);
+            this.toolStripMenuItemFiltering50Hz.Size = new System.Drawing.Size(126, 26);
             this.toolStripMenuItemFiltering50Hz.Tag = "50.0";
             this.toolStripMenuItemFiltering50Hz.Text = "50Hz";
             // 
@@ -828,6 +841,8 @@
             chartArea1.AxisX.MajorGrid.Enabled = false;
             chartArea1.AxisX.MajorTickMark.Size = 3F;
             chartArea1.AxisX.MinorTickMark.Enabled = true;
+            chartArea1.AxisX.ScaleView.Zoomable = false;
+            chartArea1.AxisX.ScrollBar.Enabled = false;
             chartArea1.AxisX.ScrollBar.Size = 20D;
             chartArea1.AxisX.Title = "Time / s";
             chartArea1.AxisX.TitleFont = new System.Drawing.Font("Arial", 10.2F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
@@ -841,6 +856,8 @@
             chartArea1.AxisX2.Minimum = 1D;
             chartArea1.AxisX2.MinorTickMark.Enabled = true;
             chartArea1.AxisX2.MinorTickMark.Interval = 1D;
+            chartArea1.AxisX2.ScaleView.Zoomable = false;
+            chartArea1.AxisX2.ScrollBar.Enabled = false;
             chartArea1.AxisX2.TitleFont = new System.Drawing.Font("Calibri", 12F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             chartArea1.AxisY.IsStartedFromZero = false;
             chartArea1.AxisY.LabelStyle.ForeColor = System.Drawing.Color.Blue;
@@ -848,6 +865,8 @@
             chartArea1.AxisY.MajorGrid.LineColor = System.Drawing.Color.Blue;
             chartArea1.AxisY.MajorTickMark.LineColor = System.Drawing.Color.Blue;
             chartArea1.AxisY.MinorTickMark.Size = 0.5F;
+            chartArea1.AxisY.ScaleView.Zoomable = false;
+            chartArea1.AxisY.ScrollBar.Enabled = false;
             chartArea1.AxisY.ScrollBar.Size = 20D;
             chartArea1.AxisY.Title = "Potential / mV";
             chartArea1.AxisY.TitleFont = new System.Drawing.Font("Calibri", 12F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
@@ -857,6 +876,8 @@
             chartArea1.AxisY2.MajorGrid.Enabled = false;
             chartArea1.AxisY2.MajorTickMark.Interval = 0D;
             chartArea1.AxisY2.MajorTickMark.LineColor = System.Drawing.Color.Red;
+            chartArea1.AxisY2.ScaleView.Zoomable = false;
+            chartArea1.AxisY2.ScrollBar.Enabled = false;
             chartArea1.AxisY2.ScrollBar.Size = 20D;
             chartArea1.AxisY2.Title = "Current / uA";
             chartArea1.AxisY2.TitleFont = new System.Drawing.Font("Calibri", 12F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
@@ -1150,7 +1171,7 @@
         private System.Windows.Forms.ToolStripSplitButton toolStripButtonRecord;
         private System.Windows.Forms.ToolStripMenuItem toolStripMenuItemOCV;
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator3;
-        private System.Windows.Forms.ToolStripMenuItem toolStripMenuItemRDE;
+        private System.Windows.Forms.ToolStripMenuItem toolStripMenuItemSubModuleOption3;
         private System.Windows.Forms.ToolStripMenuItem toolStripMenuItemSubModuleOption1;
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator5;
         private System.Windows.Forms.ToolStripMenuItem toolStripMenuItemSaveAvaragedData;
@@ -1164,7 +1185,7 @@
         private System.Windows.Forms.ToolStripTextBox toolStripTextBoxScanrate;
         private System.Windows.Forms.ToolStripLabel toolStripLabel4;
         private System.Windows.Forms.ToolStripButton toolStripButtonScan;
-        private System.Windows.Forms.ToolStripMenuItem toolStripMenuItemRDECustom;
+        private System.Windows.Forms.ToolStripMenuItem toolStripMenuItemSubModuleOption4;
         private System.Windows.Forms.ToolStripMenuItem hzToolStripMenuItem4;
         private System.Windows.Forms.ToolStripMenuItem hzToolStripMenuItem2;
         private System.Windows.Forms.ToolStripMenuItem hzToolStripMenuItem1;
@@ -1216,12 +1237,13 @@
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator14;
         private System.Windows.Forms.ToolStripMenuItem toolStripMenuItemDelay;
         private System.Windows.Forms.ToolStripTextBox toolStripTextBoxDelayTime;
-        private System.Windows.Forms.ToolStripComboBox toolStripComboBoxRDESpeed;
+        private System.Windows.Forms.ToolStripComboBox toolStripMenuItemSubModuleOption3Param1;
         private System.Windows.Forms.ToolStripMenuItem toolStripMenuItemSubModule;
         private System.Windows.Forms.ToolStripMenuItem toolStripMenuItemSubModule1;
         private System.Windows.Forms.ToolStripMenuItem toolStripMenuItemSubModule2;
         private System.Windows.Forms.ToolStripMenuItem toolStripMenuItemSubModule3;
         private System.Windows.Forms.ToolStripMenuItem toolStripMenuItemSubModuleOption2;
+        private System.Windows.Forms.ToolStripMenuItem toolStripMenuItemSubModuleOption3Param2;
     }
 }
 
