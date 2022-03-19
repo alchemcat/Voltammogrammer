@@ -133,30 +133,6 @@ namespace Voltammogrammer.Properties {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("")]
-        public string configure_resistor_values {
-            get {
-                return ((string)(this["configure_resistor_values"]));
-            }
-            set {
-                this["configure_resistor_values"] = value;
-            }
-        }
-        
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("0")]
-        public int configure_filtering_method {
-            get {
-                return ((int)(this["configure_filtering_method"]));
-            }
-            set {
-                this["configure_filtering_method"] = value;
-            }
-        }
-        
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("0")]
         public int configure_referencing_for_initial_potential {
             get {
@@ -188,18 +164,6 @@ namespace Voltammogrammer.Properties {
             }
             set {
                 this["IsUpgraded"] = value;
-            }
-        }
-        
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("0")]
-        public int configure_submodule_pluggedin {
-            get {
-                return ((int)(this["configure_submodule_pluggedin"]));
-            }
-            set {
-                this["configure_submodule_pluggedin"] = value;
             }
         }
     }

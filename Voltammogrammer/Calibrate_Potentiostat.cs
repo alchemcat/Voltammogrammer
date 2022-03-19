@@ -1,4 +1,25 @@
-﻿using System;
+﻿
+/*
+    PocketPotentiostat
+
+    Copyright (C) 2019-2022 Yasuo Matsubara
+
+    This program is free software; you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation; either version 3 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program; if not, write to the Free Software
+    Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+*/
+
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
@@ -11,6 +32,7 @@ using System.IO;
 
 using System.Xml.Serialization;
 using System.Xml;
+using System.Runtime.Serialization;
 
 
 namespace Voltammogrammer
@@ -19,6 +41,8 @@ namespace Voltammogrammer
     {
         Potentiostat _ps;
         Configure_Potentiostat _configure_ps;
+
+        Dictionary<string, calibration_data> _data_collection;
         calibration_data _data;
 
         //public double ohmInternalResistance = 0.0;
@@ -35,21 +59,48 @@ namespace Voltammogrammer
             }
         }
 
-        //public double r_ref, p_awg, p_osc1, p_osc2, c, c_slope, p_slope_osc1, p_slope_osc2, p_slope_awg;
-        [System.Xml.Serialization.XmlRoot(Namespace = "https://doi.org/10.1021/acs.jchemed.1c00228")]
+        //[System.Xml.Serialization.XmlRoot(Namespace = "https://doi.org/10.1021/acs.jchemed.1c00228")]
+        [DataContract(Namespace = "https://doi.org/10.1021/acs.jchemed.1c00228")]
         public class calibration_data
         {
+            [DataMember]
             public string id;
+
+            [DataMember]
             public double res;
+
+            [DataMember]
             public double r_ref, p_awg, p_osc1, p_osc2, c, c_slope, p_slope_osc1, p_slope_osc2, p_slope_awg;
 
             //[XmlIgnore]
+            [DataMember]
             public string configure_resistor_values;
 
             public calibration_data()
             {
+                id = "";
 
+                res = 0.5;  // internal_resistance
+                r_ref = 1000; // offset_resistor_ref
+
+                p_awg = 0; // offset_potential_awg
+                p_osc1 = 0; // offset_potential_osc1
+                p_osc2 = 0; // offset_potential_osc2
+                c = 0; // offset_current (Assuming calibration was done using +-20mA range) 
+
+                p_slope_awg = 1000; // slope_potential_awg
+                p_slope_osc1 = 1000; // slope_potential_osc1
+                p_slope_osc2 = 1000; // slope_potential_osc2
+                c_slope = 1000; // slope_current
+
+                configure_resistor_values = "";
             }
+
+            public calibration_data(string device_id) : this()
+            {
+                id = device_id;
+            }
+
             //public calibration_data(string id, double res, double r_ref, double p_awg, double p_osc1, double p_osc2, double c, double c_slope, double p_slope_osc1, double p_slope_osc2, double p_slope_awg, string configure_resistor_values)
             //{
             //    this.id           = id;
@@ -101,6 +152,7 @@ namespace Voltammogrammer
             //public double p_slope_awg { set; get; }
         }
 
+
         public Calibrate_Potentiostat(Potentiostat ps, Configure_Potentiostat configure_ps)
         {
             InitializeComponent();
@@ -108,50 +160,60 @@ namespace Voltammogrammer
             _ps = ps;
             _configure_ps = configure_ps;
 
-            // 初期値をProperties.Settingsにベタ打ちするのではなく、calibration_dataクラスをシリアライズする方法により(_tableResistorの様に)初期値を判断する。
-            // そうすれば、ビルド構成におけるコンパイル定数によって初期値を替えれるようになる（R2/R1が変わったとき様）。
-            string r1 = Properties.Settings.Default.calibration_data;
-            if (r1 == "")
+            try
             {
-                Reset();
+                // 初期値をProperties.Settingsにベタ打ちするのではなく、calibration_dataクラスをシリアライズする方法により(_tableResistorの様に)初期値を判断する。
+                // そうすれば、ビルド構成におけるコンパイル定数によって初期値を替えれるようになる（R2/R1が変わったとき様）。
+                string r1 = Properties.Settings.Default.calibration_data;
+                if (r1 == "")
+                {
+                    _data_collection = new Dictionary<string, calibration_data>();
+                }
+                else
+                {
+                    //XmlSerializer serializer = new XmlSerializer(typeof(Dictionary<string, calibration_data>));
+                    DataContractSerializer serializer = new DataContractSerializer(typeof(Dictionary<string, calibration_data>));
+
+                    StringReader sr = new StringReader(r1);
+                    XmlReader xr = XmlReader.Create(sr);
+
+                    //_data_collection = (Dictionary<string, calibration_data>)serializer.Deserialize(xr);
+                    _data_collection = (Dictionary<string, calibration_data>)serializer.ReadObject(xr);
+                    xr.Close();
+                }
             }
-            else
+            catch
             {
-                XmlSerializer serializer = new XmlSerializer(typeof(calibration_data));
-                StringReader sr = new StringReader(r1);
-                XmlReader xr = XmlReader.Create(sr);
-                _data = (calibration_data)serializer.Deserialize(xr);
-                xr.Close();
+                // データ構造が古い場合に例外が発生する可能性がある
+                _data_collection = new Dictionary<string, calibration_data>();
             }
 
-            UpdateUI();
-
-            _ps.SetCalibrationData(
-                _data.p_awg,
-                (_data.p_osc2 - _data.p_osc1),
-                (_data.c - _data.p_osc1 * 1000 / _data.r_ref) * ((1 / (double)Potentiostat.rangeCurrent.Range20mA) + _data.res / 1000000), // (c [uA] - (p_osc1 * 1000) [uV] / r_ref [ohm]) / 10000
-                _data.p_slope_awg / 1000,
-                _data.p_slope_osc2 / _data.p_slope_osc1,
-                (_data.c_slope / (_data.p_slope_osc1 * 1000.0 / _data.r_ref))//     / (1 + 0.5 / (1000000 / (double)Potentiostat.rangeCurrent.Range20mA))// * (r_ref / 1000.0)),
-                );
+            _data = new calibration_data();
         }
 
-        private void Reset()
+        ~Calibrate_Potentiostat()
         {
-            _data = new calibration_data();
+            _data.configure_resistor_values = _configure_ps.SerializedValues;
 
-            _data.res = 0.5;  // internal_resistance
-            _data.r_ref = 1000; // offset_resistor_ref
+            //System.Xml.Serialization.XmlSerializer serializer2 = new System.Xml.Serialization.XmlSerializer(typeof(Dictionary<string, calibration_data>));
+            DataContractSerializer serializer = new DataContractSerializer(typeof(Dictionary<string, calibration_data>));
 
-            _data.p_awg = 0; // offset_potential_awg
-            _data.p_osc1 = 0; // offset_potential_osc1
-            _data.p_osc2 = 0; // offset_potential_osc2
-            _data.c = 0; // offset_current (Assuming calibration was done using +-20mA range) 
+            StringBuilder sb = new StringBuilder();
+            XmlWriter xw = XmlWriter.Create(sb);
 
-            _data.p_slope_awg = 1000; // slope_potential_awg
-            _data.p_slope_osc1 = 1000; // slope_potential_osc1
-            _data.p_slope_osc2 = 1000; // slope_potential_osc2
-            _data.c_slope = 1000; // slope_current
+            //serializer.Serialize(xw, _data_collection);
+            serializer.WriteObject(xw, _data_collection);
+
+            //ファイルを閉じる
+            xw.Close();
+
+            Properties.Settings.Default.calibration_data = sb.ToString();
+            Properties.Settings.Default.Save();
+        }
+
+        private calibration_data Reset(string device_id)
+        {
+            return new calibration_data(device_id);
         }
 
         private void UpdateUI()
@@ -179,6 +241,26 @@ namespace Voltammogrammer
         {
             ((CancelEventArgs)e).Cancel = true;
             this.Hide();
+        }
+
+        private void Calibrate_Potentiostat_FormClosed(object sender, FormClosedEventArgs e)
+        {
+            //_data.configure_resistor_values = _configure_ps.SerializedValues;
+
+            ////System.Xml.Serialization.XmlSerializer serializer2 = new System.Xml.Serialization.XmlSerializer(typeof(Dictionary<string, calibration_data>));
+            //DataContractSerializer serializer = new DataContractSerializer(typeof(Dictionary<string, calibration_data>));
+
+            //StringBuilder sb = new StringBuilder();
+            //XmlWriter xw = XmlWriter.Create(sb);
+
+            ////serializer.Serialize(xw, _data_collection);
+            //serializer.WriteObject(xw, _data_collection);
+
+            ////ファイルを閉じる
+            //xw.Close();
+
+            //Properties.Settings.Default.calibration_data = sb.ToString();
+            //Properties.Settings.Default.Save();
         }
 
         private void buttonApply_Click(object sender, EventArgs e)
@@ -211,10 +293,33 @@ namespace Voltammogrammer
             }
         }
 
-        public void setID(string id)
+        public void setID(string device_id)
         {
-            _data.id = id;
+            string id = device_id.Replace("SN:",""); 
             toolStripTextBoxID.Text = id;
+
+            if(_data_collection.ContainsKey(id))
+            {
+                _data = _data_collection[id];
+            }
+            else
+            {
+                _data = Reset(id);
+                _data_collection.Add(id, _data);
+            }
+
+            UpdateUI();
+
+            _ps.SetCalibrationData(
+                _data.p_awg,
+                (_data.p_osc2 - _data.p_osc1),
+                (_data.c - _data.p_osc1 * 1000 / _data.r_ref) * ((1 / (double)Potentiostat.rangeCurrent.Range20mA) + _data.res / 1000000), // (c [uA] - (p_osc1 * 1000) [uV] / r_ref [ohm]) / 10000
+                _data.p_slope_awg / 1000,
+                _data.p_slope_osc2 / _data.p_slope_osc1,
+                (_data.c_slope / (_data.p_slope_osc1 * 1000.0 / _data.r_ref))//     / (1 + 0.5 / (1000000 / (double)Potentiostat.rangeCurrent.Range20mA))// * (r_ref / 1000.0)),
+                );
+
+            _configure_ps.SerializedValues = _data.configure_resistor_values;
         }
 
         private void buttonSave_Click(object sender, EventArgs e)
@@ -232,14 +337,21 @@ namespace Voltammogrammer
                 && Double.TryParse(this.textBoxCurrentSlope.Text, out _data.c_slope)
             )
             {
-                System.Xml.Serialization.XmlSerializer serializer2 = new System.Xml.Serialization.XmlSerializer(typeof(calibration_data));
-                StringBuilder sb2 = new StringBuilder();
-                XmlWriter xw2 = XmlWriter.Create(sb2);
-                serializer2.Serialize(xw2, _data);
-                //ファイルを閉じる
-                xw2.Close();
+                _data.configure_resistor_values = _configure_ps.SerializedValues;
 
-                Properties.Settings.Default.calibration_data = sb2.ToString();
+                //System.Xml.Serialization.XmlSerializer serializer2 = new System.Xml.Serialization.XmlSerializer(typeof(Dictionary<string, calibration_data>));
+                DataContractSerializer serializer = new DataContractSerializer(typeof(Dictionary<string, calibration_data>));
+
+                StringBuilder sb = new StringBuilder();
+                XmlWriter xw = XmlWriter.Create(sb);
+
+                //serializer.Serialize(xw, _data_collection);
+                serializer.WriteObject(xw, _data_collection);
+
+                //ファイルを閉じる
+                xw.Close();
+
+                Properties.Settings.Default.calibration_data = sb.ToString();
                 Properties.Settings.Default.Save();
 
                 _ps.SetCalibrationData(
@@ -273,17 +385,27 @@ namespace Voltammogrammer
                 return;
             }
 
-            Reset();
+            string id = _data.id;
+            _data = Reset(id);
+            if (_data_collection.ContainsKey(id))
+            {
+                _data_collection[id] = _data;
+            }
+            else
+            {
+                _data_collection.Add(id, _data);
+            }
+
             UpdateUI();
         }
 
-        private void toolStripButtonSave_Click(object sender, EventArgs e)
+        private void toolStripButtonSaveFile_Click(object sender, EventArgs e)
         {
 
             saveFileDialog1.Filter = "Calibration data file (*.xml)|*.xml|All types(*.*)|*.*";
             saveFileDialog1.FilterIndex = 1;
             saveFileDialog1.Title = "Save As";
-            saveFileDialog1.FileName = "calibration_data_" + toolStripTextBoxID.Text + ".xml"; 
+            saveFileDialog1.FileName = "calibration_data_" + _data.id + ".xml"; 
             saveFileDialog1.ShowHelp = true;
 
             if (saveFileDialog1.InitialDirectory == null)
@@ -312,17 +434,24 @@ namespace Voltammogrammer
 
                 //XmlSerializerオブジェクトを作成
                 //オブジェクトの型を指定する
-                System.Xml.Serialization.XmlSerializer serializer = new System.Xml.Serialization.XmlSerializer(typeof(calibration_data));
+                //System.Xml.Serialization.XmlSerializer serializer = new System.Xml.Serialization.XmlSerializer(typeof(calibration_data));
+                DataContractSerializer serializer = new DataContractSerializer(typeof(calibration_data));
+
                 //書き込むファイルを開く（UTF-8 BOM無し）
                 System.IO.StreamWriter sw = new System.IO.StreamWriter(file_path, false, new System.Text.UTF8Encoding(false));
+                XmlWriter xw = XmlWriter.Create(sw);
+
                 //シリアル化し、XMLファイルに保存する
-                serializer.Serialize(sw, _data);
+                //serializer.Serialize(sw, _data);
+                serializer.WriteObject(xw, _data);
+
                 //ファイルを閉じる
+                xw.Close();
                 sw.Close();
             }
         }
 
-        private void toolStripButtonLoad_Click(object sender, EventArgs e)
+        private void toolStripButtonLoadFile_Click(object sender, EventArgs e)
         {
             openFileDialog1.Filter = "Calibration data file (*.xml)|*.xml|All types(*.*)|*.*";
             openFileDialog1.FilterIndex = 1;
@@ -344,12 +473,19 @@ namespace Voltammogrammer
                     string file_path = openFileDialog1.FileNames[i];
 
                     //XmlSerializerオブジェクトを作成
-                    System.Xml.Serialization.XmlSerializer serializer = new System.Xml.Serialization.XmlSerializer(typeof(calibration_data));
+                    //System.Xml.Serialization.XmlSerializer serializer = new System.Xml.Serialization.XmlSerializer(typeof(calibration_data));
+                    DataContractSerializer serializer = new DataContractSerializer(typeof(calibration_data));
+
                     //読み込むファイルを開く
                     System.IO.StreamReader sr = new System.IO.StreamReader(file_path, new System.Text.UTF8Encoding(false));
+                    XmlReader xr = XmlReader.Create(sr);
+
                     //XMLファイルから読み込み、逆シリアル化する
-                    calibration_data _temp_data = (calibration_data)serializer.Deserialize(sr);
+                    //calibration_data _temp_data = (calibration_data)serializer.Deserialize(sr);
+                    calibration_data _temp_data = (calibration_data)serializer.ReadObject(xr);
+
                     //ファイルを閉じる
+                    xr.Close();
                     sr.Close();
 
                     if(_temp_data.id != _data.id)
@@ -373,7 +509,9 @@ namespace Voltammogrammer
                     //    out string configure_resistor_values
                     //);            
 
+                    string id = _data.id;
                     _data = _temp_data;
+                    _data.id = id;
 
                     UpdateUI();
 

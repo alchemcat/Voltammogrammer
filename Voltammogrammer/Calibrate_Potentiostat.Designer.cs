@@ -324,7 +324,7 @@
             this.toolStripButtonLoad.Name = "toolStripButtonLoad";
             this.toolStripButtonLoad.Size = new System.Drawing.Size(46, 28);
             this.toolStripButtonLoad.Text = "Load";
-            this.toolStripButtonLoad.Click += new System.EventHandler(this.toolStripButtonLoad_Click);
+            this.toolStripButtonLoad.Click += new System.EventHandler(this.toolStripButtonLoadFile_Click);
             // 
             // toolStripSeparator1
             // 
@@ -339,7 +339,7 @@
             this.toolStripButtonSave.Name = "toolStripButtonSave";
             this.toolStripButtonSave.Size = new System.Drawing.Size(44, 28);
             this.toolStripButtonSave.Text = "Save";
-            this.toolStripButtonSave.Click += new System.EventHandler(this.toolStripButtonSave_Click);
+            this.toolStripButtonSave.Click += new System.EventHandler(this.toolStripButtonSaveFile_Click);
             // 
             // toolStripLabel1
             // 
@@ -609,6 +609,7 @@
             this.Text = "Calibrate Potentiostat";
             this.TopMost = true;
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.Calibrate_Potentiostat_FormClosing);
+            this.FormClosed += new System.Windows.Forms.FormClosedEventHandler(this.Calibrate_Potentiostat_FormClosed);
             this.Load += new System.EventHandler(this.Calibrate_Potentiostat_Load);
             this.toolStrip1.ResumeLayout(false);
             this.toolStrip1.PerformLayout();

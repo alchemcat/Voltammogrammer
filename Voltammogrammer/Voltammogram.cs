@@ -2,7 +2,7 @@
 /*
     PocketPotentiostat
 
-    Copyright (C) 2019 Yasuo Matsubara
+    Copyright (C) 2019-2022 Yasuo Matsubara
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -405,7 +405,8 @@ namespace Voltammogrammer
 
             System.Windows.Forms.DataVisualization.Charting.Series series = AddNewSeries(!_mode_coulomb_counting, name, name, false);
 
-            TextReader reader = new StreamReader(file);
+            System.IO.FileStream streamFile = new System.IO.FileStream(file, System.IO.FileMode.Open, System.IO.FileAccess.Read, FileShare.ReadWrite);
+            TextReader reader = new StreamReader(streamFile);
 
             string line; int line_number = 1; int idxPotential = -1, idxCurrent = -1, idxTime = -1, idxReZ = -1, idxImZ = -1, idxFreq = -1;
             int line_header = 73;
@@ -597,6 +598,7 @@ namespace Voltammogrammer
             }
 
             reader.Close();
+            streamFile.Close();
         }
 
         public void LoadSingleVoltammogram_Hokuto(string name, string file)
@@ -654,7 +656,8 @@ namespace Voltammogrammer
 
             System.Windows.Forms.DataVisualization.Charting.Series series = AddNewSeries(!_mode_coulomb_counting, name, name, false);
 
-            TextReader reader = new StreamReader(file);
+            System.IO.FileStream streamFile = new System.IO.FileStream(file, System.IO.FileMode.Open, System.IO.FileAccess.Read, FileShare.ReadWrite);
+            TextReader reader = new StreamReader(streamFile);
 
             string line; int line_number = 1; int idxPotential = 0, idxCurrent = 0, idxTime = 0; int line_header = 2000;
             double potential, current, time, p = Double.NaN, t = Double.NaN, c = Double.NaN, q = Double.NaN;
@@ -714,12 +717,13 @@ namespace Voltammogrammer
             }
 
             reader.Close();
+            streamFile.Close();
         }
 
         public void LoadSetOfSeries(string filename, bool compressed)
         {
             //FileStream streamFile = new FileStream(filename, FileMode.Open);
-            System.IO.FileStream streamFile = new System.IO.FileStream(filename, System.IO.FileMode.Open, System.IO.FileAccess.Read);
+            System.IO.FileStream streamFile = new System.IO.FileStream(filename, System.IO.FileMode.Open, System.IO.FileAccess.Read, FileShare.ReadWrite);
 
             System.IO.Stream gzipStrm;
             if (compressed)
@@ -1279,7 +1283,7 @@ namespace Voltammogrammer
                 {
                     //   1. 最小値と最大値の更新 (ここでは値のリセットはしない)
                     double length = Math.Abs(_currentMaxX - _currentMinX);
-                    double ext = length * 0.10;
+                    double ext = Math.Max(length, Math.Abs(_currentMaxX)) * 0.10;
                     if (renew_min) { _currentMinX -= ext; }
                     if (renew_max) { _currentMaxX += ext; }
 
@@ -1316,10 +1320,10 @@ namespace Voltammogrammer
                 {
                     //   1. 最小値と最大値の更新 (ここでは値のリセットはしない)
                     double length = Math.Abs(_currentMaxY - _currentMinY);
-                    double ext = length * 0.10;
+                    double ext = Math.Max(length, Math.Abs(_currentMaxY)) * 0.10;
 
-                    if (renew_min) _currentMinY -= ext;
-                    if (renew_max) _currentMaxY += ext;
+                    if (renew_min) { _currentMinY -= ext; /*Console.WriteLine("renew_min, {0}", _currentMinY);*/  }
+                    if (renew_max) { _currentMaxY += ext; /*Console.WriteLine("renew_max, {0}", _currentMaxY);*/  }
 
                     //   2. 最小値と最大値に基づく目盛り間隔の更新
                     length = Math.Abs(_currentMaxY - _currentMinY);
@@ -2164,7 +2168,7 @@ namespace Voltammogrammer
                 case typeAxisX.ReZ_in_ohm:
                     //   1. 最小値と最大値の更新 (ここでは値のリセットはしない)
                     double length = Math.Abs(_currentMaxX - _currentMinX);
-                    double ext = length * 0.10;
+                    double ext = Math.Max(length, Math.Abs(_currentMaxX)) * 0.10;
                     _currentMinX -= ext;
                     _currentMaxX += ext;
 
@@ -2318,7 +2322,7 @@ namespace Voltammogrammer
 
                     //   1. 最小値と最大値の更新 (ここでは値のリセットはしない)
                     double length = Math.Abs(_currentMaxY - _currentMinY);
-                    double ext = length * 0.10;
+                    double ext = Math.Max(length, Math.Abs(_currentMaxY)) * 0.10;
                     _currentMinY -= ext;
                     _currentMaxY += ext;
 
@@ -2679,7 +2683,7 @@ namespace Voltammogrammer
 
                         //   1. 最小値と最大値の更新 (ここでは値のリセットはしない)
                         double length = Math.Abs(_currentMaxY - _currentMinY);
-                        double ext = length * 0.10;
+                        double ext = Math.Max(length, Math.Abs(_currentMaxY)) * 0.10;
 
                         _currentMinY -= ext;
                         _currentMaxY += ext;
@@ -3121,7 +3125,7 @@ namespace Voltammogrammer
 
                         //   1. 最小値と最大値の更新 (ここでは値のリセットはしない)
                         double length = Math.Abs(_currentMaxY - _currentMinY);
-                        double ext = length * 0.10;
+                        double ext = Math.Max(length, Math.Abs(_currentMaxY)) * 0.10;
 
                         _currentMinY -= ext;
                         _currentMaxY += ext;

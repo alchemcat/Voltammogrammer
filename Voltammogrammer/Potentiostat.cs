@@ -2,7 +2,7 @@
 /*
     PocketPotentiostat
 
-    Copyright (C) 2019 Yasuo Matsubara
+    Copyright (C) 2019-2022 Yasuo Matsubara
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -148,6 +148,7 @@ namespace Voltammogrammer
         double _hertzInitial;
         double _hertzFinal;
         double _secDuration;
+        double _secPreelectrolysis;
         double _secInterval;
         uint _rpmRDE = 0;
         double _voltAnalogInChannelRange_Current = 0.0;
@@ -790,7 +791,7 @@ namespace Voltammogrammer
         private void DoVoltammetry(ref double[] rgdSamples, double secRecording, double millivoltHeight, ref DoWorkEventArgs e, bool fCA = true, bool fFinal = true)
         {
             //double herzAcquisition = 40.0;
-            double secCAing = (fCA) ? 2.0 : 0.0;
+            double secCAing = (fCA) ? _secPreelectrolysis : 0.0;
             //double secDelta = 0.03;
             double secDelta = 1 / _hertzTargetFilteringFrequency * 2; // digital filterによる遅延時間。この分だけ、余分にデータを収集する必要がある。
 
@@ -861,6 +862,7 @@ namespace Voltammogrammer
             long t_previous_acquisition = 0, t_current_acquisition = 0;
             long t_current = 0, t_next = -1, t_cnt = 0; bool print_once = true;
             int cSwitching = 1;
+            bool was_output = false;
 
             backgroundWorkerCV.ReportProgress((int)statusMeasurement.MeasurementGotStarted);
 
@@ -1013,7 +1015,15 @@ namespace Voltammogrammer
                     }
                     else
                     {
-                        Console.WriteLine($"cAvailable: {cAvailable}, cSamples: {cSamples} (maxSamples: {Math.Floor((secCAing + secRecording) * _hertzAcquisition)}), cLost: {cLost}, sts code: {sts}");
+                        if ((cSamples % 10) == 0)
+                        {
+                            if(was_output == false)
+                            {
+                                Console.WriteLine($"cAvailable: {cAvailable}, cSamples: {cSamples} (maxSamples: {Math.Floor((secCAing + secRecording) * _hertzAcquisition)}), cLost: {cLost}, sts code: {sts}");
+                                was_output = true;
+                            }
+                        }
+                        else { was_output = false; }
 
                         if(cSamples > 0 && (sts == stsDone))
                         {
@@ -1625,7 +1635,7 @@ namespace Voltammogrammer
 
                     if (!DEBUG_VOLTAMMOGRAM)
                     {
-                        DoVoltammetry(ref rgdSamples, secRecording, millivoltHeight, ref e, fCA: !is_initial_potential_referring_to_OCP);
+                        DoVoltammetry(ref rgdSamples, secRecording, millivoltHeight, ref e, fCA: (!is_initial_potential_referring_to_OCP && _selectedMethod == methodMeasurement.OSWV));
                     }
                     else
                     {
@@ -2546,7 +2556,7 @@ namespace Voltammogrammer
                     break;
 
                 case (int)statusMeasurement.MeasurementGotStarted: // Actual measurement got started
-                    toolStripStatusLabelStatus.Text = "During measuremnet";
+                    toolStripStatusLabelStatus.Text = "During measurement";
                     break;
 
                 case (int)statusMeasurement.MeasuremetWasDone: // Measurement was done
@@ -2867,6 +2877,7 @@ namespace Voltammogrammer
                         if (true)
                         {
                             int k = (_is_using_digitalfilter) ? (int)Math.Round(_hertzAcquisition / _hertzTargetFilteringFrequency * 2) : 1;
+                            if (k < 1) k = 1;
                             //const int k = 16;
                             if (progress >= (k - 1))
                             {
@@ -3283,6 +3294,11 @@ namespace Voltammogrammer
             {
                 Console.WriteLine($"DEBUG_VOLTAMMOGRAM");
 
+                _calibrate_potentiostat.setID("");
+                this.Text = "Voltammogrammer " + System.Reflection.Assembly.GetExecutingAssembly().GetName().Version.ToString()
+                          + " for PocketPotentiostat " + VERSION_string
+                          + " (demo)";
+
                 _readingBuffers = new double[MAX_CHANNELS][];
 
                 for (int i = 0; i < MAX_CHANNELS; i++)
@@ -3344,7 +3360,7 @@ namespace Voltammogrammer
             {
                 idxDevice = (int)toolStripComboBoxSerialPort.ComboBox.SelectedValue;
             }
-            Console.WriteLine($"Connecting device: {toolStripComboBoxSerialPort.ComboBox.Text}");
+            Console.WriteLine($"Connected device: {toolStripComboBoxSerialPort.ComboBox.Text}");
 
             // Open connection to device
             status = FDwfDeviceOpen(idxDevice, out _handle);
@@ -3365,6 +3381,9 @@ namespace Voltammogrammer
             //    status = Imports.ChangePowerSource(_handle, status);
             //}
             _calibrate_potentiostat.setID(toolStripComboBoxSerialPort.ComboBox.Text);
+            this.Text = "Voltammogrammer " + System.Reflection.Assembly.GetExecutingAssembly().GetName().Version.ToString() 
+                      + " for PocketPotentiostat " + VERSION_string 
+                      + " (" + toolStripComboBoxSerialPort.ComboBox.Text + ")";
 
             //System.Text.StringBuilder sb = new System.Text.StringBuilder(32);
             //FDwfGetVersion(sb);
@@ -3620,7 +3639,7 @@ namespace Voltammogrammer
             //_selectedMethod_previous = _selectedMethod;
 
             _selectedCurrentRange = (rangeCurrent)toolStripComboBoxRange.ComboBox.SelectedValue;
-            _selectedCurrentFactor = 1000000.0 / Double.Parse(_configure_potentiostat._tableResistor.Rows[toolStripComboBoxRange.ComboBox.SelectedIndex][1].ToString());
+            _selectedCurrentFactor = 1000000.0 / Double.Parse(_configure_potentiostat.tableResistors.Rows[toolStripComboBoxRange.ComboBox.SelectedIndex][1].ToString());
             Console.WriteLine("_selectedCurrentFactor: {0}", _selectedCurrentFactor);
 
             if (DIGITALIO_FROM_ARDUINO)
@@ -3889,39 +3908,39 @@ namespace Voltammogrammer
         // Event Handlers for Chart
         //
 
-        double _chartselectionY2max, _chartselectionY2min;
-        bool _chartselectionTuringOn = false;
+        //double _chartselectionY2max, _chartselectionY2min;
+        //bool _chartselectionTuringOn = false;
 
         private void chartVoltammogram_AxisViewChanged(object sender, System.Windows.Forms.DataVisualization.Charting.ViewEventArgs e)
         {
-            return;
+            //return;
 
-            //double Y2max = e.ChartArea.AxisY2.PositionToValue(e.ChartArea.AxisY.ValueToPosition(e.Axis.ScaleView.ViewMaximum));
-            //double Y2min = e.ChartArea.AxisY2.PositionToValue(e.ChartArea.AxisY.ValueToPosition(e.Axis.ScaleView.ViewMinimum));
+            ////double Y2max = e.ChartArea.AxisY2.PositionToValue(e.ChartArea.AxisY.ValueToPosition(e.Axis.ScaleView.ViewMaximum));
+            ////double Y2min = e.ChartArea.AxisY2.PositionToValue(e.ChartArea.AxisY.ValueToPosition(e.Axis.ScaleView.ViewMinimum));
 
-            //Console.WriteLine(" X: " + e.Axis.ScaleView.ViewMaximum.ToString() + ", " + e.Axis.ScaleView.ViewMinimum.ToString());
-            //Console.WriteLine("Y2: " + Y2max + ", " + Y2min);
+            ////Console.WriteLine(" X: " + e.Axis.ScaleView.ViewMaximum.ToString() + ", " + e.Axis.ScaleView.ViewMinimum.ToString());
+            ////Console.WriteLine("Y2: " + Y2max + ", " + Y2min);
 
-            if (e.Axis.AxisName.ToString() == "Y")
-            {
-                Console.WriteLine(e.Axis.AxisName + " changed" + e.ChartArea.AxisY.ScaleView.IsZoomed);
-                if (!_chartselectionTuringOn) return;
+            //if (e.Axis.AxisName.ToString() == "Y")
+            //{
+            //    Console.WriteLine(e.Axis.AxisName + " changed" + e.ChartArea.AxisY.ScaleView.IsZoomed);
+            //    if (!_chartselectionTuringOn) return;
 
-                if(_chartselectionY2max > _chartselectionY2min)
-                {
-                    e.ChartArea.AxisY2.ScaleView.Zoom(_chartselectionY2min, _chartselectionY2max);
-                }
-                else
-                {
-                    e.ChartArea.AxisY2.ScaleView.Zoom(_chartselectionY2max, _chartselectionY2min);
-                }
-                _chartselectionTuringOn = false;
-                //e.ChartArea.AxisY2.ScaleView.Zoom((_chartselectionY2max), (_chartselectionY2min));
-                //e.ChartArea.AxisY2.ScaleView.Zoom(10,20);
-                //e.ChartArea.AxisY2.ScaleView.Zoom(e.ChartArea.AxisY2.ValueToPosition(_chartselectionY2max), e.ChartArea.AxisY2.ValueToPosition(_chartselectionY2min));
-                //Console.WriteLine("Zoom: " + e.ChartArea.AxisY2.ValueToPosition(_chartselectionY2max) + ", " + e.ChartArea.AxisY2.ValueToPosition(_chartselectionY2min));
-                //Console.WriteLine("Zoom: " + (_chartselectionY2max) + ", " + (_chartselectionY2min));
-            }
+            //    if(_chartselectionY2max > _chartselectionY2min)
+            //    {
+            //        e.ChartArea.AxisY2.ScaleView.Zoom(_chartselectionY2min, _chartselectionY2max);
+            //    }
+            //    else
+            //    {
+            //        e.ChartArea.AxisY2.ScaleView.Zoom(_chartselectionY2max, _chartselectionY2min);
+            //    }
+            //    _chartselectionTuringOn = false;
+            //    //e.ChartArea.AxisY2.ScaleView.Zoom((_chartselectionY2max), (_chartselectionY2min));
+            //    //e.ChartArea.AxisY2.ScaleView.Zoom(10,20);
+            //    //e.ChartArea.AxisY2.ScaleView.Zoom(e.ChartArea.AxisY2.ValueToPosition(_chartselectionY2max), e.ChartArea.AxisY2.ValueToPosition(_chartselectionY2min));
+            //    //Console.WriteLine("Zoom: " + e.ChartArea.AxisY2.ValueToPosition(_chartselectionY2max) + ", " + e.ChartArea.AxisY2.ValueToPosition(_chartselectionY2min));
+            //    //Console.WriteLine("Zoom: " + (_chartselectionY2max) + ", " + (_chartselectionY2min));
+            //}
         }
 
         private void chartVoltammogram_AxisViewChanging(object sender, System.Windows.Forms.DataVisualization.Charting.ViewEventArgs e)
@@ -4073,7 +4092,7 @@ namespace Voltammogrammer
                         //double new_size = Math.Ceiling(size / (interval_m)) * interval_m;
                         double new_p = Math.Round(p / (interval)) * (interval);
 
-                        // TODO: Y2は軸のスケールが違うので要変換
+                        // Y2は軸のスケールが違うので要変換
                         double p_y2 = ca.AxisY2.PositionToValue(ca.AxisY.ValueToPosition(p));
                         double start_y2 = ca.AxisY2.PositionToValue(ca.AxisY.ValueToPosition(e.NewSelectionStart));
                         double end_y2 = ca.AxisY2.PositionToValue(ca.AxisY.ValueToPosition(e.NewSelectionEnd));
@@ -4177,23 +4196,23 @@ namespace Voltammogrammer
 
         private void chartVoltammogram_SelectionRangeChanging(object sender, System.Windows.Forms.DataVisualization.Charting.CursorEventArgs e)
         {
-            return;
+            //return;
 
-            if(e.Axis.AxisName.ToString() == "Y")
-            {
-                //Console.WriteLine("Changing:");
-                //Console.WriteLine(e.Axis.AxisName + ": " + e.NewSelectionStart.ToString());
-                //Console.WriteLine(e.Axis.AxisName + ": " + e.NewSelectionEnd.ToString());
+            //if(e.Axis.AxisName.ToString() == "Y")
+            //{
+            //    //Console.WriteLine("Changing:");
+            //    //Console.WriteLine(e.Axis.AxisName + ": " + e.NewSelectionStart.ToString());
+            //    //Console.WriteLine(e.Axis.AxisName + ": " + e.NewSelectionEnd.ToString());
 
-                //_chartselectionY2max = e.ChartArea.AxisY.ValueToPosition(e.NewSelectionStart);
-                //_chartselectionY2min = e.ChartArea.AxisY.ValueToPosition(e.NewSelectionEnd);
-                _chartselectionY2max = e.ChartArea.AxisY2.PositionToValue(e.ChartArea.AxisY.ValueToPosition(e.NewSelectionStart));
-                _chartselectionY2min = e.ChartArea.AxisY2.PositionToValue(e.ChartArea.AxisY.ValueToPosition(e.NewSelectionEnd));
+            //    //_chartselectionY2max = e.ChartArea.AxisY.ValueToPosition(e.NewSelectionStart);
+            //    //_chartselectionY2min = e.ChartArea.AxisY.ValueToPosition(e.NewSelectionEnd);
+            //    _chartselectionY2max = e.ChartArea.AxisY2.PositionToValue(e.ChartArea.AxisY.ValueToPosition(e.NewSelectionStart));
+            //    _chartselectionY2min = e.ChartArea.AxisY2.PositionToValue(e.ChartArea.AxisY.ValueToPosition(e.NewSelectionEnd));
 
-                //Console.WriteLine("Ymax: " + _chartselectionY2max + ", Ymin:" + _chartselectionY2min);
+            //    //Console.WriteLine("Ymax: " + _chartselectionY2max + ", Ymin:" + _chartselectionY2min);
 
-                _chartselectionTuringOn = true;
-            }
+            //    _chartselectionTuringOn = true;
+            //}
         }
         
         private void chartVoltammogram_CursorPositionChanged(object sender, System.Windows.Forms.DataVisualization.Charting.CursorEventArgs e)
@@ -4598,6 +4617,8 @@ namespace Voltammogrammer
                     _toolstripmenuitemsRange[i].Checked = false;
                 }
             }
+
+            _selectedPotentialRange = range;
         }
 
         public void SelectCurrentRange(Potentiostat.rangeCurrent range)
@@ -5218,8 +5239,7 @@ namespace Voltammogrammer
 
         public void SetCalibrationData(
             double potential_awg, double potential_osc, double current,
-            double potential_slope_awg, double potential_slope_osc, double current_slope_osc
-            )
+            double potential_slope_awg, double potential_slope_osc, double current_slope_osc)
         {
             POTENTIAL_OFFSET_AWG = potential_awg;
             POTENTIAL_OFFSET_OSC = potential_osc;
@@ -5255,8 +5275,8 @@ namespace Voltammogrammer
                 _tablesRanges[(int)modeMeasurement.eis].Rows[i][0] = tableResistor.Rows[i][3];
             }
 
-            SetSubmodule(Properties.Settings.Default.configure_submodule_pluggedin);
-            SetFilteringMethod(Properties.Settings.Default.configure_filtering_method);
+            SetSubmodule(_configure_potentiostat.submodule);
+            SetFilteringMethod(_configure_potentiostat.filtering_method);
         }
 
         private void SetFrequencyOfAcquisition(int index)
@@ -5470,7 +5490,7 @@ namespace Voltammogrammer
                 _countStep = Double.NaN;
                 _hertzInitial = Double.NaN;
                 _hertzFinal = Double.NaN;
-                _secDuration = Double.NaN;
+                _secDuration = Double.NaN; _secPreelectrolysis = Double.NaN;
                 _secInterval = Double.NaN;
 
                 switch (_selectedMethod)
@@ -5857,6 +5877,13 @@ namespace Voltammogrammer
                         //{
                         //    MessageBox.Show(this, "The value of Scanning range [mV] is too wide (> 5000 mV)."); return;
                         //}
+
+                        if (double.TryParse(toolStripTextBoxStep.Text, out _secPreelectrolysis)
+                            && (_secPreelectrolysis >= 1))
+                        {
+                            //_millivoltVertex += (int)POTENTIAL_OFFSET;
+                        }
+                        else { MessageBox.Show(this, "The value of pre-electrolysis time [s] is invalid."); return; }
 
                         if (double.TryParse(toolStripTextBoxRepeat.Text, out _countRepeat)
                             && (_countRepeat <= 100)
@@ -6420,6 +6447,8 @@ namespace Voltammogrammer
                         toolStripTextBoxVertexV.Text = "500";
                         toolStripLabel3.Text = "Scanning rate [" + unit1 + "/s]:";
                         toolStripTextBoxScanrate.Text = "100";
+                        toolStripLabel8.Text = "Pre-electrolysis [s]"; toolStripLabel8.Visible = true;
+                        toolStripTextBoxStep.Text = "2"; toolStripTextBoxStep.Visible = true;
                         toolStripLabel4.Text = "Repeat:";
                         toolStripTextBoxRepeat.Text = "1";
                         break;
@@ -6464,6 +6493,8 @@ namespace Voltammogrammer
                         toolStripTextBoxVertexV.Text = "500";
                         toolStripLabel3.Text = "Scanning rate [" + unit1 + "/s]:";
                         toolStripTextBoxScanrate.Text = "100";
+                        toolStripLabel8.Text = "Pre-electrolysis [s]"; toolStripLabel8.Visible = true;
+                        toolStripTextBoxStep.Text = "2"; toolStripTextBoxStep.Visible = true;
                         toolStripLabel4.Text = "Repeat:";
                         toolStripTextBoxRepeat.Text = "1";
                         break;
@@ -6636,25 +6667,24 @@ namespace Voltammogrammer
             SetMode(mode);
         }
 
-        private void toolStripMenuGalvanoStat_Click(object sender, EventArgs e)
-        {
-            //SetGalvanostat(!toolStripMenuGalvanoStat.Checked);
-            SetMode(modeMeasurement.galvanometry);
-        }
-
-        private void toolStripMenuEIS_Click(object sender, EventArgs e)
-        {
-            //if(toolStripMenuEIS.Checked)
-            //{
-            //    SetEIS(false);
-            //}
-            //else
-            //{
-            //    SetEIS(true);
-            //}
-            //SetEIS(!toolStripMenuEIS.Checked);
-            SetMode(modeMeasurement.eis);
-        }
+        //private void toolStripMenuGalvanoStat_Click(object sender, EventArgs e)
+        //{
+        //    //SetGalvanostat(!toolStripMenuGalvanoStat.Checked);
+        //    SetMode(modeMeasurement.galvanometry);
+        //}
+        //private void toolStripMenuEIS_Click(object sender, EventArgs e)
+        //{
+        //    //if(toolStripMenuEIS.Checked)
+        //    //{
+        //    //    SetEIS(false);
+        //    //}
+        //    //else
+        //    //{
+        //    //    SetEIS(true);
+        //    //}
+        //    //SetEIS(!toolStripMenuEIS.Checked);
+        //    SetMode(modeMeasurement.eis);
+        //}
 
         private void toolStripMenuItemDebug_Click(object sender, EventArgs e)
         {
@@ -6678,11 +6708,6 @@ namespace Voltammogrammer
             {
                 hzToolStripMenuItemAuto.Checked = false;
             }
-        }
-
-        private void toolStripMenuItemCalibrate_Click(object sender, EventArgs e)
-        {
-            _calibrate_potentiostat.Show();
         }
 
         private void toolStripMenuClearComp_Click(object sender, EventArgs e)
@@ -6738,6 +6763,22 @@ namespace Voltammogrammer
             }
         }
 
+        private void toolStripTextBoxStep_Validating(object sender, CancelEventArgs e)
+        {
+            if (!backgroundWorkerCV.IsBusy) return; 
+
+            if(_selectedMethod == methodMeasurement.ConstantCurrent)
+            {
+                if (int.TryParse(toolStripTextBoxStep.Text, out int value)
+                    && (value >= 1))
+                {
+                    _millivoltLimit = value;
+                    MessageBox.Show(this, $"The potential limit, |E| [mV] for S electrode (as an absolute value) is now: {_millivoltLimit}");
+                }
+                else { MessageBox.Show(this, "The potential limit, |E| [mV] for S electrode (as an absolute value) is invalid."); e.Cancel = true; return; }
+            }
+        }
+
         private void toolStripTextBoxVertexV_Validating(object sender, CancelEventArgs e)
         {
             if (!backgroundWorkerCV.IsBusy) return; 
@@ -6780,6 +6821,11 @@ namespace Voltammogrammer
             _configure_potentiostat.Show();
         }
 
+        private void toolStripMenuItemCalibrate_Click(object sender, EventArgs e)
+        {
+            _calibrate_potentiostat.Show();
+        }
+
         private void toolStripMenuItemSaveAvaragedData_DropDownItemClicked(object sender, ToolStripItemClickedEventArgs e)
         {
             ToolStripMenuItem item = (ToolStripMenuItem)sender;
@@ -6792,6 +6838,21 @@ namespace Voltammogrammer
             {
                 Properties.Settings.Default.configure_referencing_for_initial_potential = toolStripComboBoxReferenceForInitialPotential.SelectedIndex;
                 Properties.Settings.Default.Save();
+
+                if(_selectedMode == modeMeasurement.voltammetry)
+                {
+                    switch(toolStripComboBoxReferenceForInitialPotential.SelectedIndex)
+                    {
+                        case 0: // vs REF
+                            toolStripLabel8.Enabled = true;
+                            toolStripTextBoxStep.Enabled = true;
+                            break;
+                        case 1: // vs OCP
+                            toolStripLabel8.Enabled = false;
+                            toolStripTextBoxStep.Enabled = false;
+                            break;
+                    }
+                }
             }
         }
 

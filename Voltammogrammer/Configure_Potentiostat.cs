@@ -1,4 +1,25 @@
-﻿using System;
+﻿
+/*
+    PocketPotentiostat
+
+    Copyright (C) 2019-2022 Yasuo Matsubara
+
+    This program is free software; you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation; either version 3 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program; if not, write to the Free Software
+    Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+*/
+
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
@@ -14,24 +35,98 @@ using System.Runtime.Serialization;
 using System.IO;
 using System.Xml.Serialization;
 
+
 namespace Voltammogrammer
 {
     public partial class Configure_Potentiostat : Form
     {
         Potentiostat _ps;
-        public DataTable _tableResistor;
+
+        configration_data _data;
+
+        [System.Xml.Serialization.XmlRoot(Namespace = "https://doi.org/10.1021/acs.jchemed.1c00228")]
+        public class configration_data
+        {
+            public DataTable tableResistors;
+            public int filtering_method = 0;
+            public int submodule = 0;
+
+            public configration_data()
+            {
+                tableResistors = new DataTable("resistor_table1");
+
+                tableResistors.Columns.Add("Resistor");
+                tableResistors.Columns.Add("Value [ohm]", typeof(double));
+                tableResistors.Columns.Add("Caption (Current)", typeof(string));
+                tableResistors.Columns.Add("Caption (EIS)", typeof(string));
+                tableResistors.Rows.Add("R1", 10, "+- 200 mA", "10 Ohm");
+                tableResistors.Rows.Add("R2", 100, "+- 20 mA", "100 Ohm");
+                tableResistors.Rows.Add("R3", 1000, "+- 2 mA", "1 kOhm");
+                tableResistors.Rows.Add("R4", 10000, "+- 200 uA", "10 kOhm");
+                tableResistors.Rows.Add("R5", 100000, "+- 20 uA", "100 kOhm");
+                tableResistors.Rows.Add("R6", 1000000, "+- 2 uA", "1 MOhm");
+
+                tableResistors.Rows.Add("R7 (=R4, raw)", 10000, "+- 200 uA (raw)", "10 kOhm"); // For RAW mode
+            }
+        }
+
         public string SerializedValues
         {
             set 
             {
-                Properties.Settings.Default.configure_resistor_values = value;
-                Properties.Settings.Default.Save();
+                if (value == "")
+                {
+                    _data = Reset();
+                }
+                else
+                {
+                    XmlSerializer serializer = new XmlSerializer(typeof(configration_data)); // _tableResistor.GetType()
+                    StringReader sr = new StringReader(value);
 
-                InitializeResistors();                
+                    XmlReader xr = XmlReader.Create(sr);
+                    _data = (configration_data)serializer.Deserialize(xr);
+                    xr.Close();
+                }
+
+                UpdateUI();
+
+                // Potentiostat本体の値を更新
+                _ps.UpdateResistors(_data.tableResistors);
             }
             get 
-            { 
-                return Properties.Settings.Default.configure_resistor_values;
+            {
+                System.Xml.Serialization.XmlSerializer serializer = new System.Xml.Serialization.XmlSerializer(typeof(configration_data));
+                StringBuilder sb = new StringBuilder();
+                XmlWriter xw = XmlWriter.Create(sb);
+                serializer.Serialize(xw, _data);
+                //ファイルを閉じる
+                xw.Close();
+
+                return sb.ToString();
+            }
+        }
+
+        public DataTable tableResistors
+        {
+            get 
+            {
+                return _data.tableResistors;
+            }
+        }
+
+        public int filtering_method
+        {
+            get
+            {
+                return _data.filtering_method;
+            }
+        }
+
+        public int submodule
+        {
+            get
+            {
+                return _data.submodule;
             }
         }
 
@@ -41,60 +136,42 @@ namespace Voltammogrammer
 
             _ps = ps;
 
-            InitializeResistors();
-
-            int r2 = Properties.Settings.Default.configure_filtering_method;
-            comboBoxFilteringMethod.SelectedIndex = (r2);
-
-            int r3 = Properties.Settings.Default.configure_submodule_pluggedin;
-            comboBoxSubmodule.SelectedIndex = (r3);
-
+            _data = new configration_data();
         }
 
-        public void InitializeResistors()
+        //public void InitializeResistors()
+        //{
+        //    string r1 = Properties.Settings.Default.configure_resistor_values;
+        //    if (r1 == "")
+        //    {
+        //        Reset();
+        //    }
+        //    else
+        //    {
+        //        XmlSerializer serializer = new XmlSerializer(typeof(DataTable)); // _tableResistor.GetType()
+        //        StringReader sr = new StringReader(r1);
+
+        //        XmlReader xr = XmlReader.Create(sr);
+        //        _tableResistor = (DataTable)serializer.Deserialize(xr);
+        //        xr.Close();
+        //    }
+
+        //    UpdateUI();
+
+        //    // Potentiostat本体の値を更新
+        //    _ps.UpdateResistors(_tableResistor);
+        //}
+
+        private configration_data Reset()
         {
-            string r1 = Properties.Settings.Default.configure_resistor_values;
-            if (r1 == "")
-            {
-                Reset();
-            }
-            else
-            {
-                XmlSerializer serializer = new XmlSerializer(typeof(DataTable)); // _tableResistor.GetType()
-                StringReader sr = new StringReader(r1);
-
-                XmlReader xr = XmlReader.Create(sr);
-                _tableResistor = (DataTable)serializer.Deserialize(xr);
-                xr.Close();
-            }
-
-            UpdateUI();
-
-            // Potentiostat本体の値を更新
-            _ps.UpdateResistors(_tableResistor);
-        }
-
-        private void Reset()
-        {
-            _tableResistor = new DataTable("resistor_table1");
-
-            _tableResistor.Columns.Add("Resistor");
-            _tableResistor.Columns.Add("Value [ohm]", typeof(double));
-            _tableResistor.Columns.Add("Caption (Current)", typeof(string));
-            _tableResistor.Columns.Add("Caption (EIS)", typeof(string));
-            _tableResistor.Rows.Add("R1", 10, "+- 200 mA", "10 Ohm");
-            _tableResistor.Rows.Add("R2", 100, "+- 20 mA", "100 Ohm");
-            _tableResistor.Rows.Add("R3", 1000, "+- 2 mA", "1 kOhm");
-            _tableResistor.Rows.Add("R4", 10000, "+- 200 uA", "10 kOhm");
-            _tableResistor.Rows.Add("R5", 100000, "+- 20 uA", "100 kOhm");
-            _tableResistor.Rows.Add("R6", 1000000, "+- 2 uA", "1 MOhm");
-
-            _tableResistor.Rows.Add("R7 (=R4, raw)", 10000, "+- 200 uA (raw)", "10 kOhm"); // For RAW mode
+            return new configration_data();
         }
 
         private void UpdateUI()
         {
-            dataGridView1.DataSource = _tableResistor;
+            dataGridView1.DataSource = _data.tableResistors.Copy();
+            comboBoxFilteringMethod.SelectedIndex = _data.filtering_method;
+            comboBoxSubmodule.SelectedIndex = _data.submodule;
         }
 
         private void Configure_Potentiostat_FormClosing(object sender, FormClosingEventArgs e)
@@ -109,20 +186,24 @@ namespace Voltammogrammer
             dataGridView1[2, 6].Value = dataGridView1[2, 3].Value;
             dataGridView1[3, 6].Value = dataGridView1[3, 3].Value;
 
-            System.Xml.Serialization.XmlSerializer serializer2 = new System.Xml.Serialization.XmlSerializer(typeof(DataTable));
-            StringBuilder sb2 = new StringBuilder();
-            XmlWriter xw2 = XmlWriter.Create(sb2);
-            serializer2.Serialize(xw2, _tableResistor);
-            //ファイルを閉じる
-            xw2.Close();
+            _data.tableResistors = ((DataTable)dataGridView1.DataSource).Copy();
+            _data.filtering_method = comboBoxFilteringMethod.SelectedIndex;
+            _data.submodule = comboBoxSubmodule.SelectedIndex;
 
-            Properties.Settings.Default.configure_resistor_values = sb2.ToString();
-            Properties.Settings.Default.configure_filtering_method = comboBoxFilteringMethod.SelectedIndex;
-            Properties.Settings.Default.configure_submodule_pluggedin = comboBoxSubmodule.SelectedIndex;
-            Properties.Settings.Default.Save();
+            //System.Xml.Serialization.XmlSerializer serializer2 = new System.Xml.Serialization.XmlSerializer(typeof(DataTable));
+            //StringBuilder sb2 = new StringBuilder();
+            //XmlWriter xw2 = XmlWriter.Create(sb2);
+            //serializer2.Serialize(xw2, _tableResistor);
+            ////ファイルを閉じる
+            //xw2.Close();
+
+            //Properties.Settings.Default.configure_resistor_values = sb2.ToString();
+            //Properties.Settings.Default.configure_filtering_method = comboBoxFilteringMethod.SelectedIndex;
+            //Properties.Settings.Default.configure_submodule_pluggedin = comboBoxSubmodule.SelectedIndex;
+            //Properties.Settings.Default.Save();
 
             // Potentiostat本体の値を更新
-            _ps.UpdateResistors(_tableResistor);
+            _ps.UpdateResistors(_data.tableResistors);
         }
 
         private void buttonReset_Click(object sender, EventArgs e)
@@ -139,7 +220,7 @@ namespace Voltammogrammer
                 return;
             }
 
-            Reset();
+            _data = Reset();
             UpdateUI();
         }
 
