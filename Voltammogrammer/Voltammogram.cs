@@ -1436,7 +1436,7 @@ namespace Voltammogrammer
         {
             XmlWriterSettings settings = new XmlWriterSettings();
             settings.Indent = true;
-            settings.IndentChars = "\t";
+            //settings.IndentChars = "\t";
 
             Stream stream = new MemoryStream();
 
@@ -1489,7 +1489,7 @@ namespace Voltammogrammer
                             if ((k % step) == 0)
                             {
                                 writer.WriteString(
-                                      "\t\t"
+                                      "      "
                                     + chartVoltammogram.Series[i].Points[j].XValue.ToString()
                                     + ", "
                                     + String.Join(",", chartVoltammogram.Series[i].Points[j].YValues.Select(o => o.ToString()).ToArray())
@@ -1507,7 +1507,7 @@ namespace Voltammogrammer
                         else
                         {
                             writer.WriteString(
-                                  "\t\t"
+                                  "      "
                                 + chartVoltammogram.Series[i].Points[j].XValue.ToString()
                                 + ", "
                                 + String.Join(",", chartVoltammogram.Series[i].Points[j].YValues.Select(o => o.ToString()).ToArray())
@@ -1515,7 +1515,9 @@ namespace Voltammogrammer
                             );
                         }
                     }
-
+                    writer.WriteString(
+                            "    "
+                    );
                     //writer.WriteElementString("Series", serializedSeries);
 
                     writer.WriteEndElement();

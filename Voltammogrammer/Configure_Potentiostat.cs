@@ -97,7 +97,10 @@ namespace Voltammogrammer
             {
                 System.Xml.Serialization.XmlSerializer serializer = new System.Xml.Serialization.XmlSerializer(typeof(configration_data));
                 StringBuilder sb = new StringBuilder();
-                XmlWriter xw = XmlWriter.Create(sb);
+                XmlWriterSettings settings = new XmlWriterSettings();
+                settings.Indent = true;
+                //settings.IndentChars = "\t";
+                XmlWriter xw = XmlWriter.Create(sb, settings);
                 serializer.Serialize(xw, _data);
                 //ファイルを閉じる
                 xw.Close();

@@ -439,7 +439,11 @@ namespace Voltammogrammer
 
                 //書き込むファイルを開く（UTF-8 BOM無し）
                 System.IO.StreamWriter sw = new System.IO.StreamWriter(file_path, false, new System.Text.UTF8Encoding(false));
-                XmlWriter xw = XmlWriter.Create(sw);
+
+                XmlWriterSettings settings = new XmlWriterSettings();
+                settings.Indent = true;
+                //settings.IndentChars = "\t";
+                XmlWriter xw = XmlWriter.Create(sw, settings);
 
                 //シリアル化し、XMLファイルに保存する
                 //serializer.Serialize(sw, _data);

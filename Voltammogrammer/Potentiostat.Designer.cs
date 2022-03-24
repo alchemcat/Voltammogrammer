@@ -136,6 +136,12 @@
             this.toolStripTextBoxStep = new System.Windows.Forms.ToolStripTextBox();
             this.toolStripLabel4 = new System.Windows.Forms.ToolStripLabel();
             this.toolStripTextBoxRepeat = new System.Windows.Forms.ToolStripTextBox();
+            this.toolStripSeparator12 = new System.Windows.Forms.ToolStripSeparator();
+            this.toolStripDropDownButtonDetails = new System.Windows.Forms.ToolStripDropDownButton();
+            this.toolStripMenuItemDetail1 = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStripLabeledTextBoxDetail1Option1 = new Voltammogrammer.ToolStripLabeledTextBox();
+            this.toolStripLabeledTextBoxDetail1Option2 = new Voltammogrammer.ToolStripLabeledTextBox();
+            this.toolStripSeparator4 = new System.Windows.Forms.ToolStripSeparator();
             this.timerCurrentEandI = new System.Windows.Forms.Timer(this.components);
             this.toolStrip1.SuspendLayout();
             this.statusStrip1.SuspendLayout();
@@ -982,12 +988,14 @@
             this.toolStripLabel8,
             this.toolStripTextBoxStep,
             this.toolStripLabel4,
-            this.toolStripTextBoxRepeat});
+            this.toolStripTextBoxRepeat,
+            this.toolStripSeparator12,
+            this.toolStripDropDownButtonDetails});
             this.toolStrip2.LayoutStyle = System.Windows.Forms.ToolStripLayoutStyle.HorizontalStackWithOverflow;
             this.toolStrip2.Location = new System.Drawing.Point(4, 28);
             this.toolStrip2.Name = "toolStrip2";
             this.toolStrip2.RenderMode = System.Windows.Forms.ToolStripRenderMode.Professional;
-            this.toolStrip2.Size = new System.Drawing.Size(1205, 28);
+            this.toolStrip2.Size = new System.Drawing.Size(956, 28);
             this.toolStrip2.TabIndex = 3;
             // 
             // toolStripLabel1
@@ -1098,6 +1106,53 @@
             this.toolStripTextBoxRepeat.Size = new System.Drawing.Size(70, 28);
             this.toolStripTextBoxRepeat.Text = "1";
             this.toolStripTextBoxRepeat.Validating += new System.ComponentModel.CancelEventHandler(this.toolStripTextBoxRepeat_Validating);
+            // 
+            // toolStripSeparator12
+            // 
+            this.toolStripSeparator12.Name = "toolStripSeparator12";
+            this.toolStripSeparator12.Size = new System.Drawing.Size(6, 28);
+            // 
+            // toolStripDropDownButtonDetails
+            // 
+            this.toolStripDropDownButtonDetails.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
+            this.toolStripDropDownButtonDetails.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.toolStripMenuItemDetail1,
+            this.toolStripLabeledTextBoxDetail1Option1,
+            this.toolStripLabeledTextBoxDetail1Option2,
+            this.toolStripSeparator4});
+            this.toolStripDropDownButtonDetails.Image = ((System.Drawing.Image)(resources.GetObject("toolStripDropDownButtonDetails.Image")));
+            this.toolStripDropDownButtonDetails.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.toolStripDropDownButtonDetails.Name = "toolStripDropDownButtonDetails";
+            this.toolStripDropDownButtonDetails.Size = new System.Drawing.Size(89, 25);
+            this.toolStripDropDownButtonDetails.Text = "Advanced";
+            // 
+            // toolStripMenuItemDetail1
+            // 
+            this.toolStripMenuItemDetail1.CheckOnClick = true;
+            this.toolStripMenuItemDetail1.Name = "toolStripMenuItemDetail1";
+            this.toolStripMenuItemDetail1.Size = new System.Drawing.Size(372, 26);
+            this.toolStripMenuItemDetail1.Text = "Potential switching";
+            // 
+            // toolStripLabeledTextBoxDetail1Option1
+            // 
+            this.toolStripLabeledTextBoxDetail1Option1.BackColor = System.Drawing.Color.Transparent;
+            this.toolStripLabeledTextBoxDetail1Option1.Caption = "    Switching potential [mV]:";
+            this.toolStripLabeledTextBoxDetail1Option1.Name = "toolStripLabeledTextBoxDetail1Option1";
+            this.toolStripLabeledTextBoxDetail1Option1.Size = new System.Drawing.Size(298, 33);
+            this.toolStripLabeledTextBoxDetail1Option1.Text = "0";
+            // 
+            // toolStripLabeledTextBoxDetail1Option2
+            // 
+            this.toolStripLabeledTextBoxDetail1Option2.BackColor = System.Drawing.Color.Transparent;
+            this.toolStripLabeledTextBoxDetail1Option2.Caption = "    Switching interval [s]:";
+            this.toolStripLabeledTextBoxDetail1Option2.Name = "toolStripLabeledTextBoxDetail1Option2";
+            this.toolStripLabeledTextBoxDetail1Option2.Size = new System.Drawing.Size(271, 33);
+            this.toolStripLabeledTextBoxDetail1Option2.Text = "0";
+            // 
+            // toolStripSeparator4
+            // 
+            this.toolStripSeparator4.Name = "toolStripSeparator4";
+            this.toolStripSeparator4.Size = new System.Drawing.Size(369, 6);
             // 
             // timerCurrentEandI
             // 
@@ -1235,6 +1290,12 @@
         private System.Windows.Forms.ToolStripMenuItem toolStripMenuItemSubModuleOption2;
         private System.Windows.Forms.ToolStripMenuItem toolStripMenuItemSubModuleOption3Param2;
         private System.Windows.Forms.ToolStripMenuItem toolStripMenuItemConfigure;
+        private System.Windows.Forms.ToolStripDropDownButton toolStripDropDownButtonDetails;
+        private System.Windows.Forms.ToolStripMenuItem toolStripMenuItemDetail1;
+        private ToolStripLabeledTextBox toolStripLabeledTextBoxDetail1Option1;
+        private ToolStripLabeledTextBox toolStripLabeledTextBoxDetail1Option2;
+        private System.Windows.Forms.ToolStripSeparator toolStripSeparator4;
+        private System.Windows.Forms.ToolStripSeparator toolStripSeparator12;
     }
 }
 

@@ -155,6 +155,10 @@ namespace Voltammogrammer
         bool _is_warned_about_potential_limit = false;
         double _coulombPassingThroughCell;
 
+        bool _is_using_potential_switcher = false; 
+        double _millivoltSwitchingPotential;
+        double _secPotentialSwitchingInterval;
+
         string _file_path = null;
         TextWriter _writer;
 
@@ -162,7 +166,7 @@ namespace Voltammogrammer
 
         bool _is_switched_on = false;
         bool _is_using_automatical_switcher = false; 
-        double _secSwitcingInterval = 1.0;
+        double _secSwitchingInterval = 1.0;
         bool _is_applying_switching_on_finally = false;
         
         ToolStripMenuItem[] _toolstripmenuitemsFrequencyOfAcquisition;
@@ -1053,7 +1057,7 @@ namespace Voltammogrammer
                         break;
 
                     case typeSubModule.Synchronous_switching:                            
-                        if(_is_using_automatical_switcher && t_current > (secCAing + _secSwitcingInterval * cSwitching) * 1000)
+                        if(_is_using_automatical_switcher && t_current > (secCAing + _secSwitchingInterval * cSwitching) * 1000)
                         {
                             SetSwitchOnAsync(!_is_switched_on);
                             cSwitching++;
@@ -1786,94 +1790,114 @@ namespace Voltammogrammer
                 byte sts = 0;
                 int cSamples = 0;
                 int cAvailable = 0, cLost = 0, cCorrupted = 0;
-                int cSwitching = 1;
+                int cSwitching = 1, cPotentialSwitching = 0;
 
-                for (int i = -1; (i <= (_secDuration * 60 / _secInterval)) && (i < BUFFER_SIZE); i++)
+
+                long t_current = 0, t_next = -1;
+
+                while ((_clockingStopwatch.ElapsedMilliseconds < (_secDuration * 60 * 1000)) && (cSamples < BUFFER_SIZE))
                 {
-                    long t_current; // long t1, t2; 
-                    //t1 = _clockingStopwatch.ElapsedMilliseconds;
-                    do
-                    {
-                        Thread.Sleep(10);
-
-                        t_current = _clockingStopwatch.ElapsedMilliseconds;
-                    }
-                    while (t_current < nextMeasurementTiming);
-                    //nextMeasurementTiming = t2;
-
-                    if (FDwfAnalogInStatus(_handle, Convert.ToInt32(true), out sts) == 0)
-                    {
-                        Console.WriteLine("error");
-                        return;
-                    }
-                    //Console.WriteLine($"sts : {sts}");
-                    if (cSamples == 0 && (sts == stsCfg || sts == stsPrefill || sts == stsArm))
-                    {
-                        // Acquisition not yet started.
-                        continue;
-                    }
-
-                    //FDwfAnalogInStatusIndexWrite(_handle, out int pWrite);
-                    FDwfAnalogInStatusSamplesValid(_handle, out int pWrite);
-                    //Console.WriteLine($"pWrite: {pWrite}");
-
-                    if (i >= 0)
-                    {
-                        // FDwfAnalogInBufferSizeSetで16個の指定だが、ここでは、最初の1個だけデータとして採取。いまのところ、平均していない。
-                        FDwfAnalogInStatusData2(_handle, (CHANNEL_POTENTIAL - 1), _readingBuffers[(CHANNEL_POTENTIAL - 1)], pWrite, 1);
-                        //_recordingSeries[1][cSamples] = (_readingBuffers[0][0] * -1000.0);// * -1)*1000.0;// とりあえず最初の値のみ記録。平均しない。
-                        //Array.Copy(_readingBuffers[(CHANNEL_POTENTIAL - 1)], 0, _recordingSeries[CHANNEL_POTENTIAL], cSamples, cAvailable);
-
-                        if (_selectedMethod == methodMeasurement.OCP)
-                        {
-                            _recordingSeries[CHANNEL_POTENTIAL][i] = _readingBuffers[(CHANNEL_POTENTIAL - 1)][0] * -1;
-                        }
-                        else
-                        {
-                            _recordingSeries[CHANNEL_POTENTIAL][i] = _readingBuffers[(CHANNEL_POTENTIAL - 1)][0];// * -1000.0;
-                        }
-
-                        //SampleSingleValue((CHANNEL_CURRENT-1), out double valueCh2);
-                        FDwfAnalogInStatusData2(_handle, (CHANNEL_CURRENT - 1), _readingBuffers[(CHANNEL_CURRENT - 1)], pWrite, 1);
-                        _recordingSeries[CHANNEL_CURRENT][i] = _readingBuffers[(CHANNEL_CURRENT - 1)][0]; ;
-
-                        _recordingSeries[0][i] = t_current;// nextMeasurementTiming;
-
-
-                        //SampleSingleValue((CHANNEL_POTENTIAL-1), out double valueCh1);
-                        //SampleSingleValue((CHANNEL_CURRENT-1), out double valueCh2);
-                        //_recordingSeries[0][i] = t2;// nextMeasurementTiming;
-                        ////_recordingSeries[1][i] = _readingBuffers[0][0] * -1;
-                        ////_recordingSeries[2][i] = _readingBuffers[1][0];
-                        //_recordingSeries[CHANNEL_POTENTIAL][i] = valueCh1;// * -1000.0;
-                        //_recordingSeries[CHANNEL_CURRENT][i] = valueCh2;// * 1000.0;
-
-                        backgroundWorkerCV.ReportProgress(i);
-
-                        //
-                        // 時々、S電極の電位を確認して、_millivoltLimitを超えていたら、_millivoltInitialを調節する
-                        //
-                        if (_selectedMethod == methodMeasurement.ConstantCurrent)
-                        {
-                            if (i > 0 && (i % 10) == 0)
-                            {
-                                if(_millivoltLimit > 0 && Math.Abs(_recordingSeries[CHANNEL_POTENTIAL][i] * 1000) > _millivoltLimit)
-                                {
-                                    // S電極の電位が_millivoltLimitを超えているので、倍率0.9で絶対値を低減させる
-                                    _millivoltInitial *= 0.9;
-                                    _millivoltInitial_raw *= 0.9;
-                                    SetDCVoltageCH1(_millivoltInitial * 1000.0);
-                                    Console.WriteLine($"Current for G/S was attenuated. (now: {_millivoltInitial_raw} uA)");
-                                }
-                            }
-                        }
-                    }
-
                     if (backgroundWorkerCV.CancellationPending)
                     {
                         e.Cancel = true;
 
                         break;
+                    }
+
+                    t_current = _clockingStopwatch.ElapsedMilliseconds;
+                    if (t_current > t_next)
+                    {
+
+                        if (FDwfAnalogInStatus(_handle, Convert.ToInt32(true), out sts) == 0)
+                        {
+                            Console.WriteLine("error");
+                            return;
+                        }
+                        //Console.WriteLine($"sts : {sts}");
+                        if (cSamples == 0 && (sts == stsCfg || sts == stsPrefill || sts == stsArm))
+                        {
+                            // Acquisition not yet started.
+                            continue;
+                        }
+
+                        //FDwfAnalogInStatusIndexWrite(_handle, out int pWrite);
+                        FDwfAnalogInStatusSamplesValid(_handle, out int pWrite);
+                        //Console.WriteLine($"pWrite: {pWrite}");
+
+                        //if (i >= 0)
+                        if (true)
+                        {
+                            // FDwfAnalogInBufferSizeSetで16個の指定だが、ここでは、最初の1個だけデータとして採取。いまのところ、平均していない。
+                            FDwfAnalogInStatusData2(_handle, (CHANNEL_POTENTIAL - 1), _readingBuffers[(CHANNEL_POTENTIAL - 1)], pWrite, 1);
+                            //_recordingSeries[1][cSamples] = (_readingBuffers[0][0] * -1000.0);// * -1)*1000.0;// とりあえず最初の値のみ記録。平均しない。
+                            //Array.Copy(_readingBuffers[(CHANNEL_POTENTIAL - 1)], 0, _recordingSeries[CHANNEL_POTENTIAL], cSamples, cAvailable);
+
+                            if (_selectedMethod == methodMeasurement.OCP)
+                            {
+                                _recordingSeries[CHANNEL_POTENTIAL][cSamples] = _readingBuffers[(CHANNEL_POTENTIAL - 1)][0] * -1;
+                            }
+                            else
+                            {
+                                _recordingSeries[CHANNEL_POTENTIAL][cSamples] = _readingBuffers[(CHANNEL_POTENTIAL - 1)][0];// * -1000.0;
+                            }
+
+                            //SampleSingleValue((CHANNEL_CURRENT-1), out double valueCh2);
+                            FDwfAnalogInStatusData2(_handle, (CHANNEL_CURRENT - 1), _readingBuffers[(CHANNEL_CURRENT - 1)], pWrite, 1);
+                            _recordingSeries[CHANNEL_CURRENT][cSamples] = _readingBuffers[(CHANNEL_CURRENT - 1)][0]; ;
+
+                            _recordingSeries[0][cSamples] = t_current;// nextMeasurementTiming;
+
+
+                            //SampleSingleValue((CHANNEL_POTENTIAL-1), out double valueCh1);
+                            //SampleSingleValue((CHANNEL_CURRENT-1), out double valueCh2);
+                            //_recordingSeries[0][i] = t2;// nextMeasurementTiming;
+                            ////_recordingSeries[1][i] = _readingBuffers[0][0] * -1;
+                            ////_recordingSeries[2][i] = _readingBuffers[1][0];
+                            //_recordingSeries[CHANNEL_POTENTIAL][i] = valueCh1;// * -1000.0;
+                            //_recordingSeries[CHANNEL_CURRENT][i] = valueCh2;// * 1000.0;
+
+                            backgroundWorkerCV.ReportProgress(cSamples);
+
+                            //
+                            // 時々、S電極の電位を確認して、_millivoltLimitを超えていたら、_millivoltInitialを調節する
+                            //
+                            if (_selectedMethod == methodMeasurement.ConstantCurrent)
+                            {
+                                if (cSamples > 0 && (cSamples % 10) == 0)
+                                {
+                                    if(_millivoltLimit > 0 && Math.Abs(_recordingSeries[CHANNEL_POTENTIAL][cSamples] * 1000) > _millivoltLimit)
+                                    {
+                                        // S電極の電位が_millivoltLimitを超えているので、倍率0.9で絶対値を低減させる
+                                        _millivoltInitial *= 0.9;
+                                        _millivoltInitial_raw *= 0.9;
+                                        SetDCVoltageCH1(_millivoltInitial * 1000.0);
+                                        Console.WriteLine($"Current for G/S was attenuated. (now: {_millivoltInitial_raw} uA)");
+                                    }
+                                }
+                            }
+
+                            cSamples++;
+                        }
+
+                        t_next = t_current + (long)Math.Round(_secInterval * 1000);
+                    }
+
+                    if(_is_using_potential_switcher)
+                    {
+                        // TODO: 
+
+                        if(t_current > (_secPotentialSwitchingInterval * cPotentialSwitching) * 1000)
+                        {
+                            if((cPotentialSwitching % 2) == 0)
+                            {
+                                SetDCVoltageCH1(_millivoltInitial * 1000.0);
+                            }
+                            else
+                            {
+                                SetDCVoltageCH1(_millivoltSwitchingPotential * 1000.0);
+                            }
+                            cPotentialSwitching++;
+                        }
                     }
 
                     switch (_selectedSubModule)
@@ -1882,7 +1906,7 @@ namespace Voltammogrammer
                             break;
 
                         case typeSubModule.Synchronous_switching:
-                            if (_is_using_automatical_switcher && t_current > (_secSwitcingInterval * cSwitching) * 1000)
+                            if (_is_using_automatical_switcher && t_current > (_secSwitchingInterval * cSwitching) * 1000)
                             {
                                 SetSwitchOnAsync(!_is_switched_on);
                                 cSwitching++;
@@ -1893,10 +1917,119 @@ namespace Voltammogrammer
                             break;
                     }
 
-                    nextMeasurementTiming += (long)Math.Round(_secInterval * 1000); // [ms]
-                    //if (nextMeasurementTiming > (_millivoltVertex * 60 * 1000) ) break;
-                    //Console.WriteLine("elapsed time: {0} [s]", nextMeasurementTiming/1000);
+                    Thread.Sleep(10);
+                    Thread.Yield();
                 }
+
+                //for (int i = -1; (i <= (_secDuration * 60 / _secInterval)) && (i < BUFFER_SIZE); i++)
+                //{
+                //    long t_current; // long t1, t2; 
+                //    //t1 = _clockingStopwatch.ElapsedMilliseconds;
+                //    do
+                //    {
+                //        Thread.Sleep(10);
+
+                //        t_current = _clockingStopwatch.ElapsedMilliseconds;
+                //    }
+                //    while (t_current < nextMeasurementTiming);
+                //    //nextMeasurementTiming = t2;
+
+                //    if (FDwfAnalogInStatus(_handle, Convert.ToInt32(true), out sts) == 0)
+                //    {
+                //        Console.WriteLine("error");
+                //        return;
+                //    }
+                //    //Console.WriteLine($"sts : {sts}");
+                //    if (cSamples == 0 && (sts == stsCfg || sts == stsPrefill || sts == stsArm))
+                //    {
+                //        // Acquisition not yet started.
+                //        continue;
+                //    }
+
+                //    //FDwfAnalogInStatusIndexWrite(_handle, out int pWrite);
+                //    FDwfAnalogInStatusSamplesValid(_handle, out int pWrite);
+                //    //Console.WriteLine($"pWrite: {pWrite}");
+
+                //    if (i >= 0)
+                //    {
+                //        // FDwfAnalogInBufferSizeSetで16個の指定だが、ここでは、最初の1個だけデータとして採取。いまのところ、平均していない。
+                //        FDwfAnalogInStatusData2(_handle, (CHANNEL_POTENTIAL - 1), _readingBuffers[(CHANNEL_POTENTIAL - 1)], pWrite, 1);
+                //        //_recordingSeries[1][cSamples] = (_readingBuffers[0][0] * -1000.0);// * -1)*1000.0;// とりあえず最初の値のみ記録。平均しない。
+                //        //Array.Copy(_readingBuffers[(CHANNEL_POTENTIAL - 1)], 0, _recordingSeries[CHANNEL_POTENTIAL], cSamples, cAvailable);
+
+                //        if (_selectedMethod == methodMeasurement.OCP)
+                //        {
+                //            _recordingSeries[CHANNEL_POTENTIAL][i] = _readingBuffers[(CHANNEL_POTENTIAL - 1)][0] * -1;
+                //        }
+                //        else
+                //        {
+                //            _recordingSeries[CHANNEL_POTENTIAL][i] = _readingBuffers[(CHANNEL_POTENTIAL - 1)][0];// * -1000.0;
+                //        }
+
+                //        //SampleSingleValue((CHANNEL_CURRENT-1), out double valueCh2);
+                //        FDwfAnalogInStatusData2(_handle, (CHANNEL_CURRENT - 1), _readingBuffers[(CHANNEL_CURRENT - 1)], pWrite, 1);
+                //        _recordingSeries[CHANNEL_CURRENT][i] = _readingBuffers[(CHANNEL_CURRENT - 1)][0]; ;
+
+                //        _recordingSeries[0][i] = t_current;// nextMeasurementTiming;
+
+
+                //        //SampleSingleValue((CHANNEL_POTENTIAL-1), out double valueCh1);
+                //        //SampleSingleValue((CHANNEL_CURRENT-1), out double valueCh2);
+                //        //_recordingSeries[0][i] = t2;// nextMeasurementTiming;
+                //        ////_recordingSeries[1][i] = _readingBuffers[0][0] * -1;
+                //        ////_recordingSeries[2][i] = _readingBuffers[1][0];
+                //        //_recordingSeries[CHANNEL_POTENTIAL][i] = valueCh1;// * -1000.0;
+                //        //_recordingSeries[CHANNEL_CURRENT][i] = valueCh2;// * 1000.0;
+
+                //        backgroundWorkerCV.ReportProgress(i);
+
+                //        //
+                //        // 時々、S電極の電位を確認して、_millivoltLimitを超えていたら、_millivoltInitialを調節する
+                //        //
+                //        if (_selectedMethod == methodMeasurement.ConstantCurrent)
+                //        {
+                //            if (i > 0 && (i % 10) == 0)
+                //            {
+                //                if(_millivoltLimit > 0 && Math.Abs(_recordingSeries[CHANNEL_POTENTIAL][i] * 1000) > _millivoltLimit)
+                //                {
+                //                    // S電極の電位が_millivoltLimitを超えているので、倍率0.9で絶対値を低減させる
+                //                    _millivoltInitial *= 0.9;
+                //                    _millivoltInitial_raw *= 0.9;
+                //                    SetDCVoltageCH1(_millivoltInitial * 1000.0);
+                //                    Console.WriteLine($"Current for G/S was attenuated. (now: {_millivoltInitial_raw} uA)");
+                //                }
+                //            }
+                //        }
+                //    }
+
+                //    if (backgroundWorkerCV.CancellationPending)
+                //    {
+                //        e.Cancel = true;
+
+                //        break;
+                //    }
+
+                //    switch (_selectedSubModule)
+                //    {
+                //        case typeSubModule.RDE:
+                //            break;
+
+                //        case typeSubModule.Synchronous_switching:
+                //            if (_is_using_automatical_switcher && t_current > (_secSwitchingInterval * cSwitching) * 1000)
+                //            {
+                //                SetSwitchOnAsync(!_is_switched_on);
+                //                cSwitching++;
+                //            }
+                //            break;
+
+                //        default:
+                //            break;
+                //    }
+
+                //    nextMeasurementTiming += (long)Math.Round(_secInterval * 1000); // [ms]
+                //    //if (nextMeasurementTiming > (_millivoltVertex * 60 * 1000) ) break;
+                //    //Console.WriteLine("elapsed time: {0} [s]", nextMeasurementTiming/1000);
+                //}
 
                 switch (_selectedSubModule)
                 {
@@ -3832,8 +3965,8 @@ namespace Voltammogrammer
                     if (double.TryParse(toolStripMenuItemSubModuleOption3Param1.Text, out double value)
                         && (value >= 1.0))
                     {
-                        _secSwitcingInterval = value;
-                        Console.WriteLine("Switcing Interval: {0}", _secSwitcingInterval);
+                        _secSwitchingInterval = value;
+                        Console.WriteLine("Switcing Interval: {0}", _secSwitchingInterval);
                     }
                     else {  }
                     break;
@@ -6075,6 +6208,24 @@ namespace Voltammogrammer
                         }
                         else { MessageBox.Show(this, "The target Q [C] (as an absolute value) must be >= 0."); toolStripTextBoxRepeat.Text = "0"; return; }
 
+                        _is_using_potential_switcher = toolStripMenuItemDetail1.Checked;
+                        if(_is_using_potential_switcher)
+                        {
+                            if (double.TryParse(toolStripLabeledTextBoxDetail1Option1.Text, out _millivoltSwitchingPotential)
+                                && (_millivoltSwitchingPotential <= 11000)
+                                && (_millivoltSwitchingPotential >= -11000))
+                            {
+                            }
+                            else { MessageBox.Show(this, "The value of Switching Potential [mV] is invalid."); toolStripLabeledTextBoxDetail1Option1.Text = "0"; return; }
+
+                            if (double.TryParse(toolStripLabeledTextBoxDetail1Option2.Text, out _secPotentialSwitchingInterval)
+                                && (_secPotentialSwitchingInterval >= 1)
+                                && (_secPotentialSwitchingInterval > _secInterval) )
+                            {
+                            }
+                            else { MessageBox.Show(this, "The value of Switching Interval [s] is invalid. It must be larger than 1 sec and the Sampling Interval. "); toolStripLabeledTextBoxDetail1Option2.Text = "1"; return; }
+                        }
+
 
                         FDwfAnalogInChannelRangeGet(_handle, (CHANNEL_POTENTIAL - 1), out channel_range);
 
@@ -6435,6 +6586,8 @@ namespace Voltammogrammer
             toolStripLabel8.Visible = false;
             toolStripTextBoxStep.Visible = false;
 
+            toolStripDropDownButtonDetails.Visible = false;
+
             if (_selectedMode == modeMeasurement.voltammetry || _selectedMode == modeMeasurement.galvanometry)
             {
                 switch (_selectedMethod)
@@ -6465,12 +6618,19 @@ namespace Voltammogrammer
 
                     case methodMeasurement.BulkElectrolysis:
                         toolStripLabel1.Text = "Potential [" + unit1 + "]:";
+                        //toolStripLabel6.Text = "Potential [" + unit1 + "]:"; toolStripLabel6.Visible = true;
+                        //toolStripTextBoxFinalV.Text = ""; toolStripTextBoxFinalV.Visible = true;
                         toolStripLabel2.Text = "Duration [min]:";
                         toolStripTextBoxVertexV.Text = "60";
                         toolStripLabel3.Text = "Sampling Interval [s]:";
                         toolStripTextBoxScanrate.Text = "1";
+                        //toolStripLabel7.Text = "Potential switching interval [s]:"; toolStripLabel7.Visible = true;
+                        //toolStripTextBoxScanrate2.Text = "0"; toolStripTextBoxScanrate2.Visible = true;
                         toolStripLabel4.Text = "Target |Q| [C]:";
                         toolStripTextBoxRepeat.Text = "0";
+
+                        toolStripDropDownButtonDetails.Visible = true;
+
                         break;
 
                     case methodMeasurement.ConstantCurrent:
@@ -6902,6 +7062,90 @@ namespace Voltammogrammer
         }
 
         #endregion
+    }
+
+    [System.Windows.Forms.Design.ToolStripItemDesignerAvailability(
+      System.Windows.Forms.Design.ToolStripItemDesignerAvailability.ContextMenuStrip |
+      System.Windows.Forms.Design.ToolStripItemDesignerAvailability.ToolStrip |
+      System.Windows.Forms.Design.ToolStripItemDesignerAvailability.MenuStrip |
+      System.Windows.Forms.Design.ToolStripItemDesignerAvailability.StatusStrip)]
+    public class ToolStripLabeledTextBox : ToolStripControlHost
+    {
+        TextBox textbox;
+        Label label;
+        public ToolStripLabeledTextBox() : base(new FlowLayoutPanel())
+        {
+            textbox = new TextBox();
+            label = new Label();
+
+            label.Anchor = AnchorStyles.Top | AnchorStyles.Bottom;// | AnchorStyles.Left;
+            label.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
+            label.AutoSize = true;
+            label.Margin = new Padding(0);
+            label.Padding = new Padding(0);
+
+            label.Text = "label";
+            textbox.Text = "text";
+
+            FlowLayoutPanel flp = ((FlowLayoutPanel)base.Control);
+
+            flp.Controls.Add(label);
+            flp.Controls.Add(textbox);
+
+            flp.BackColor = System.Drawing.Color.Transparent;
+            flp.AutoSize = true;
+            flp.Padding = new Padding(0);
+            flp.Margin = new Padding(0);
+
+            base.AutoSize = true;
+        }
+
+        public ToolStripLabeledTextBox(string label_text, string text) : this()
+        {
+            label.Text = label_text;
+            textbox.Text = text;
+        }
+
+        public override string Text
+        {
+            get
+            {
+                return textbox.Text;
+            }
+            set
+            {
+                textbox.Text = value;
+            }
+        }
+
+        public string Caption
+        {
+            get
+            {
+                return label.Text;
+            }
+            set
+            {
+                label.Text = value;
+
+                base.Size = new System.Drawing.Size(label.Width + textbox.Width, base.Size.Height);
+            }
+        }
+
+        public override System.Drawing.Size Size
+        {
+            get
+            {
+                return base.Size;
+            }
+            set
+            {
+                if(label != null && textbox != null)
+                {
+                    base.Size = new System.Drawing.Size(label.Width + textbox.Width, base.Size.Height);
+                }
+            }
+        }
     }
 
     namespace PathCompactEx
