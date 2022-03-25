@@ -349,7 +349,7 @@ namespace Voltammogrammer
             {
                 bool compressed = (ext == ".voltax") ? true : false;
 
-                if (doLoadNewWindow)
+                if (chartVoltammogram.Series.Count != 0 && doLoadNewWindow)
                 {
                     formVoltammogram v = new formVoltammogram();
                     v.Show();
@@ -1722,6 +1722,171 @@ namespace Voltammogrammer
             //}
         }
 
+        public void ExportDataAsMetafile(int decimation_ratio)
+        {
+            try
+            {
+                System.IO.MemoryStream memStream = new System.IO.MemoryStream();
+
+                if (true)
+                {
+                    bool scrollbar_x = false, scrollbar_y = false;
+                    if (chartVoltammogram.ChartAreas[0].AxisX.ScrollBar.IsVisible)
+                    {
+                        scrollbar_x = true;
+                        chartVoltammogram.ChartAreas[0].AxisX.ScrollBar.Enabled = false;
+                    }
+                    if (chartVoltammogram.ChartAreas[0].AxisY.ScrollBar.IsVisible)
+                    {
+                        scrollbar_y = true;
+                        chartVoltammogram.ChartAreas[0].AxisY.ScrollBar.Enabled = false;
+                    }
+                    chartVoltammogram.ChartAreas[0].CursorX.LineDashStyle = System.Windows.Forms.DataVisualization.Charting.ChartDashStyle.NotSet;
+                    chartVoltammogram.ChartAreas[0].CursorY.LineDashStyle = System.Windows.Forms.DataVisualization.Charting.ChartDashStyle.NotSet;
+
+                    //chartVoltammogram.ChartAreas[0].CursorX.
+
+
+                    //var chart = chartVoltammogram.DeepClone();
+
+                    //System.Windows.Forms.DataVisualization.Charting.Chart chart1 = new System.Windows.Forms.DataVisualization.Charting.Chart();
+                    //Enter your chart building code here
+                    //System.IO.MemoryStream myStream = new System.IO.MemoryStream();
+                    //System.Windows.Forms.DataVisualization.Charting.Chart chart2 = new System.Windows.Forms.DataVisualization.Charting.Chart();
+                    //chartVoltammogram.Serializer.Save(myStream);
+                    //chart2.Serializer.Load(myStream);
+
+
+
+                    //
+                    // 一旦、データを退避させて、データ点数を減らしたものをメタファイル化するようにする
+                    //
+
+                    DataSet ds = chartVoltammogram.DataManipulator.ExportSeriesValues();
+
+                    for (int i = 0; i < ds.Tables.Count; i++)
+                    {
+                        System.Windows.Forms.DataVisualization.Charting.Series series = chartVoltammogram.Series[i];
+                        series.Points.Clear();
+
+                        for (int j = 0; j < ds.Tables[i].Rows.Count; j++)
+                        {
+                            if ((j % decimation_ratio) == 0)
+                            {
+                                DataRow row = ds.Tables[i].Rows[j];
+                                series.Points.AddXY(row.Field<double>(0), row.ItemArray.Skip(1).ToArray());
+                            }
+                            j++;
+                        }
+                    }
+
+
+                    //System.Windows.Forms.DataVisualization.Charting.Series series = chartVoltammogram.Series[0];
+                    //series.Points.Clear();
+
+                    //int i = 0;
+                    //foreach (DataRow row in ds.Tables[0].Rows)
+                    //{
+                    //    if((i % 100) == 0)
+                    //    {
+                    //        series.Points.AddXY(row.Field<double>(0), row.ItemArray.Skip(1).ToArray());                   
+                    //    }
+                    //    i++;
+                    //}
+
+
+
+
+
+
+                    chartVoltammogram.SaveImage(memStream, System.Drawing.Imaging.ImageFormat.Emf);
+                    memStream.Seek(0, SeekOrigin.Begin);
+                    System.Drawing.Imaging.Metafile mf1 = new System.Drawing.Imaging.Metafile(memStream);
+                    //Metafile
+                    //chartVoltammogram.SaveImage(@"c:\temp\test.wmf", System.Drawing.Imaging.ImageFormat.Wmf);
+                    //System.Drawing.Imaging.Metafile mf2 = new System.Drawing.Imaging.Metafile(@"c:\temp\test.wmf");
+                    //mf2.Dispose();
+
+                    //Image img = Image.FromFile(@"c:\temp\test4.wmf");
+                    //System.Windows.Forms.Clipboard.SetDataObject(img);
+                    //img.Dispose();
+
+
+                    ClipboardMetafileHelper.PutEnhMetafileOnClipboard(this.Handle, mf1);
+
+                    //Clipboard.SetDataObject(memStream);
+
+                    mf1.Dispose();
+                    //mf2.Dispose();
+
+                    //if (scrollbar_x)
+                    //{
+                    //    chartVoltammogram.ChartAreas[0].AxisX.ScrollBar.Enabled = true;
+                    //}
+                    //if (scrollbar_y)
+                    //{
+                    //    chartVoltammogram.ChartAreas[0].AxisY.ScrollBar.Enabled = true;
+                    //}
+
+
+
+
+                    //series.Points.Clear();
+
+                    //foreach (DataRow row in ds.Tables[0].Rows)
+                    //{
+                    //    series.Points.AddXY(row.Field<double>(0), row.ItemArray.Skip(1).ToArray());
+                    //}
+
+
+                    for (int i = 0; i < ds.Tables.Count; i++)
+                    {
+                        System.Windows.Forms.DataVisualization.Charting.Series series = chartVoltammogram.Series[i];
+                        series.Points.Clear();
+
+                        for (int j = 0; j < ds.Tables[i].Rows.Count; j++)
+                        {
+                            DataRow row = ds.Tables[i].Rows[j];
+                            series.Points.AddXY(row.Field<double>(0), row.ItemArray.Skip(1).ToArray());
+                        }
+                    }
+
+
+
+
+
+
+
+
+
+                    chartVoltammogram.ChartAreas[0].CursorX.LineDashStyle = System.Windows.Forms.DataVisualization.Charting.ChartDashStyle.Dot;
+                    chartVoltammogram.ChartAreas[0].CursorY.LineDashStyle = System.Windows.Forms.DataVisualization.Charting.ChartDashStyle.Dot;
+                }
+                else
+                {
+                    chartVoltammogram.SaveImage(memStream, System.Drawing.Imaging.ImageFormat.Emf);
+                    memStream.Seek(0, SeekOrigin.Begin);
+
+                    Graphics offScreenBufferGraphics = Graphics.FromHwndInternal(IntPtr.Zero);
+                    IntPtr deviceContextHandle = offScreenBufferGraphics.GetHdc();
+
+                    //System.Drawing.Imaging.Metafile bmp = new System.Drawing.Imaging.Metafile(memStream, deviceContextHandle, System.Drawing.Imaging.EmfType.EmfPlusOnly);
+                    System.Drawing.Imaging.Metafile bmp = new System.Drawing.Imaging.Metafile(memStream);
+
+                    //Image img = Image.FromStream(memStream);
+                    System.Windows.Forms.Clipboard.SetDataObject(bmp);
+
+
+                    //Clipboard.SetDataObject(memStream);
+
+                }
+            }
+            catch (Exception exc)
+            {
+
+            }
+        }
+
         public void SaveDataOfCurrentSeries(string filename, XMLDataHolder exp_conditions)
         {
             TextWriter writer = new StreamWriter(filename, false);
@@ -2876,12 +3041,13 @@ namespace Voltammogrammer
             //comboBox.SelectedIndex = 0;
             //dialog.Controls.Add(comboBox);
 
-            //CommonFileDialogCheckBox chkBoxDataReduction = new CommonFileDialogCheckBox("Data Reduction (1/5)");
+            //CommonFileDialogCheckBox chkBoxDataReduction = new CommonFileDialogCheckBox("Data decimation (1/5)");
             CommonFileDialogComboBox chkBoxDataReductionCombo = new CommonFileDialogComboBox();
-            chkBoxDataReductionCombo.Items.Add(new CommonFileDialogComboBoxItem("No data reduction"));
-            chkBoxDataReductionCombo.Items.Add(new CommonFileDialogComboBoxItem("Data reduction (1/5)"));
-            chkBoxDataReductionCombo.Items.Add(new CommonFileDialogComboBoxItem("Data reduction (1/10)"));
-            chkBoxDataReductionCombo.Items.Add(new CommonFileDialogComboBoxItem("Data reduction (1/20)"));
+            chkBoxDataReductionCombo.Items.Add(new CommonFileDialogComboBoxItem("No data decimation"));
+            chkBoxDataReductionCombo.Items.Add(new CommonFileDialogComboBoxItem("Data decimation (1/5)"));
+            chkBoxDataReductionCombo.Items.Add(new CommonFileDialogComboBoxItem("Data decimation (1/10)"));
+            chkBoxDataReductionCombo.Items.Add(new CommonFileDialogComboBoxItem("Data decimation (1/25)"));
+            chkBoxDataReductionCombo.Items.Add(new CommonFileDialogComboBoxItem("Data decimation (1/100)"));
             chkBoxDataReductionCombo.SelectedIndex = 0;
             //CommonFileDialogCheckBox chkBoxForExcel = new CommonFileDialogCheckBox("For Excel");
             dialog.Controls.Add(chkBoxDataReductionCombo);
@@ -2914,7 +3080,8 @@ namespace Voltammogrammer
                     case 0: reduction_level = 1; break;
                     case 1: reduction_level = 5; break;
                     case 2: reduction_level = 10; break;
-                    case 3: reduction_level = 20; break;
+                    case 3: reduction_level = 25; break;
+                    case 4: reduction_level = 100; break;
                 }
 
                 SaveData(file_path, reduction_level, compressed);
@@ -2940,7 +3107,7 @@ namespace Voltammogrammer
             //comboBox.SelectedIndex = 0;
             //dialog.Controls.Add(comboBox);
 
-            CommonFileDialogCheckBox chkBoxDataReduction = new CommonFileDialogCheckBox("Data Reduction (1/5)");
+            CommonFileDialogCheckBox chkBoxDataReduction = new CommonFileDialogCheckBox("Data Decimation (1/5)");
             CommonFileDialogCheckBox chkBoxForExcel = new CommonFileDialogCheckBox("For Excel");
             dialog.Controls.Add(chkBoxDataReduction);
             dialog.Controls.Add(chkBoxForExcel);
@@ -3186,82 +3353,15 @@ namespace Voltammogrammer
 
         private void toolStripDropDownButtonCopy_ButtonClick(object sender, EventArgs e)
         {
-            try
-            {
-                System.IO.MemoryStream memStream = new System.IO.MemoryStream();
+            ExportDataAsMetafile(1);
+        }
 
-                if (true)
-                {
-                    bool scrollbar_x = false, scrollbar_y = false;
-                    if (chartVoltammogram.ChartAreas[0].AxisX.ScrollBar.IsVisible)
-                    {
-                        scrollbar_x = true;
-                        chartVoltammogram.ChartAreas[0].AxisX.ScrollBar.Enabled = false;
-                    }
-                    if (chartVoltammogram.ChartAreas[0].AxisY.ScrollBar.IsVisible)
-                    {
-                        scrollbar_y = true;
-                        chartVoltammogram.ChartAreas[0].AxisY.ScrollBar.Enabled = false;
-                    }
-                    chartVoltammogram.ChartAreas[0].CursorX.LineDashStyle = System.Windows.Forms.DataVisualization.Charting.ChartDashStyle.NotSet;
-                    chartVoltammogram.ChartAreas[0].CursorY.LineDashStyle = System.Windows.Forms.DataVisualization.Charting.ChartDashStyle.NotSet;
+        private void toolStripDropDownButtonCopy_DropDownItemClicked(object sender, ToolStripItemClickedEventArgs e)
+        {
+            //ToolStripMenuItem item = (ToolStripMenuItem)sender;
+            //int idx = item.DropDownItems.IndexOf(e.ClickedItem);
 
-                    //chartVoltammogram.ChartAreas[0].CursorX.
-
-                    chartVoltammogram.SaveImage(memStream, System.Drawing.Imaging.ImageFormat.Emf);
-                    memStream.Seek(0, SeekOrigin.Begin);
-                    System.Drawing.Imaging.Metafile mf1 = new System.Drawing.Imaging.Metafile(memStream);
-                    //Metafile
-                    //chartVoltammogram.SaveImage(@"c:\temp\test.wmf", System.Drawing.Imaging.ImageFormat.Wmf);
-                    //System.Drawing.Imaging.Metafile mf2 = new System.Drawing.Imaging.Metafile(@"c:\temp\test.wmf");
-                    //mf2.Dispose();
-
-                    //Image img = Image.FromFile(@"c:\temp\test4.wmf");
-                    //System.Windows.Forms.Clipboard.SetDataObject(img);
-                    //img.Dispose();
-
-
-                    ClipboardMetafileHelper.PutEnhMetafileOnClipboard(this.Handle, mf1);
-
-                    //Clipboard.SetDataObject(memStream);
-
-                    mf1.Dispose();
-                    //mf2.Dispose();
-
-                    //if (scrollbar_x)
-                    //{
-                    //    chartVoltammogram.ChartAreas[0].AxisX.ScrollBar.Enabled = true;
-                    //}
-                    //if (scrollbar_y)
-                    //{
-                    //    chartVoltammogram.ChartAreas[0].AxisY.ScrollBar.Enabled = true;
-                    //}
-                    chartVoltammogram.ChartAreas[0].CursorX.LineDashStyle = System.Windows.Forms.DataVisualization.Charting.ChartDashStyle.Dot;
-                    chartVoltammogram.ChartAreas[0].CursorY.LineDashStyle = System.Windows.Forms.DataVisualization.Charting.ChartDashStyle.Dot;
-                }
-                else
-                {
-                    chartVoltammogram.SaveImage(memStream, System.Drawing.Imaging.ImageFormat.Emf);
-                    memStream.Seek(0, SeekOrigin.Begin);
-
-                    Graphics offScreenBufferGraphics = Graphics.FromHwndInternal(IntPtr.Zero);
-                    IntPtr deviceContextHandle = offScreenBufferGraphics.GetHdc();
-
-                    //System.Drawing.Imaging.Metafile bmp = new System.Drawing.Imaging.Metafile(memStream, deviceContextHandle, System.Drawing.Imaging.EmfType.EmfPlusOnly);
-                    System.Drawing.Imaging.Metafile bmp = new System.Drawing.Imaging.Metafile(memStream);
-
-                    //Image img = Image.FromStream(memStream);
-                    System.Windows.Forms.Clipboard.SetDataObject(bmp);
-
-
-                    //Clipboard.SetDataObject(memStream);
-
-                }
-            }
-            catch (Exception exc)
-            {
-
-            }
+            ExportDataAsMetafile(int.Parse(e.ClickedItem.Tag.ToString()));
         }
 
         private void toolStripMenuItemSetXRange_Click(object sender, EventArgs e)
@@ -3770,6 +3870,23 @@ namespace Voltammogrammer
             for (int i = 0; i < files.Count(); i++)
             {
                 LoadFile(files[i]);
+            }
+        }
+    }
+
+    public static class ObjectExtension
+    {
+        // ディープコピーの複製を作る拡張メソッド
+        public static T DeepClone<T>(this T src)
+        {
+            using (var memoryStream = new System.IO.MemoryStream())
+            {
+                var binaryFormatter
+                  = new System.Runtime.Serialization
+                        .Formatters.Binary.BinaryFormatter();
+                binaryFormatter.Serialize(memoryStream, src); // シリアライズ
+                memoryStream.Seek(0, System.IO.SeekOrigin.Begin);
+                return (T)binaryFormatter.Deserialize(memoryStream); // デシリアライズ
             }
         }
     }

@@ -1130,7 +1130,7 @@
             // 
             this.toolStripMenuItemDetail1.CheckOnClick = true;
             this.toolStripMenuItemDetail1.Name = "toolStripMenuItemDetail1";
-            this.toolStripMenuItemDetail1.Size = new System.Drawing.Size(372, 26);
+            this.toolStripMenuItemDetail1.Size = new System.Drawing.Size(359, 26);
             this.toolStripMenuItemDetail1.Text = "Potential switching";
             // 
             // toolStripLabeledTextBoxDetail1Option1
@@ -1138,7 +1138,7 @@
             this.toolStripLabeledTextBoxDetail1Option1.BackColor = System.Drawing.Color.Transparent;
             this.toolStripLabeledTextBoxDetail1Option1.Caption = "    Switching potential [mV]:";
             this.toolStripLabeledTextBoxDetail1Option1.Name = "toolStripLabeledTextBoxDetail1Option1";
-            this.toolStripLabeledTextBoxDetail1Option1.Size = new System.Drawing.Size(298, 33);
+            this.toolStripLabeledTextBoxDetail1Option1.Size = new System.Drawing.Size(291, 28);
             this.toolStripLabeledTextBoxDetail1Option1.Text = "0";
             // 
             // toolStripLabeledTextBoxDetail1Option2
@@ -1146,13 +1146,13 @@
             this.toolStripLabeledTextBoxDetail1Option2.BackColor = System.Drawing.Color.Transparent;
             this.toolStripLabeledTextBoxDetail1Option2.Caption = "    Switching interval [s]:";
             this.toolStripLabeledTextBoxDetail1Option2.Name = "toolStripLabeledTextBoxDetail1Option2";
-            this.toolStripLabeledTextBoxDetail1Option2.Size = new System.Drawing.Size(271, 33);
+            this.toolStripLabeledTextBoxDetail1Option2.Size = new System.Drawing.Size(270, 28);
             this.toolStripLabeledTextBoxDetail1Option2.Text = "0";
             // 
             // toolStripSeparator4
             // 
             this.toolStripSeparator4.Name = "toolStripSeparator4";
-            this.toolStripSeparator4.Size = new System.Drawing.Size(369, 6);
+            this.toolStripSeparator4.Size = new System.Drawing.Size(356, 6);
             // 
             // timerCurrentEandI
             // 

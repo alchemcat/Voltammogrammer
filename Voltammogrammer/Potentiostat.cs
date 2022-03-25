@@ -45,9 +45,6 @@ namespace Voltammogrammer
 {
     public partial class Potentiostat : Form
     {
-        //[System.Runtime.InteropServices.DllImport("kernel32.dll")] // この行を追加
-        //private static extern bool AllocConsole();
-
         int _handle = 0;
         int status;
 
@@ -300,8 +297,31 @@ namespace Voltammogrammer
         //[DllImport("shlwapi.dll", CallingConvention = CallingConvention.StdCall, CharSet = System.Runtime.InteropServices.CharSet.Unicode)]
         //extern static bool PathCompactPathExW([Out] System.Text.StringBuilder ResultPath, String SourcePath, int HowManyLetters, int Delimiter);
 
+        //[System.Runtime.InteropServices.DllImport("kernel32.dll")] // この行を追加
+        //private static extern bool AllocConsole();
+        [DllImport("kernel32.dll", ExactSpelling = true)]
+        public static extern IntPtr GetConsoleWindow();
+
+        // dllの中のSetWindowsPos()関数を使う
+        [DllImport("user32.dll", EntryPoint = "SetWindowPos")]
+        public static extern IntPtr SetWindowPos(IntPtr hWnd, int hWndInsertAfter, int x, int Y, int cx, int cy, int wFlags);
+        public const int SWP_NOSIZE = 0x0001;
+        [DllImport("user32.dll", CharSet = CharSet.Auto)]
+        static extern int ShowWindow(IntPtr hWnd, int nCmdShow);
+        private const int SW_SHOWMINNOACTIVE = 7;
+
         public Potentiostat()
         {
+#if DEBUG
+            //
+#else
+            //
+            // Minimize console window
+            //
+            IntPtr MyConsole = GetConsoleWindow();
+            ShowWindow(MyConsole, SW_SHOWMINNOACTIVE);
+#endif
+
             InitializeComponent();
 
             //string target = "";
@@ -431,12 +451,10 @@ namespace Voltammogrammer
                 IntPtr hMenu = GetSystemMenu(hWnd, 0);
                 RemoveMenu(hMenu, SC_CLOSE, MF_BYCOMMAND);
             }
-
-            //toolStrip1.Top = 0; toolStrip1.Left = 0;
         }
 
-        //
         // Functions for analog I/O pins from AnalogDiscovery 2
+        //
         //
 
         private void SetDCVoltageCH1(double microvoltOffset)
