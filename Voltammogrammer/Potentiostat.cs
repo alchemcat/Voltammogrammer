@@ -288,10 +288,8 @@ namespace Voltammogrammer
 
         Arduino _arduino = new Arduino();
 
-        [DllImport("USER32.DLL")]
-        private static extern IntPtr GetSystemMenu(IntPtr hWnd, UInt32 bRevert);
-        [DllImport("USER32.DLL")]
-        private static extern UInt32 RemoveMenu(IntPtr hMenu, UInt32 nPosition, UInt32 wFlags);
+        [DllImport("USER32.DLL")] private static extern IntPtr GetSystemMenu(IntPtr hWnd, UInt32 bRevert);
+        [DllImport("USER32.DLL")] private static extern UInt32 RemoveMenu(IntPtr hMenu, UInt32 nPosition, UInt32 wFlags);
         private const UInt32 SC_CLOSE = 0x0000F060;
         private const UInt32 MF_BYCOMMAND = 0x00000000;
         //[DllImport("shlwapi.dll", CallingConvention = CallingConvention.StdCall, CharSet = System.Runtime.InteropServices.CharSet.Unicode)]
@@ -299,27 +297,53 @@ namespace Voltammogrammer
 
         //[System.Runtime.InteropServices.DllImport("kernel32.dll")] // この行を追加
         //private static extern bool AllocConsole();
-        [DllImport("kernel32.dll", ExactSpelling = true)]
-        public static extern IntPtr GetConsoleWindow();
-
-        // dllの中のSetWindowsPos()関数を使う
-        [DllImport("user32.dll", EntryPoint = "SetWindowPos")]
-        public static extern IntPtr SetWindowPos(IntPtr hWnd, int hWndInsertAfter, int x, int Y, int cx, int cy, int wFlags);
+        [DllImport("kernel32.dll", ExactSpelling = true)] public static extern IntPtr GetConsoleWindow();
+        [DllImport("user32.dll", EntryPoint = "SetWindowPos")] public static extern IntPtr SetWindowPos(IntPtr hWnd, int hWndInsertAfter, int x, int Y, int cx, int cy, int wFlags);
         public const int SWP_NOSIZE = 0x0001;
-        [DllImport("user32.dll", CharSet = CharSet.Auto)]
-        static extern int ShowWindow(IntPtr hWnd, int nCmdShow);
+        [DllImport("user32.dll", CharSet = CharSet.Auto)] static extern int ShowWindow(IntPtr hWnd, int nCmdShow);
         private const int SW_SHOWMINNOACTIVE = 7;
+
+        [DllImport("kernel32.dll", EntryPoint = "AllocConsole", SetLastError = true, CharSet = CharSet.Auto, CallingConvention = CallingConvention.StdCall)] public static extern int AllocConsole();
+        [DllImport("Kernel32.dll")] public static extern bool AttachConsole(int processId);
+        [DllImport("kernel32.dll", SetLastError = true)] public static extern bool SetStdHandle(int nStdHandle, IntPtr hHandle);
+        public const int STD_OUTPUT_HANDLE = -11;
+        public const int STD_INPUT_HANDLE = -10;
+        public const int STD_ERROR_HANDLE = -12;
+        [DllImport("kernel32.dll", EntryPoint = "GetStdHandle", SetLastError = true, CharSet = CharSet.Auto, CallingConvention = CallingConvention.StdCall)] public static extern IntPtr GetStdHandle(int nStdHandle);
+
+        [DllImport("kernel32.dll", CharSet = CharSet.Auto, SetLastError = true)]
+        public static extern IntPtr CreateFile([MarshalAs(UnmanagedType.LPTStr)] string filename,
+                                               [MarshalAs(UnmanagedType.U4)] uint access,
+                                               [MarshalAs(UnmanagedType.U4)] FileShare share,
+                                                                                 IntPtr securityAttributes,
+                                               [MarshalAs(UnmanagedType.U4)] FileMode creationDisposition,
+                                               [MarshalAs(UnmanagedType.U4)] FileAttributes flagsAndAttributes,
+                                                                                 IntPtr templateFile);
+        public const uint GENERIC_WRITE = 0x40000000;
+        public const uint GENERIC_READ = 0x80000000;
+
+        private static void OverrideRedirection()
+        {
+            //var hOut = GetStdHandle(STD_OUTPUT_HANDLE);
+            var hRealOut = CreateFile("CONOUT$", GENERIC_READ | GENERIC_WRITE, FileShare.Write, IntPtr.Zero, FileMode.OpenOrCreate, 0, IntPtr.Zero);
+            //if (hRealOut != hOut)
+            //{
+                SetStdHandle(STD_OUTPUT_HANDLE, hRealOut);
+                //Console.SetOut(new StreamWriter(Console.OpenStandardOutput(), Console.OutputEncoding) { AutoFlush = true });
+            //}
+        }
 
         public Potentiostat()
         {
 #if DEBUG
-            //
+            AllocConsole();
+            OverrideRedirection();
 #else
             //
             // Minimize console window
             //
-            IntPtr MyConsole = GetConsoleWindow();
-            ShowWindow(MyConsole, SW_SHOWMINNOACTIVE);
+            //IntPtr MyConsole = GetConsoleWindow();
+            //ShowWindow(MyConsole, SW_SHOWMINNOACTIVE);
 #endif
 
             InitializeComponent();
