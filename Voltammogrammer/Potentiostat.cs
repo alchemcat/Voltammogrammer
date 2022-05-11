@@ -154,7 +154,8 @@ namespace Voltammogrammer
 
         bool _is_using_potential_switcher = false; 
         double _millivoltSwitchingPotential;
-        double _secPotentialSwitchingInterval;
+        double _secPotentialSwitchingInterval1;
+        double _secPotentialSwitchingInterval2;
 
         string _file_path = null;
         TextWriter _writer;
@@ -163,7 +164,8 @@ namespace Voltammogrammer
 
         bool _is_switched_on = false;
         bool _is_using_automatical_switcher = false; 
-        double _secSwitchingInterval = 1.0;
+        double _secSwitchingInterval1 = 1.0;
+        double _secSwitchingInterval2 = 1.0;
         bool _is_applying_switching_on_finally = false;
         
         ToolStripMenuItem[] _toolstripmenuitemsFrequencyOfAcquisition;
@@ -361,6 +363,14 @@ namespace Voltammogrammer
             //
             if (Properties.Settings.Default.IsUpgraded == false)
             {
+                MessageBox.Show
+                (
+                  "The configration and calibration data will be loaded from the previous settings, if possible. Otherwise, these are reset to default values.",
+                  "Notice",
+                  MessageBoxButtons.OK,
+                  MessageBoxIcon.Information
+                );
+
                 Properties.Settings.Default.Upgrade();
                 Properties.Settings.Default.IsUpgraded = true;
                 Properties.Settings.Default.Save();
@@ -1098,12 +1108,31 @@ namespace Voltammogrammer
                     case typeSubModule.RDE:
                         break;
 
-                    case typeSubModule.Synchronous_switching:                            
-                        if(_is_using_automatical_switcher && t_current > (secCAing + _secSwitchingInterval * cSwitching) * 1000)
+                    case typeSubModule.Synchronous_switching:
+                        if (_is_using_automatical_switcher)
                         {
-                            SetSwitchOnAsync(!_is_switched_on);
-                            cSwitching++;
+                            if ((cSwitching % 2) == 1)
+                            {
+                                if (t_current > (((_secSwitchingInterval1 + _secSwitchingInterval2) * Math.DivRem(cSwitching, 2, out int rem) + _secSwitchingInterval1) * 1000))
+                                {
+                                    SetSwitchOnAsync(!_is_switched_on);
+                                    cSwitching++;
+                                }
+                            }
+                            else
+                            {
+                                if (t_current > (((_secSwitchingInterval1 + _secSwitchingInterval2) * Math.DivRem(cSwitching, 2, out int rem)) * 1000))
+                                {
+                                    SetSwitchOnAsync(!_is_switched_on);
+                                    cSwitching++;
+                                }
+                            }
                         }
+                        //if(_is_using_automatical_switcher && t_current > (secCAing + _secSwitchingInterval * cSwitching) * 1000)
+                        //{
+                        //    SetSwitchOnAsync(!_is_switched_on);
+                        //    cSwitching++;
+                        //}
                         break;
 
                     default:
@@ -1222,6 +1251,9 @@ namespace Voltammogrammer
             //toolStripContainer1.PerformLayout();
             //toolStrip1.ResumeLayout(false);
             //toolStrip1.PerformLayout();
+
+            toolStripMenuItemSubModuleOption2Param1.TextChanged += new EventHandler(toolStripMenuItemSubModuleOption2Param1_TextChanged);
+            toolStripMenuItemSubModuleOption2Param2.TextChanged += new EventHandler(toolStripMenuItemSubModuleOption2Param2_TextChanged);
         }
 
         private void Potentiostat_KeyPress(object sender, KeyPressEventArgs e)
@@ -1832,7 +1864,7 @@ namespace Voltammogrammer
                 byte sts = 0;
                 int cSamples = 0;
                 int cAvailable = 0, cLost = 0, cCorrupted = 0;
-                int cSwitching = 1, cPotentialSwitching = 0;
+                int cSwitching = 1, cPotentialSwitching = 1;
 
 
                 long t_current = 0, t_next = -1;
@@ -1928,18 +1960,50 @@ namespace Voltammogrammer
                     {
                         // TODO: 
 
-                        if(t_current > (_secPotentialSwitchingInterval * cPotentialSwitching) * 1000)
+                        if((cPotentialSwitching % 2) == 1)
                         {
-                            if((cPotentialSwitching % 2) == 0)
-                            {
-                                SetDCVoltageCH1(_millivoltInitial * 1000.0);
-                            }
-                            else
+                            if(t_current > (((_secPotentialSwitchingInterval1 + _secPotentialSwitchingInterval2) * Math.DivRem(cPotentialSwitching, 2, out int rem) + _secPotentialSwitchingInterval1) * 1000))
                             {
                                 SetDCVoltageCH1(_millivoltSwitchingPotential * 1000.0);
-                            }
-                            cPotentialSwitching++;
+                                cPotentialSwitching++;
+                            }           
                         }
+                        else
+                        {
+                            if(t_current > (((_secPotentialSwitchingInterval1 + _secPotentialSwitchingInterval2) * Math.DivRem(cPotentialSwitching, 2, out int rem)) * 1000))
+                            {
+                                SetDCVoltageCH1(_millivoltInitial * 1000.0);
+                                cPotentialSwitching++;
+                            }           
+                        }
+
+                        //if(t_current > ((_secPotentialSwitchingInterval1 + _secPotentialSwitchingInterval2) * cPotentialSwitching - _secPotentialSwitchingInterval2))
+                        //{
+                        //    if()
+                        //    {
+
+                        //    }
+                        //}
+
+                        //if(
+                        //       t_current > ((_secPotentialSwitchingInterval1 + _secPotentialSwitchingInterval2) * cPotentialSwitching) * 1000
+                        //    || ) * 1000 )
+                        //{
+                        //    if((cPotentialSwitching % 2) == 1)
+                        //    {
+                        //        if(t_current > ((_secPotentialSwitchingInterval1 + _secPotentialSwitchingInterval2) * cPotentialSwitching) * 1000)
+                        //        {
+                        //            SetDCVoltageCH1(_millivoltInitial * 1000.0);
+                        //            cPotentialSwitching++;
+                        //        }
+
+                        //    }
+                        //    else
+                        //    {
+                        //        SetDCVoltageCH1(_millivoltSwitchingPotential * 1000.0);
+                        //        cPotentialSwitching++;
+                        //    }
+                        //}
                     }
 
                     switch (_selectedSubModule)
@@ -1948,11 +2012,30 @@ namespace Voltammogrammer
                             break;
 
                         case typeSubModule.Synchronous_switching:
-                            if (_is_using_automatical_switcher && t_current > (_secSwitchingInterval * cSwitching) * 1000)
+                            if(_is_using_automatical_switcher)
                             {
-                                SetSwitchOnAsync(!_is_switched_on);
-                                cSwitching++;
+                                if ((cSwitching % 2) == 1)
+                                {
+                                    if (t_current > (((_secSwitchingInterval1 + _secSwitchingInterval2) * Math.DivRem(cSwitching, 2, out int rem) + _secSwitchingInterval1) * 1000))
+                                    {
+                                        SetSwitchOnAsync(!_is_switched_on);
+                                        cSwitching++;
+                                    }
+                                }
+                                else
+                                {
+                                    if (t_current > (((_secSwitchingInterval1 + _secSwitchingInterval2) * Math.DivRem(cSwitching, 2, out int rem)) * 1000))
+                                    {
+                                        SetSwitchOnAsync(!_is_switched_on);
+                                        cSwitching++;
+                                    }
+                                }
                             }
+                            //if (_is_using_automatical_switcher && t_current > (_secSwitchingInterval * cSwitching) * 1000)
+                            //{
+                            //    SetSwitchOnAsync(!_is_switched_on);
+                            //    cSwitching++;
+                            //}
                             break;
 
                         default:
@@ -3747,7 +3830,7 @@ namespace Voltammogrammer
                 {
                     case typeSubModule.RDE:
                         SetRotation(0);
-                        SetPurging(on: true);
+                        SetPurging(on: false);
                         break;
 
                     case typeSubModule.Synchronous_switching:
@@ -3873,6 +3956,67 @@ namespace Voltammogrammer
                     break;
 
                 case typeSubModule.Synchronous_switching:
+                    toolStripMenuItemSubModuleOption2.Checked = (_is_using_automatical_switcher = !toolStripMenuItemSubModuleOption2.Checked);
+                    break;
+
+                default:
+                    break;
+            }
+        }
+
+        private void toolStripMenuItemSubModuleOption2Param1_TextChanged(object sender, EventArgs e)
+        {
+            switch (_selectedSubModule)
+            {
+                case typeSubModule.RDE:
+                    break;
+
+                case typeSubModule.Synchronous_switching:
+                    if (double.TryParse(toolStripMenuItemSubModuleOption2Param1.Text, out double value)
+                        && (value >= 1.0))
+                    {
+                        _secSwitchingInterval1 = value;
+                        Console.WriteLine("Switcing Interval: {0}", _secSwitchingInterval1);
+                    }
+                    else { }
+                    break;
+
+                default:
+                    break;
+            }
+        }
+
+        private void toolStripMenuItemSubModuleOption2Param2_TextChanged(object sender, EventArgs e)
+        {
+            switch (_selectedSubModule)
+            {
+                case typeSubModule.RDE:
+                    break;
+
+                case typeSubModule.Synchronous_switching:
+                    if (double.TryParse(toolStripMenuItemSubModuleOption2Param2.Text, out double value)
+                        && (value >= 1.0))
+                    {
+                        _secSwitchingInterval2 = value;
+                        Console.WriteLine("Switcing Interval: {0}", _secSwitchingInterval2);
+                    }
+                    else { }
+                    break;
+
+                default:
+                    break;
+            }
+        }
+
+        private void toolStripMenuItemSubModuleOption2Param3_Click(object sender, EventArgs e)
+        {
+            switch (_selectedSubModule)
+            {
+                case typeSubModule.RDE:
+                    break;
+
+                case typeSubModule.Synchronous_switching:
+                    toolStripMenuItemSubModuleOption2Param3.Checked = (_is_applying_switching_on_finally = !toolStripMenuItemSubModuleOption2Param3.Checked);
                     break;
 
                 default:
@@ -3897,7 +4041,6 @@ namespace Voltammogrammer
                     break;
 
                 case typeSubModule.Synchronous_switching:
-                    toolStripMenuItemSubModuleOption3.Checked = (_is_using_automatical_switcher = !toolStripMenuItemSubModuleOption3.Checked);
                     break;
 
                 default:
@@ -4004,13 +4147,6 @@ namespace Voltammogrammer
                     break;
 
                 case typeSubModule.Synchronous_switching:
-                    if (double.TryParse(toolStripMenuItemSubModuleOption3Param1.Text, out double value)
-                        && (value >= 1.0))
-                    {
-                        _secSwitchingInterval = value;
-                        Console.WriteLine("Switcing Interval: {0}", _secSwitchingInterval);
-                    }
-                    else {  }
                     break;
 
                 default:
@@ -4026,7 +4162,6 @@ namespace Voltammogrammer
                     break;
 
                 case typeSubModule.Synchronous_switching:
-                    toolStripMenuItemSubModuleOption3Param2.Checked = (_is_applying_switching_on_finally = !toolStripMenuItemSubModuleOption3Param2.Checked);
                     break;
 
                 default:
@@ -5570,6 +5705,7 @@ namespace Voltammogrammer
 
         public async void SetSwitchOnAsync(bool value_to_be_set)
         {
+            Console.WriteLine($"SetSwitchOnAsync: {value_to_be_set}");
             // GUI操作は非同期で呼び出す
             await Task.Run(() => { _is_switched_on = value_to_be_set; SetPurging(value_to_be_set); });
         }
@@ -5624,23 +5760,25 @@ namespace Voltammogrammer
 
                 case typeSubModule.Synchronous_switching:
                     toolStripMenuItemSubModuleOption1.Visible = true;
-                    toolStripMenuItemSubModuleOption2.Visible = false;
-                    toolStripMenuItemSubModuleOption3.Visible = true;
+                    toolStripMenuItemSubModuleOption2.Visible = true;
+                    toolStripMenuItemSubModuleOption3.Visible = false;
                     toolStripMenuItemSubModuleOption3Param1.Visible = true;
                     toolStripMenuItemSubModuleOption3Param2.Visible = true;
                     toolStripMenuItemSubModuleOption4.Visible = false;
 
                     toolStripMenuItemSubModuleOption1.Text = "    Switch on";
-                    toolStripMenuItemSubModuleOption2.Text = "    ";
-                    toolStripMenuItemSubModuleOption3.Text = "    Switch on/off at intervals [s] of ";
-                    toolStripMenuItemSubModuleOption3Param2.Text = "Finally on";
+                    toolStripMenuItemSubModuleOption2.Text = "    Switch on/off at intervals [s] of";
+                    toolStripMenuItemSubModuleOption2Param3.Text = "Finally on";
+                    toolStripMenuItemSubModuleOption3.Text = "    ";
                     toolStripMenuItemSubModuleOption4.Text = "    ";
 
                     toolStripMenuItemSubModuleOption1.Checked = false;
                     toolStripMenuItemSubModuleOption2.Checked = false;
-                    toolStripMenuItemSubModuleOption3.Checked = false;
-                    toolStripMenuItemSubModuleOption3Param2.Checked = false;
+                    toolStripMenuItemSubModuleOption2.Checked = false;
+                    toolStripMenuItemSubModuleOption2Param3.Checked = false;
                     toolStripMenuItemSubModuleOption4.Checked = false;
+
+                    //SetSwitchOnAsync(!toolStripMenuItemSubModuleOption1.Checked);
 
                     break;
 
@@ -5667,6 +5805,8 @@ namespace Voltammogrammer
                 _hertzFinal = Double.NaN;
                 _secDuration = Double.NaN; _secPreelectrolysis = Double.NaN;
                 _secInterval = Double.NaN;
+
+                _is_using_potential_switcher = false;
 
                 switch (_selectedMethod)
                 {
@@ -6260,12 +6400,19 @@ namespace Voltammogrammer
                             }
                             else { MessageBox.Show(this, "The value of Switching Potential [mV] is invalid."); toolStripLabeledTextBoxDetail1Option1.Text = "0"; return; }
 
-                            if (double.TryParse(toolStripLabeledTextBoxDetail1Option2.Text, out _secPotentialSwitchingInterval)
-                                && (_secPotentialSwitchingInterval >= 1)
-                                && (_secPotentialSwitchingInterval > _secInterval) )
+                            if (double.TryParse(toolStripLabeledTextBoxDetail1Option2.Text, out _secPotentialSwitchingInterval1)
+                                && (_secPotentialSwitchingInterval1 >= 1)
+                                && (_secPotentialSwitchingInterval1 > _secInterval) )
                             {
                             }
-                            else { MessageBox.Show(this, "The value of Switching Interval [s] is invalid. It must be larger than 1 sec and the Sampling Interval. "); toolStripLabeledTextBoxDetail1Option2.Text = "1"; return; }
+                            else { MessageBox.Show(this, "The value of Switching Interval 1 [s] is invalid. It must be larger than 1 sec and the Sampling Interval. "); toolStripLabeledTextBoxDetail1Option2.Text = "1"; return; }
+
+                            if (double.TryParse(toolStripLabeledTextBoxDetail1Option3.Text, out _secPotentialSwitchingInterval2)
+                                && (_secPotentialSwitchingInterval2 >= 1)
+                                && (_secPotentialSwitchingInterval2 > _secInterval) )
+                            {
+                            }
+                            else { MessageBox.Show(this, "The value of Switching Interval 2 [s] is invalid. It must be larger than 1 sec and the Sampling Interval. "); toolStripLabeledTextBoxDetail1Option2.Text = "1"; return; }
                         }
 
 
@@ -7128,6 +7275,7 @@ namespace Voltammogrammer
 
             label.Text = "label";
             textbox.Text = "text";
+            textbox.TextChanged += new EventHandler(TextBox_OnTextChanged);
 
             FlowLayoutPanel flp = ((FlowLayoutPanel)base.Control);
 
@@ -7186,6 +7334,30 @@ namespace Voltammogrammer
                 {
                     base.Size = new System.Drawing.Size(label.Width + textbox.Width, base.Size.Height);
                 }
+            }
+        }
+
+        //protected override void OnSubscribeControlEvents(Control control)
+        //{
+        //    base.OnSubscribeControlEvents(control);
+        //    //NumericUpDown numControl = (NumericUpDown)control;
+        //    textbox.TextChanged += new EventHandler(TextBox_OnTextChanged);
+        //}
+
+        //protected override void OnUnsubscribeControlEvents(Control control)
+        //{
+        //    base.OnUnsubscribeControlEvents(control);
+        //    //NumericUpDown numControl = (NumericUpDown)control;
+        //    textbox.TextChanged -= new EventHandler(TextBox_OnTextChanged);
+        //}
+
+        public new event EventHandler TextChanged;
+
+        private void TextBox_OnTextChanged(object sender, EventArgs e)
+        {
+            if (TextChanged != null)
+            {
+                TextChanged(this, e);
             }
         }
     }
