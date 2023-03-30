@@ -11,7 +11,13 @@ dwf.h
 *.vcxproj.*
 !cacert.pem
 hostname.txt
-ProjectBuildCounter-master/
+# ProjectBuildCounter-master/
+# !ProjectBuildCounter-master/
+ProjectBuildCounter-master/*
+!ProjectBuildCounter-master/.gitkeep
+!ProjectBuildCounter-master/ProjectBuildCounter/.gitkeep
+!ProjectBuildCounter-master/ProjectBuildCounter/bin/.gitkeep
+!ProjectBuildCounter-master/ProjectBuildCounter/bin/Release/.gitkeep
 *.pdn
 
 # User-specific files

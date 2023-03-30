@@ -31,7 +31,7 @@ After these measurements, you can organize acquired data with facility by using 
 
 ## How to compile
 
-Install Digilent Waveforms SDK 3.10.9 or later version ([**https://reference.digilentinc.com/reference/software/waveforms/waveforms-3/**](https://reference.digilentinc.com/reference/software/waveforms/waveforms-3/)) to a laptop computer running Microsoft Windows operating system. Compile the VisualStudio solution file, `Voltammogrammer.sln` by using the community edition of Microsoft Visual Studio ([**https://visualstudio.microsoft.com/**](https://visualstudio.microsoft.com/)) in the laptop computer. Please note that the solution requires two NuGet libraries as listed in the Dependency section below.
+Install Digilent Waveforms SDK 3.10.9 or later version ([**https://reference.digilentinc.com/reference/software/waveforms/waveforms-3/**](https://reference.digilentinc.com/reference/software/waveforms/waveforms-3/)) to a laptop computer running Microsoft Windows operating system. Compile the VisualStudio solution file, `Voltammogrammer.sln` by using the community edition of Microsoft Visual Studio ([**https://visualstudio.microsoft.com/**](https://visualstudio.microsoft.com/)) in the laptop computer. Please note that the solution requires two NuGet libraries as listed in the Dependency section below. If needed, place the ProjectBuildCounter (see below) in the directory of the solution file (Voltammogrammer.sln).
 
 ## Basic usage
 

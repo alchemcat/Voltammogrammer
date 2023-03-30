@@ -67,6 +67,7 @@ namespace Voltammogrammer
         const bool VERSION_0_9e = false;
         const bool VERSION_0_9k = true;
         const int CHANNEL_POTENTIAL = 1; const int CHANNEL_CURRENT = 2;
+        const double RATIO_POTENTIAL = 1.0; // R2/R1 (Figure 2 in JCE2012) which determines an amplification factor of potential
 #elif VERSION_0_9j
         const string VERSION_string = "0.9j";
         const bool VERSION_0_5  = false;
@@ -5876,8 +5877,8 @@ namespace Voltammogrammer
 
                     case methodMeasurement.ConstantCurrent:
                         if (double.TryParse(toolStripTextBoxInitialV.Text, out _millivoltInitial)
-                            && (_millivoltInitial <= 200000)
-                            && (_millivoltInitial >= -200000))
+                            && (_millivoltInitial <= 1000000)
+                            && (_millivoltInitial >= -1000000))
                         {
                             _millivoltInitial_raw = _millivoltInitial;
                             _millivoltInitial = (_millivoltInitial * (-1000.0 / (double)_selectedCurrentFactor));
@@ -6831,7 +6832,7 @@ namespace Voltammogrammer
                         toolStripLabel4.Text = "Target |Q| [C]:";
                         toolStripTextBoxRepeat.Text = "0";
                         toolStripLabel8.Text = "Limit of |E| for S [mV]:"; toolStripLabel8.Visible = true;
-                        toolStripTextBoxStep.Text = "0"; toolStripTextBoxStep.Visible = true;
+                        toolStripTextBoxStep.Text = "10000"; toolStripTextBoxStep.Visible = true;
                         break;
 
                     case methodMeasurement.LSV:

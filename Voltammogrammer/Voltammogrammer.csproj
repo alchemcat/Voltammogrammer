@@ -5,7 +5,7 @@
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ProjectGuid>{A1482912-0F53-4973-9307-DFFE82BC2314}</ProjectGuid>
-    <OutputType>WinExe</OutputType>
+    <OutputType>Exe</OutputType>
     <RootNamespace>Voltammogrammer</RootNamespace>
     <AssemblyName>Voltammogrammer</AssemblyName>
     <TargetFrameworkVersion>v4.6.1</TargetFrameworkVersion>
@@ -260,6 +260,6 @@
     </PostBuildEvent>
   </PropertyGroup>
   <PropertyGroup>
-    <PreBuildEvent>$(SolutionDir)ProjectBuildCounter-master\ProjectBuildCounter\bin\Release\ProjectBuildCounter.exe $(ProjectDir)Properties\AssemblyInfo.cs R</PreBuildEvent>
+    <PreBuildEvent>if exist $(SolutionDir)ProjectBuildCounter-master\ProjectBuildCounter\bin\Release\ProjectBuildCounter.exe $(SolutionDir)ProjectBuildCounter-master\ProjectBuildCounter\bin\Release\ProjectBuildCounter.exe $(ProjectDir)Properties\AssemblyInfo.cs R</PreBuildEvent>
   </PropertyGroup>
 </Project>

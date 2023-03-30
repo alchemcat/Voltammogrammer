@@ -218,7 +218,7 @@
             this.toolStrip1.Location = new System.Drawing.Point(4, 0);
             this.toolStrip1.Name = "toolStrip1";
             this.toolStrip1.RenderMode = System.Windows.Forms.ToolStripRenderMode.Professional;
-            this.toolStrip1.Size = new System.Drawing.Size(823, 28);
+            this.toolStrip1.Size = new System.Drawing.Size(782, 28);
             this.toolStrip1.TabIndex = 2;
             this.toolStrip1.Text = "toolStrip1";
             // 
@@ -398,7 +398,7 @@
             this.toolStripMenuItemSubModuleOption2Param1.BackColor = System.Drawing.Color.Transparent;
             this.toolStripMenuItemSubModuleOption2Param1.Caption = "on";
             this.toolStripMenuItemSubModuleOption2Param1.Name = "toolStripMenuItemSubModuleOption2Param1";
-            this.toolStripMenuItemSubModuleOption2Param1.Size = new System.Drawing.Size(132, 33);
+            this.toolStripMenuItemSubModuleOption2Param1.Size = new System.Drawing.Size(129, 28);
             this.toolStripMenuItemSubModuleOption2Param1.Text = "300";
             // 
             // toolStripMenuItemSubModuleOption2Param2
@@ -406,13 +406,13 @@
             this.toolStripMenuItemSubModuleOption2Param2.BackColor = System.Drawing.Color.Transparent;
             this.toolStripMenuItemSubModuleOption2Param2.Caption = "off";
             this.toolStripMenuItemSubModuleOption2Param2.Name = "toolStripMenuItemSubModuleOption2Param2";
-            this.toolStripMenuItemSubModuleOption2Param2.Size = new System.Drawing.Size(133, 33);
+            this.toolStripMenuItemSubModuleOption2Param2.Size = new System.Drawing.Size(131, 28);
             this.toolStripMenuItemSubModuleOption2Param2.Text = "300";
             // 
             // toolStripMenuItemSubModuleOption2Param3
             // 
             this.toolStripMenuItemSubModuleOption2Param3.Name = "toolStripMenuItemSubModuleOption2Param3";
-            this.toolStripMenuItemSubModuleOption2Param3.Size = new System.Drawing.Size(224, 26);
+            this.toolStripMenuItemSubModuleOption2Param3.Size = new System.Drawing.Size(199, 26);
             this.toolStripMenuItemSubModuleOption2Param3.Text = "Finally on";
             this.toolStripMenuItemSubModuleOption2Param3.Click += new System.EventHandler(this.toolStripMenuItemSubModuleOption2Param3_Click);
             // 
@@ -445,7 +445,7 @@
             // toolStripMenuItemSubModuleOption3Param2
             // 
             this.toolStripMenuItemSubModuleOption3Param2.Name = "toolStripMenuItemSubModuleOption3Param2";
-            this.toolStripMenuItemSubModuleOption3Param2.Size = new System.Drawing.Size(224, 26);
+            this.toolStripMenuItemSubModuleOption3Param2.Size = new System.Drawing.Size(200, 26);
             this.toolStripMenuItemSubModuleOption3Param2.Text = "Finally switch on";
             this.toolStripMenuItemSubModuleOption3Param2.Click += new System.EventHandler(this.toolStripMenuItemSubModuleOption3Param2_Click);
             // 
