@@ -2439,7 +2439,7 @@ namespace Voltammogrammer
                     _recordingSeries[CHANNEL_VIRTUAL_REAL_Z][i] = -1 * resi; // due to cirtutry of PP0.9e
                     _recordingSeries[CHANNEL_VIRTUAL_IM_Z][i] = reac;
                     _recordingSeries[CHANNEL_VIRTUAL_PHASE][i] = phase;
-                    _recordingSeries[CHANNEL_POTENTIAL][i] = potential; // 戻り値はPOTENTIAL_RATIOの影響を受けている
+                    _recordingSeries[CHANNEL_POTENTIAL][i] = potential / 1000; // 戻り値はPOTENTIAL_RATIOの影響を受けている
 
                     switch (_selectedMethod)
                     {
@@ -2454,10 +2454,10 @@ namespace Voltammogrammer
                     FDwfAnalogImpedanceStatusInput(_handle, 0, out double gain0, out double radian0);
                     FDwfAnalogImpedanceStatusInput(_handle, 1, out double gain1, out double radian1);
 
-                    _recordingSeries[CHANNEL_VIRTUAL_FREQ][i] = _millivoltScanrate;
+                    _recordingSeries[CHANNEL_VIRTUAL_FREQ][i] = _hertzInitial;// _millivoltScanrate; 何故かこうなっていた！
                     _recordingSeries[CHANNEL_VIRTUAL_ATTN][i] = gain0;
 
-                    Console.WriteLine("Freq {0}, {1}, {2}, {3}, {4}", _millivoltScanrate, resi, reac, impe, potential);
+                    Console.WriteLine("Freq {0}, {1}, {2}, {3}, {4} mV", _hertzInitial, resi, reac, impe, potential);
 
                     backgroundWorkerCV.ReportProgress(i);
 
