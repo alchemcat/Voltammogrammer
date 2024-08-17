@@ -817,7 +817,7 @@ namespace Voltammogrammer
                     Array.Copy(_readingBuffers[(CHANNEL_CURRENT - 1)], 0, _recordingSeries[CHANNEL_CURRENT], cSamples, cAvailable);
 
                     cSamples += cAvailable;
-                    if (cSamples > 8192) cSamples = 8192;
+                    //if (cSamples > 8192) cSamples = 8192; // I'm not sure why I placed this line... (noted on 17 Aug, 2024)
 
                     backgroundWorkerCV.ReportProgress(cSamples);
 
@@ -863,7 +863,8 @@ namespace Voltammogrammer
             FDwfAnalogInFrequencySet(_handle, ((double)_hertzAcquisition)); // 取り込み周波数を設定
             Console.WriteLine($"FDwfAnalogInFrequencySet: {_hertzAcquisition}");
             FDwfAnalogInChannelFilterSet(_handle, -1, filterAverage);
-            FDwfAnalogInRecordLengthSet(_handle, (secCAing + secRecording + secDelta)); // 取り込みする時間[s]の設定。サンプル数[] / 周波数[s-1]
+            //FDwfAnalogInRecordLengthSet(_handle, (secCAing + secRecording + secDelta)); // 取り込みする時間[s]の設定。サンプル数[] / 周波数[s-1]
+            FDwfAnalogInRecordLengthSet(_handle, (-1)); // for WF 3.23.4 or later
 
 
             _clockingStopwatch.Restart();
@@ -935,7 +936,7 @@ namespace Voltammogrammer
             {
                 if ((cSamples >= (secCAing * _hertzAcquisition)) && (fCVing == false))
                 {
-                    Console.WriteLine(_clockingStopwatch.ElapsedMilliseconds);
+                    Console.WriteLine($"Setting AWG started at {_clockingStopwatch.ElapsedMilliseconds} ms");
 
                     // いよいよCV測定。AWGに波形等を設定する
                     //FDwfAnalogOutConfigure(_handle, 0, Convert.ToInt32(false)); // 一旦止めなくてもよい？？
@@ -955,7 +956,7 @@ namespace Voltammogrammer
 
                     FDwfAnalogOutConfigure(_handle, 0, Convert.ToInt32(true));
 
-                    Console.WriteLine(_clockingStopwatch.ElapsedMilliseconds);
+                    Console.WriteLine($"Setting AWG ended at {_clockingStopwatch.ElapsedMilliseconds} ms");
                     fCVing = true;
                 }
 
@@ -977,6 +978,7 @@ namespace Voltammogrammer
                     if (cSamples == 0 && (sts == stsCfg || sts == stsPrefill || sts == stsArm))
                     {
                         // Acquisition not yet started.
+                        Console.WriteLine("Wait for acquisition getting started...");
                         continue;
                     }
                     if(cSamples == 0)
@@ -985,6 +987,8 @@ namespace Voltammogrammer
                     }
 
                     FDwfAnalogInStatusRecord(_handle, out cAvailable, out cLost, out cCorrupted);
+
+                    //Console.WriteLine($"cAvailable: {cAvailable}");
 
                     cSamples += cLost;
                     cSamples += cCorrupted;
@@ -1225,7 +1229,7 @@ namespace Voltammogrammer
             for (int i = 0; i < c; i++)
             {
                 FDwfEnumDeviceType(i, out int type, out int rev);
-                if (type == devidDiscovery2)
+                if (type == devidDiscovery2 || type == devidDiscovery3)
                 {
                     FDwfEnumSN(i, out string sn);
 
@@ -6910,39 +6914,63 @@ namespace Voltammogrammer
                     case methodMeasurement.EIS_Open_Circuit:
                     case methodMeasurement.EIS_Short_Circuit:
                     case methodMeasurement.EIS:
-                        toolStripLabel1.Text = "Potential [" + unit1 + "]:";
-                        toolStripLabel2.Text = "Amplitude [" + unit1 + "]:";
-                        toolStripTextBoxVertexV.Text = "100";
-                        toolStripLabel3.Text = "Scanning Frequency [" + unit2 + "] from:";
-                        toolStripTextBoxScanrate.Text = "1";
-                        toolStripLabel7.Text = "to:"; toolStripLabel7.Visible = true;
-                        toolStripTextBoxScanrate2.Text = "1000000"; toolStripTextBoxScanrate2.Visible = true;
-                        toolStripLabel4.Text = "Accumulation:";
-                        toolStripTextBoxRepeat.Text = "64";
-                        toolStripLabel8.Text = "Steps/dec.:"; toolStripLabel8.Visible = true;
-                        toolStripTextBoxStep.Text = "10"; toolStripTextBoxStep.Visible = true;
-                        toolStripLabel5.Text = "Reference Resistor:";
 
-                        toolStripComboBoxRange.SelectedIndex = 2;
+                        if(
+                               _selectedMethod_previous != methodMeasurement.EIS_Open_Circuit
+                            && _selectedMethod_previous != methodMeasurement.EIS_Short_Circuit
+                            && _selectedMethod_previous != methodMeasurement.EIS
+                        )
+                        {
+                            toolStripLabel1.Text = "Potential [" + unit1 + "]:";
+                            toolStripLabel2.Text = "Amplitude [" + unit1 + "]:";
+                            toolStripTextBoxVertexV.Text = "100";
+                            toolStripLabel3.Text = "Scanning Frequency [" + unit2 + "] from:";
+                            toolStripTextBoxScanrate.Text = "1000000";
+                            toolStripLabel7.Text = "to:"; toolStripLabel7.Visible = true;
+                            toolStripTextBoxScanrate2.Text = "1"; toolStripTextBoxScanrate2.Visible = true;
+                            toolStripLabel4.Text = "Accumulation:";
+                            toolStripTextBoxRepeat.Text = "64";
+                            toolStripLabel8.Text = "Steps/dec.:"; toolStripLabel8.Visible = true;
+                            toolStripTextBoxStep.Text = "10"; toolStripTextBoxStep.Visible = true;
+                            toolStripLabel5.Text = "Reference Resistor:";
+
+                            //toolStripComboBoxRange.SelectedIndex = 2;
+                        }
+
+                        toolStripLabel7.Visible = true;
+                        toolStripTextBoxScanrate2.Visible = true;
+                        toolStripLabel8.Visible = true;
+                        toolStripTextBoxStep.Visible = true;
 
                         break;
 
                     case methodMeasurement.EIS_MottSchottkey:
-                        toolStripLabel1.Text = "Initial [" + unit1 + "]:";
-                        toolStripTextBoxInitialV.Text = "0";
-                        toolStripLabel6.Text = "Final [mV]:"; toolStripLabel6.Visible = true;
-                        toolStripTextBoxFinalV.Text = "-1000"; toolStripTextBoxFinalV.Visible = true;
-                        toolStripLabel2.Text = "Amplitude [" + unit1 + "]:";
-                        toolStripTextBoxVertexV.Text = "10";
-                        toolStripLabel3.Text = "Frequency [" + unit2 + "]:";
-                        toolStripTextBoxScanrate.Text = "1000";
-                        toolStripLabel4.Text = "Accumulation:";
-                        toolStripTextBoxRepeat.Text = "64";
-                        toolStripLabel8.Text = "Step [mV]:"; toolStripLabel8.Visible = true;
-                        toolStripTextBoxStep.Text = "10"; toolStripTextBoxStep.Visible = true;
-                        toolStripLabel5.Text = "Reference Resistor:";
 
-                        toolStripComboBoxRange.SelectedIndex = 1;
+                        if (
+                               _selectedMethod_previous != methodMeasurement.EIS_MottSchottkey
+                        )
+                        {
+                            toolStripLabel1.Text = "Initial [" + unit1 + "]:";
+                            toolStripTextBoxInitialV.Text = "0";
+                            toolStripLabel6.Text = "Final [mV]:"; toolStripLabel6.Visible = true;
+                            toolStripTextBoxFinalV.Text = "-1000"; toolStripTextBoxFinalV.Visible = true;
+                            toolStripLabel2.Text = "Amplitude [" + unit1 + "]:";
+                            toolStripTextBoxVertexV.Text = "10";
+                            toolStripLabel3.Text = "Frequency [" + unit2 + "]:";
+                            toolStripTextBoxScanrate.Text = "1000";
+                            toolStripLabel4.Text = "Accumulation:";
+                            toolStripTextBoxRepeat.Text = "64";
+                            toolStripLabel8.Text = "Step [mV]:"; toolStripLabel8.Visible = true;
+                            toolStripTextBoxStep.Text = "10"; toolStripTextBoxStep.Visible = true;
+                            toolStripLabel5.Text = "Reference Resistor:";
+
+                            //toolStripComboBoxRange.SelectedIndex = 1;
+                        }
+
+                        toolStripLabel6.Visible = true;
+                        toolStripTextBoxFinalV.Visible = true;
+                        toolStripLabel8.Visible = true;
+                        toolStripTextBoxStep.Visible = true;
 
                         break;
                 }
@@ -7080,7 +7108,7 @@ namespace Voltammogrammer
             for (int i = 0; i < c; i++)
             {
                 FDwfEnumDeviceType(i, out int type, out int rev);
-                if (type == devidDiscovery2)
+                if (type == devidDiscovery2 || type == devidDiscovery3)
                 {
                     FDwfEnumSN(i, out string sn);
 
