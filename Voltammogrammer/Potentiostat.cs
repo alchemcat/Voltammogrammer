@@ -3339,7 +3339,7 @@ namespace Voltammogrammer
                     {
                         for (int i = _itrRecording; i < progress; i++)
                         {
-                            chartVoltammogram.Series[1].Points.AddXY(_recordingSeries[CHANNEL_VIRTUAL_REAL_Z][i], _recordingSeries[CHANNEL_VIRTUAL_IM_Z][i]);
+                            chartVoltammogram.Series[1].Points.AddXY(_recordingSeries[CHANNEL_VIRTUAL_REAL_Z][i],-1* _recordingSeries[CHANNEL_VIRTUAL_IM_Z][i]);
                             chartVoltammogram.Series[6].Points.AddXY(_recordingSeries[CHANNEL_VIRTUAL_FREQ][i], Math.Sqrt(Math.Pow(_recordingSeries[CHANNEL_VIRTUAL_REAL_Z][i], 2) + Math.Pow(_recordingSeries[CHANNEL_VIRTUAL_IM_Z][i], 2))); //CHANNEL_VIRTUAL_ATTN
 
                             _voltammogram.AddDataToCurrentSeries(
@@ -3351,7 +3351,7 @@ namespace Voltammogrammer
                                 formVoltammogram.typeAxisY.Current_in_uA,
                                 _recordingSeries[0][i] / 1000.00, // [s]
                                 _recordingSeries[CHANNEL_VIRTUAL_REAL_Z][i],
-                                _recordingSeries[CHANNEL_VIRTUAL_IM_Z][i],
+                                -1*_recordingSeries[CHANNEL_VIRTUAL_IM_Z][i],
                                 _recordingSeries[CHANNEL_VIRTUAL_FREQ][i]
                             );
                         }
@@ -6745,7 +6745,7 @@ namespace Voltammogrammer
                     chartVoltammogram.ChartAreas[0].AxisX.Title = "Re[Z] / ohm";
                     chartVoltammogram.ChartAreas[0].AxisX.Maximum = Double.NaN;
                     chartVoltammogram.ChartAreas[0].AxisX.Minimum = 0;// Double.NaN;
-                    chartVoltammogram.ChartAreas[0].AxisY.Title = "Im[Z] / ohm";
+                    chartVoltammogram.ChartAreas[0].AxisY.Title = "-Im[Z] / ohm";
                     chartVoltammogram.ChartAreas[0].AxisX2.Title = "Frequency / Hz";
                     chartVoltammogram.ChartAreas[0].AxisX2.Minimum = Double.NaN;
                     //chartVoltammogram.ChartAreas[0].AxisX2.Minimum = 1;
